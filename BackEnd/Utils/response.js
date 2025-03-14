@@ -6,7 +6,7 @@ class Response {
   }
 
   send() {
-    return this.res.status(this.status).json({
+    return this.res.status(this. status).json({
       status: String(this.status).startsWith("2") ? "success" : "error",
       ...this.dataPayload,
     });
