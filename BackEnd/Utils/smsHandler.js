@@ -7,7 +7,7 @@ export const sendAuthCode=async(Mobile)=>{
             ApiKey:process.env.SMS_KEY
           },
           body:JSON.stringify({
-            Mobile,
+            Mobile, 
             Footer:'  رکاد'
           })
         })
