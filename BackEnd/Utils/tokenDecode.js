@@ -8,4 +8,4 @@ const tokenDecode=(headers)=>{
     }
 
 }
-export default tokenDecode
+export default  tokenDecode
