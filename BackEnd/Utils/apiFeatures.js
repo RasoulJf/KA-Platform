@@ -7,7 +7,7 @@ class ApiFeatures {
     const queryObj = { ...this.queryString };
     const fieldsItems = ["page", "limit", "sort", "fields"];
     fieldsItems.forEach((el) => delete queryObj[el]);
-    this.query = this.query.find(queryObj.filters);
+    this.query = this.query.find(queryObj.filters); 
     return this;
   }
   sort() {
