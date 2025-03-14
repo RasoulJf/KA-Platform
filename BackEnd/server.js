@@ -10,5 +10,5 @@ mongoose.connect(process.env.DATA_BASE).then(()=>{
 
 
 app.listen(process.env.PORT,()=>{
-    console.log('server is running')
+    console.log('server is running')  
 })
