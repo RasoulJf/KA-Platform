@@ -25,7 +25,7 @@ async function updateRanks() {
         await Promise.all(studentsInClass.map(student => student.save()));
     }
 
-    await Promise.all(students.map(student => student.save()));
+    await Promise.all(students.map(student => student.save())); 
 }
 
 export default updateRanks;
