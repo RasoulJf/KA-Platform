@@ -8,7 +8,7 @@ const activitySchema = new mongoose.Schema({
   },
   name: {
     type:String,
-    required:[true,'Activity name is required']
+    required:[true,'Activity name is required'] 
   },
   description: String,
 });
