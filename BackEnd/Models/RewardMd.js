@@ -4,7 +4,7 @@ const rewardSchema = new mongoose.Schema({
   parent: {
     type: String,
     enum: ["پاداش های عمومی", "پاداش های اختصاصی", "پاداش نیکوکارانه"],
-    required: true,
+    required: true, 
   },
   name: {
     type: String, 
