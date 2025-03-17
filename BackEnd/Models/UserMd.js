@@ -36,7 +36,7 @@ const userSchema = new mongoose.Schema(
       enum: [101, 102, 103, 201, 202, 301, 302],
       required: [isStudent, "Class is required"],
     },
-    score: {
+    score: { 
       type: Number,
       default: 0,
     },
