@@ -10,7 +10,7 @@ async function updateRanks() {
     const grades = await User.distinct("grade");
     for (const grade of grades) {
         const studentsInGrade = await User.find({ role: 'Student', grade }).sort({ score: -1 });
-        studentsInGrade.forEach((student, index) => {
+        studentsInGrade.forEach((student, index) => { 
             student.rankInGrade = index + 1;
         });
         await Promise.all(studentsInGrade.map(student => student.save()));
