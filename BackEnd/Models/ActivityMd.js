@@ -4,7 +4,7 @@ const activitySchema = new mongoose.Schema({
   parent: {
     type: String,
     enum:['فعالیت‌های آموزشی','فعالیت‌های شغلی','فعالیت‌های داوطلبانه','فعالیت‌های توسعه فردی'],
-    required: true,
+    required: true, 
   },
   name: {
     type:String,
