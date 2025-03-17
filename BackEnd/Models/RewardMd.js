@@ -7,7 +7,7 @@ const rewardSchema = new mongoose.Schema({
     required: true,
   },
   name: {
-    type: String,
+    type: String, 
     required: [true, "Activity name is required"], 
   },
   description: {
