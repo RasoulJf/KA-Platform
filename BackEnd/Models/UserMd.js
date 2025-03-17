@@ -43,7 +43,7 @@ const userSchema = new mongoose.Schema(
     rankInSchool: {
       type: Number,
       default: null,
-    },
+    }, 
     rankInGrade: {
       type: Number,
       default: null,
