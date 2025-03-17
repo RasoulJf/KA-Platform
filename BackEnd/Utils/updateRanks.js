@@ -18,7 +18,7 @@ async function updateRanks() {
 
     const classes = await User.distinct("class");
     for (const classId of classes) {
-        const studentsInClass = await User.find({ role: 'Student', class: classId }).sort({ score: -1 });
+        const studentsInClass = await User.find({ role: 'Student', class: classId }).sort({ score: -1 }); 
         studentsInClass.forEach((student, index) => {
             student.rankInClass = index + 1;
         });
