@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const activitySchema = new mongoose.Schema({
-  parent: {
+  parent: { 
     type: String,
     enum:['فعالیت‌های آموزشی','فعالیت‌های شغلی','فعالیت‌های داوطلبانه','فعالیت‌های توسعه فردی'],
     required: true,
