@@ -16,6 +16,6 @@ app.use(express.static("Public"));
 app.use("*", (req, res, next) => { 
   next(new HandleERROR("Route not Found", 404));
 });
-app.use(catchError);
+app.use(catchError); 
 
 export default app;
