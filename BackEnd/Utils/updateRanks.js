@@ -17,7 +17,7 @@ async function updateStudentRankings() {
   const grades = [...new Set(students.map((student) => student.grade))];
   for (const grade of grades) {
     const studentsInGrade = students
-      .filter((student) => student.grade === grade)
+      .filter((student) => student.grade === grade) 
       .sort((a, b) => b.score - a.score);
     studentsInGrade.forEach((student, index) => {
       bulkUpdates.push({
