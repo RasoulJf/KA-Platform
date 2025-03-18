@@ -16,6 +16,9 @@ const rewardSchema = new mongoose.Schema({
   minToken: {
     type: Number,
   },
+  maxToken: {
+    type: Number,
+  },
   reqToken: {
     type: Number,
   },
