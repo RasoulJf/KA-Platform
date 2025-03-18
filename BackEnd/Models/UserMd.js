@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const isStudent = function () {
-  return this.role === "Student";
+  return this.role === "student";
 };
 
 const userSchema = new mongoose.Schema(
@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["Student", "Admin", "SuperAdmin"],
+      enum: ["student", "admin", "superAdmin"],
       default: "Student",
     },
     idCode: {
@@ -43,7 +43,7 @@ const userSchema = new mongoose.Schema(
     rankInSchool: {
       type: Number,
       default: null,
-    }, 
+    },
     rankInGrade: {
       type: Number,
       default: null,
