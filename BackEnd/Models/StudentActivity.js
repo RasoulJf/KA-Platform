@@ -6,7 +6,7 @@ const studentActivitySchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true, 
+      index: true,  
     },
     activityId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -16,7 +16,7 @@ const studentActivitySchema = new mongoose.Schema(
     },
     details: {
       type: String,
-      required: [true, "Details is required"],
+      required: [true, "Details is required"], 
       trim: true, 
     },
     status: {
