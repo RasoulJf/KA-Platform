@@ -18,10 +18,7 @@ const rewardSchema = new mongoose.Schema({
   },
   maxToken: {
     type: Number,
-  },
-  reqToken: {
-    type: Number,
-  },
+  }
 });
 
 const Reward = mongoose.model("Reward", rewardSchema);
