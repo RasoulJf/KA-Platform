@@ -25,8 +25,8 @@ const studentActivitySchema = new mongoose.Schema(
       default: "pending",
     },
     scoreAwarded: {
-      type: Number,
-      default: 0, 
+      type: Number,      
+      default: 0,   
     },
     adminComment: {
       type: String,
