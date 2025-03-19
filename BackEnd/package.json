@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev":"nodemon server.js"
   },
-  "author": "RasoulJf",
+  "author": "RasoulJF",
   "license": "ISC",
   "description": "", 
   "dependencies": {
