@@ -7,7 +7,7 @@ const isSuperAdmin = catchAsync(async (req, res, next) => {
   const { id, role } = Jwt.verify(token, process.env.JWT_SECRET);
   req.userId = id;
   req.role = role;
-  if (role != "suoerAdmin") {
+  if (role != "superAdmin") {
     return next(new HandleERROR("you are not superAdmin", 404));
   }
   return next();
