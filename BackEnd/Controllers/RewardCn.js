@@ -11,7 +11,7 @@ export const createReward=catchAsync(async(req,res,next)=>{
     })
 })
 export const getAllRewards=catchAsync(async(req,res,next)=>{
-    const features=new ApiFeatures()
+    const features=new ApiFeatures(Reward,req.query)
     .sort()
     .populate()
     .filter()

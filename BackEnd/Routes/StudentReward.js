@@ -1,6 +1,8 @@
 import express from "express"
-import { createStudentReward} from "../Controllers/StudentRewardCn.js"
+import { createStudentReward, getAllStudentRewards, getOnetudentReward} from "../Controllers/StudentRewardCn.js"
 import isLogin from "../Middlewares/isLogin.js"
 const studentRewardRouter=express.Router()
-studentRewardRouter.route('/').post(isLogin,createStudentReward)
+studentRewardRouter.route('/').post(isLogin,createStudentReward).get(getAllStudentRewards)
+studentRewardRouter.route('/:id').get(isLogin,getOnetudentReward)
+
 export default studentRewardRouter

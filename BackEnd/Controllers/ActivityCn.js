@@ -11,7 +11,7 @@ export const createActivity=catchAsync(async(req,res,next)=>{
     })
 })
 export const getAllActivities=catchAsync(async(req,res,next)=>{
-    const features=new ApiFeatures()
+    const features=new ApiFeatures(Activity,req.query)
     .sort()
     .populate()
     .filter()

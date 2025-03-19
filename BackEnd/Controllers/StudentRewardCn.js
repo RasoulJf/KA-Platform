@@ -4,6 +4,7 @@ import ApiFeatures from "../Utils/apiFeatures.js";
 import User from "../Models/UserMd.js";
 import HandleERROR from "../Utils/handleError.js";
 import updateStudentRankings from "../Utils/updateRanks.js";
+import { UpdateScore } from "./UserCn.js";
 
 export const changeStatus = catchAsync(async (req, res, next) => {
     const { id } = req.params
@@ -12,20 +13,12 @@ export const changeStatus = catchAsync(async (req, res, next) => {
         new: true,
         runValidators: true
     })
-    if (status == "approved") {
-        const {token}=req.body
-        const user = await User.findById(req.body.userId)
-        if((0.95 * user.score) >= token){
-            user.score=user.score-token
-        }else{
-            return next(new HandleERROR("user not enough score",400))
-        }
-        await user.save()
-        updateStudentRankings()
-    }
+    UpdateScore()
+
     return res.status(200).json({
         data: studentReward,
-        success: true
+        success: true,
+        message:"change status Successfully"
     })
 })
 export const createStudentReward = catchAsync(async (req, res, next) => {
@@ -34,5 +27,25 @@ export const createStudentReward = catchAsync(async (req, res, next) => {
         success: true,
         message: "studentReward created successfully",
         data: studentReward
+    })
+})
+export const getAllStudentRewards=catchAsync(async(req,res,next)=>{
+    const features=new ApiFeatures(StudentReward,req.query)
+    .sort()
+    .populate()
+    .filter()
+    .limitFields()
+    const studentRewards=await features.query
+    return res.status(200).json({
+        success:true,
+        data:studentRewards
+    })
+})
+export const getOnetudentReward=catchAsync(async(req,res,next)=>{
+    const {id}=req.params
+    const studentReward=await StudentReward.findById(id)
+    return res.status(200).json({
+        data:studentReward,
+        success:true
     })
 })
