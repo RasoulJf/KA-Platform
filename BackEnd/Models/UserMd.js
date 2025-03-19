@@ -13,13 +13,16 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["student", "admin", "superAdmin"], 
-      default: "Student",
+      enum: [ "student", "admin", "superAdmin"], 
+      default: "student",
+    },
+    password:{
+      type:String,
     },
     idCode: {
       type: String,
       required: [true, "IdCode is required"],
-      match: [/^(?!0{10})\d{10}$/, "IdCode is not valid"],
+      // match: [/^(?!0{10})\d{10}$/, "IdCode is not valid"],
     },
     fieldOfStudy: {
       type: String,
