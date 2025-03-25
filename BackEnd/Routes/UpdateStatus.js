@@ -1,9 +1,9 @@
 import express from "express"
 import { login, register } from "../Controllers/AuthCn.js"
 import isAdmin from "../Middlewares/isAdmin.js"
-import { changeStatusAndAddAdminComment } from "../Controllers/StudentActivityCn.js"
-import { changeStatus } from "../Controllers/StudentRewardCn.js"
+import { changeStatusAc } from "../Controllers/StudentActivityCn.js"
+import { changeStatusRe } from "../Controllers/StudentRewardCn.js"
 const updateStatusRouter=express.Router()
-updateStatusRouter.route('/activity').post(isAdmin,changeStatusAndAddAdminComment)
-updateStatusRouter.route('/reward').post(isAdmin,changeStatus)
+updateStatusRouter.route('/activity').post(isAdmin,changeStatusAc)
+updateStatusRouter.route('/reward').post(isAdmin,changeStatusRe)
 export default updateStatusRouter
