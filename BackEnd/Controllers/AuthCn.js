@@ -4,7 +4,7 @@ import bcryptjs from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import HandleERROR from "../Utils/handleError.js";
 export const register=catchAsync(async(req,res,next)=>{
-    const {idCode='',password='',role=null, ...others}=req.body
+    const {idCode='',password='',role='', ...others}=req.body
     let pass 
      if(role === 'student'){
         pass = `s${idCode}`
