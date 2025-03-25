@@ -8,9 +8,6 @@ const adminActivitySchema = new mongoose.Schema(
       required: true,
       index: true,  
     },
-    average:{
-        type:Number,
-    },
     activityId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Activity",
