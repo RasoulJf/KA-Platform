@@ -4,7 +4,7 @@ import ApiFeatures from "../Utils/apiFeatures.js";
 import User from "../Models/UserMd.js";
 import { UpdateScore } from "./UserCn.js";
 
-export const changeStatusAndAddAdminComment = catchAsync(async (req, res, next) => {
+export const changeStatusAc = catchAsync(async (req, res, next) => {
     const { id } = req.params
     const { status,adminComment="Your Request Seen" } = req.body
     const studentActivity = await StudentActivity.findByIdAndUpdate(id, { status,adminComment }, {
