@@ -6,7 +6,7 @@ import HandleERROR from "../Utils/handleError.js";
 import updateStudentRankings from "../Utils/updateRanks.js";
 import { UpdateScore } from "./UserCn.js";
 
-export const changeStatus = catchAsync(async (req, res, next) => {
+export const changeStatusRe = catchAsync(async (req, res, next) => {
     const { id } = req.params
     const { status } = req.body
     const studentReward = await StudentReward.findByIdAndUpdate(id, { status }, {
