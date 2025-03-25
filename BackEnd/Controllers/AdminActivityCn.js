@@ -1,17 +1,19 @@
 import AdminActivity from "../Models/AdminActivityMd.js";
 import catchAsync from "../Utils/catchAsync.js";
 import ApiFeatures from "../Utils/apiFeatures.js";
-import { UpdateScore } from "./UserCn.js";
+import { addScoreToUser } from "../Utils/UpdateScore.js";
+import User from "../Models/UserMd.js";
 
 
 export const createAdminActivity=catchAsync(async(req,res,next)=>{
+    const {id}= req.params
     const {scoreAwarded=null,average=null}=req.body
     if (average){
         scoreAwarded=average*5
     }
-    const adminActivity=await AdminActivity.create({...req.body,scoreAwarded})
-    UpdateScore()
-
+    const adminActivity=await AdminActivity.create({...req.body,scoreAwarded,userId:id})
+    const user=await User.findById(id)
+    addScoreToUser(user)
     return res.status(201).json({
         success:true,
         message: "adminActivity created successfully",

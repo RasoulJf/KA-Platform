@@ -4,7 +4,7 @@ import ApiFeatures from "../Utils/apiFeatures.js";
 import User from "../Models/UserMd.js";
 import HandleERROR from "../Utils/handleError.js";
 import updateStudentRankings from "../Utils/updateRanks.js";
-import { UpdateScore } from "./UserCn.js";
+import { deductTokensFromUser } from "../Utils/UpdateScore.js";
 
 export const changeStatusRe = catchAsync(async (req, res, next) => {
     const { id } = req.params
@@ -13,8 +13,8 @@ export const changeStatusRe = catchAsync(async (req, res, next) => {
         new: true,
         runValidators: true
     })
-    UpdateScore()
-
+    const user=await User.findById(studentReward.userId)
+    deductTokensFromUser(user)
     return res.status(200).json({
         data: studentReward,
         success: true,
@@ -22,7 +22,7 @@ export const changeStatusRe = catchAsync(async (req, res, next) => {
     })
 })
 export const createStudentReward = catchAsync(async (req, res, next) => {
-    const studentReward = await StudentReward.create(req.body)
+    const studentReward = await StudentReward.create({...req.body,userId:req.userId})
     return res.status(201).json({
         success: true,
         message: "studentReward created successfully",

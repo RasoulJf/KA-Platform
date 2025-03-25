@@ -10,6 +10,7 @@ import rewardRouter from "./Routes/Reward.js";
 import studentActivityRouter from "./Routes/StudentActivity.js";
 import studentRewardRouter from "./Routes/StudentReward.js";
 import updateStatusRouter from "./Routes/UpdateStatus.js";
+import adminActivityRouter from "./Routes/AdminActivity.js";
 
 const __filename = fileURLToPath(import.meta.url);
 export const __dirname = path.dirname(__filename);
@@ -26,6 +27,7 @@ app.use("/api/updateStatus",updateStatusRouter)
 app.use("/api/activity",activityRouter)
 app.use("/api/reward",rewardRouter)
 app.use("/api/studentActivity",studentActivityRouter)
+app.use("/api/adminActivity",adminActivityRouter)
 app.use("/api/studentReward",studentRewardRouter)
 
 

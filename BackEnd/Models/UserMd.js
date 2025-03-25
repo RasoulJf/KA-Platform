@@ -86,6 +86,13 @@ userSchema.pre("findOneAndUpdate", function (next) {
   next();
 });
 
+userSchema.pre("save", function (next) {
+  if (this.score !== undefined) {
+    this.token = Math.floor(this.score * 0.95);
+  }
+  next();
+});
+
 userSchema.post("findOneAndUpdate", async function (doc) {
   if (doc) {
     doc.token = Math.floor(doc.score * 0.95);

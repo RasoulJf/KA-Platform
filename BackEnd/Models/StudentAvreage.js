@@ -15,6 +15,12 @@ const studentAvreageSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    activityId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Activity",
+      required: true,
+      index: true,
+    },
   },
   { timestamps: true, versionKey: false }
 );

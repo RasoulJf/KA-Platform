@@ -2,7 +2,7 @@ import StudentActivity from "../Models/StudentActivityMd.js";
 import catchAsync from "../Utils/catchAsync.js";
 import ApiFeatures from "../Utils/apiFeatures.js";
 import User from "../Models/UserMd.js";
-import { UpdateScore } from "./UserCn.js";
+import { addScoreToUser } from "../Utils/UpdateScore.js";
 
 export const changeStatusAc = catchAsync(async (req, res, next) => {
     const { id } = req.params
@@ -11,7 +11,8 @@ export const changeStatusAc = catchAsync(async (req, res, next) => {
         new: true,
         runValidators: true
     })
-    UpdateScore()
+    const user=await User.findById(studentActivity.userId)
+    addScoreToUser(user)
     return res.status(200).json({
         data: studentActivity,
         success: true,
@@ -19,7 +20,7 @@ export const changeStatusAc = catchAsync(async (req, res, next) => {
     })
 })
 export const createStudentActivity=catchAsync(async(req,res,next)=>{
-    const studentActivity=await StudentActivity.create(req.body)
+    const studentActivity=await StudentActivity.create({...req.body,userId:req.userId})
     return res.status(201).json({
         success:true,
         message: "studentActivity created successfully",

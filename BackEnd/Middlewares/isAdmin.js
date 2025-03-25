@@ -7,7 +7,7 @@ const isAdmin = catchAsync(async (req, res, next) => {
   const { id, role } = Jwt.verify(token, process.env.JWT_SECRET);
   req.userId = id;
   req.role = role;
-  if (role != "admin") {
+  if (role == "student" ) {
     return next(new HandleERROR("you are not admin", 404));
   }
   return next();
