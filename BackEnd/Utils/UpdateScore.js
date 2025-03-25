@@ -8,7 +8,7 @@ export const addScoreToUser = async (user) => {
 
     const activities = await StudentActivity.find({ userId: user._id, status: "approved" });
     const adminActivities = await AdminActivity.find({ userId: user._id });
-
+    
     activities.forEach(activity => totalScore += activity.scoreAwarded);
     adminActivities.forEach(activity => totalScore += activity.scoreAwarded);
 
