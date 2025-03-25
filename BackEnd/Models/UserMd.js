@@ -13,16 +13,15 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: [ "student", "admin", "superAdmin"], 
+      enum: ["student", "admin", "superAdmin"], 
       default: "student",
     },
-    password:{
-      type:String,
+    password: {
+      type: String,
     },
     idCode: {
       type: String,
       required: [true, "IdCode is required"],
-      // match: [/^(?!0{10})\d{10}$/, "IdCode is not valid"],
     },
     fieldOfStudy: {
       type: String,
@@ -46,7 +45,7 @@ const userSchema = new mongoose.Schema(
     rankInSchool: {
       type: Number,
       default: null,
-    },
+    }, 
     rankInGrade: {
       type: Number,
       default: null,
@@ -85,6 +84,13 @@ userSchema.pre("findOneAndUpdate", function (next) {
     update.token = Math.floor(update.score * 0.95);
   }
   next();
+});
+
+userSchema.post("findOneAndUpdate", async function (doc) {
+  if (doc) {
+    doc.token = Math.floor(doc.score * 0.95);
+    await doc.save();
+  }
 });
 
 const User = mongoose.model("User", userSchema);
