@@ -1,7 +1,7 @@
 import User from "../Models/UserMd.js";
 
 async function updateStudentRankings() {
-  const students = await User.find({ role: "Student" }).sort({ score: -1 });
+  const students = await User.find({ role: "student" }).sort({ score: -1 });
 
   const bulkUpdates = [];
 
