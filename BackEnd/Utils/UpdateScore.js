@@ -15,8 +15,8 @@ export const updateUserScore = async (user) => {
 
     user.activities = [...activities, ...adminActivities];
     user.score = totalScore;
+    await user.save();
 
-    
 
     const rewards = await StudentReward.find({ userId: user._id, status: "approved" });
     for (const reward of rewards) {
@@ -24,7 +24,6 @@ export const updateUserScore = async (user) => {
             user.score -= reward.token;
         } else {
             return false;
-            user.score=user.score
         }
     }
 

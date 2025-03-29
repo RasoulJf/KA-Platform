@@ -14,6 +14,10 @@ export const changeStatusRe = catchAsync(async (req, res, next) => {
         runValidators: true
     })
     const user=await User.findById(studentReward.userId)
+    if(user.token<studentReward.token && status=="approved"){
+        return next(new HandleERROR("User Does Not Have Enough token"))
+
+    }
     if(await updateUserScore(user)){
         return res.status(200).json({
             data: studentReward,
