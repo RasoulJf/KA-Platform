@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+
+/* @theme {
+    --color-rabbit-red: oklch(60.61% 0.2249 31.67)
+  } */
+  /* "#ea2e0e" */
+
+  @font-face {
+    font-family: gilory;
+    font-style: normal;
+    src: url("/src/assets/fonts/Gilroy-Medium.ttf") ,
+  }
+  @font-face {
+    font-family: boldgilory;
+    src: url("/src/assets/fonts/Gilroy-ExtraBold.ttf"),
+  }
+  @font-face {
+    font-family: iransans;
+    src: url("/src/assets/fonts/IRANSansXFaNum-Medium.ttf"),
+  }
+#root{
+    font-family: "inter",sans-serif,"boldgilory";
+    font-optical-sizing: auto;
+    font-style: normal;
+}
+#root{
+  font-family: gilory;
+}
+h1{
+  font-family: boldgilory;
+  /* font-family: iransans; */
+
+}
+h3,h5,li,p,a,div{
+  font-family: iransans;
+}
+button{
+  font-family: iransans;
+}
