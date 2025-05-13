@@ -25,16 +25,26 @@
     font-style: normal;
 }
 #root{
-  font-family: gilory;
+  font-family: iransans;
+}
+.font-bold-gilory{
+  font-family: boldgilory !important;
+}
+.font-gilory{
+  font-family: gilory !important;
 }
 h1{
-  font-family: boldgilory;
-  /* font-family: iransans; */
+  /* font-family: boldgilory; */
+  font-family: iransans;
 
 }
-h3,h5,li,p,a,div{
+h3,h5,li,p,a,div,th{
   font-family: iransans;
 }
 button{
   font-family: iransans;
+}
+
+.rtl{
+  direction: rtl;
 }

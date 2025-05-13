@@ -59,14 +59,14 @@ export default function Login() {
                 <img className='absolute left-[70px]'
                     src={union3} alt="" />
                 <div className="absolute left-15 bottom-40">
-                    <h2 className='text-white text-4xl'>Welcome To</h2>
-                    <h1 className='text-white text-5xl'
+                    <h2 className='text-white text-4xl font-gilory'>Welcome To</h2>
+                    <h1 className='text-white text-5xl font-bold-gilory'
                     >KA Platform</h1>
                 </div>
             </div>
 
             <div className="flex w-[55%] items-center justify-center">
-                <div className='p-10 w-100 mx-auto rounded shadow-[0_0px_55px_rgba(0,0,0,0.15)]'>
+                <div className='p-10 w-100 mx-auto rounded shadow-[0_0px_10px_rgba(0,0,0,0.15)]'>
                     <div className="flex gap-2 justify-center items-center mb-10">
                         <div className="flex-column justify-items-center items-center ">
                             <h3 className='text-[#59BBAF] text-3xl font-semibold'>پلتـفرم کــا</h3>
