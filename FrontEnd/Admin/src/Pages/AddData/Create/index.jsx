@@ -291,7 +291,7 @@ export default function CreateNewData({ Open }) {
                                     className="w-full px-3 py-2 h-[5vh] border-0 focus:ring-0 focus:outline-none text-sm text-right bg-transparent"
                                     placeholder="توضیحات بیشتر در مورد فعالیت..."
                                 ></textarea>
-                                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2 text-right">شرح اطلاعات</label>
+                                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2 text-right w-10">شرح اطلاعات</label>
 
                             </div>
 
