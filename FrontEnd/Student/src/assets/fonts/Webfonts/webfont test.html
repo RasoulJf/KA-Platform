@@ -1,0 +1,226 @@
+<head>
+	<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=9" />
+	<title>IRANSansX</title>
+	<style type="text/css" media="screen">
+		@font-face { font-family: 'WOFF IRANSansX-Thin'; src: url('fonts/woff/IRANSansXFaNum-ThinD4.woff'); }
+		@font-face { font-family: 'WOFF IRANSansX-UltraLight'; src: url('fonts/woff/IRANSansXFaNum-UltraLightD4.woff'); }
+		@font-face { font-family: 'WOFF IRANSansX-Light'; src: url('fonts/woff/IRANSansXFaNum-LightD4.woff'); }
+		@font-face { font-family: 'WOFF IRANSansX-Regular'; src: url('fonts/woff/IRANSansXFaNum-RegularD4.woff'); }
+		@font-face { font-family: 'WOFF IRANSansX-Medium'; src: url('fonts/woff/IRANSansXFaNum-MediumD4.woff'); }
+		@font-face { font-family: 'WOFF IRANSansX-DemiBold'; src: url('fonts/woff/IRANSansXFaNum-DemiBoldD4.woff'); }
+		@font-face { font-family: 'WOFF IRANSansX-Bold'; src: url('fonts/woff/IRANSansXFaNum-BoldD4.woff'); }
+		@font-face { font-family: 'WOFF IRANSansX-ExtraBold'; src: url('fonts/woff/IRANSansXFaNum-ExtraBoldD4.woff'); }
+		@font-face { font-family: 'WOFF IRANSansX-Black'; src: url('fonts/woff/IRANSansXFaNum-BlackD4.woff'); }
+		@font-face { font-family: 'WOFF IRANSansX-ExtraBlack'; src: url('fonts/woff/IRANSansXFaNum-ExtraBlackD4.woff'); }
+		@font-face { font-family: 'WOFF IRANSansX-Heavy'; src: url('fonts/woff/IRANSansXFaNum-HeavyD4.woff'); }
+		@font-face { font-family: 'WOFF2 IRANSansX-Thin'; src: url('fonts/woff2/IRANSansXFaNum-ThinD4.woff2'); }
+		@font-face { font-family: 'WOFF2 IRANSansX-UltraLight'; src: url('fonts/woff2/IRANSansXFaNum-UltraLightD4.woff2'); }
+		@font-face { font-family: 'WOFF2 IRANSansX-Light'; src: url('fonts/woff2/IRANSansXFaNum-LightD4.woff2'); }
+		@font-face { font-family: 'WOFF2 IRANSansX-Regular'; src: url('fonts/woff2/IRANSansXFaNum-RegularD4.woff2'); }
+		@font-face { font-family: 'WOFF2 IRANSansX-Medium'; src: url('fonts/woff2/IRANSansXFaNum-MediumD4.woff2'); }
+		@font-face { font-family: 'WOFF2 IRANSansX-DemiBold'; src: url('fonts/woff2/IRANSansXFaNum-DemiBoldD4.woff2'); }
+		@font-face { font-family: 'WOFF2 IRANSansX-Bold'; src: url('fonts/woff2/IRANSansXFaNum-BoldD4.woff2'); }
+		@font-face { font-family: 'WOFF2 IRANSansX-ExtraBold'; src: url('fonts/woff2/IRANSansXFaNum-ExtraBoldD4.woff2'); }
+		@font-face { font-family: 'WOFF2 IRANSansX-Black'; src: url('fonts/woff2/IRANSansXFaNum-BlackD4.woff2'); }
+		@font-face { font-family: 'WOFF2 IRANSansX-ExtraBlack'; src: url('fonts/woff2/IRANSansXFaNum-ExtraBlackD4.woff2'); }
+		@font-face { font-family: 'WOFF2 IRANSansX-Heavy'; src: url('fonts/woff2/IRANSansXFaNum-HeavyD4.woff2'); }
+		
+		body { 
+			font-family: "WOFF IRANSansX-thin"; 
+			font-feature-settings: "kern" on, "liga" on, "calt" on;
+			-moz-font-feature-settings: "kern" on, "liga" on, "calt" on;
+			-webkit-font-feature-settings: "kern" on, "liga" on, "calt" on;
+			-ms-font-feature-settings: "kern" on, "liga" on, "calt" on;
+			-o-font-feature-settings: "kern" on, "liga" on, "calt" on;
+		}
+		p { padding: 5px; margin: 10px; }
+		.features {
+			font-size:x-small;
+			font:sans-serif;
+		}
+		.label{
+			font-family: sans-serif;
+			font-size: x-small;
+			color: grey;
+		}
+		span#p08 { font-size: 10pt; }
+		span#p09 { font-size: 11pt; }
+		span#p10 { font-size: 12pt; }
+		span#p11 { font-size: 13pt; }
+		span#p12 { font-size: 14pt; }
+		span#p13 { font-size: 15pt; }
+		span#p14 { font-size: 16pt; }
+		span#p15 { font-size: 17pt; }
+		span#p16 { font-size: 18pt; }
+		span#largeParagraph { font-size: 36pt; }
+		span#veryLargeParagraph { font-size: 72pt; }		
+	</style>
+	<script type="text/javascript">
+		function updateParagraph() {
+			// update paragraph text based on user input:
+			var txt = document.getElementById('textInput');
+			var paragraphs = ['p08','p09','p10','p11','p12','p13','p14','p15','p16','largeParagraph','veryLargeParagraph'];
+			for (i = 0; i < paragraphs.length; i++) {
+				paragraphID = paragraphs[i];
+				var paragraph = document.getElementById(paragraphID);
+				paragraph.textContent = txt.value;
+			}
+		}
+		function updateFeatures() {
+			// update features based on user input:
+			// first, get feature on/off line:
+			var cssCode = "";
+			var codeLine = "";
+			var checkboxes = document.getElementsByClassName("otFeature")
+			for (i = 0; i < checkboxes.length; i++) {
+				var checkbox = checkboxes[i];
+				codeLine += '"'+checkbox.name+'" ';
+				codeLine += checkbox.checked ? 'on, ' : 'off, ';
+				if (checkbox.name=="kern") {
+					cssCode += "font-kerning: "
+					cssCode += checkbox.checked ? 'normal; ' : 'none; ';
+				} else if (checkbox.name=="liga") {
+					codeLine += '"clig" '
+					codeLine += checkbox.checked ? 'on, ' : 'off, ';
+					cssCode += "font-variant-ligatures: "
+					cssCode += checkbox.checked ? 'common-ligatures contextual; ' : 'no-common-ligatures no-contextual; ';
+				} else if (checkbox.name=="dlig") {
+					cssCode += "font-variant-ligatures: "
+					cssCode += checkbox.checked ? 'discretionary-ligatures; ' : 'no-discretionary-ligatures; ';
+				} else if (checkbox.name=="hlig") {
+					cssCode += "font-variant-ligatures: "
+					cssCode += checkbox.checked ? 'historical-ligatures; ' : 'no-historical-ligatures; ';
+				}
+			}
+			codeLine = codeLine.slice(0, -2)
+			
+			// then, apply line for every browser:
+			var prefixes = ["","-moz-","-webkit-","-ms-","-o-",];
+			var suffix = "font-feature-settings: "
+			for (i = 0; i < prefixes.length; i++) {
+				var prefix = prefixes[i];
+				cssCode += prefix
+				cssCode += suffix
+				cssCode += codeLine
+				cssCode += "; "
+			}
+			
+			document.getElementById('fontTestBody').style.cssText = cssCode;
+			document.getElementById('featureLine').innerHTML = cssCode.replace(/;/g,";<br/>");
+			changeFont();
+		}
+		function changeFont() {
+			var selector = document.getElementById('fontFamilySelector');
+			var selected_index = selector.selectedIndex;
+			var selected_option_text = selector.options[selected_index].text;
+			document.getElementById('fontTestBody').style.fontFamily = selected_option_text;
+		}
+		function setDefaultText(defaultText) {
+			document.getElementById('textInput').value = decodeEntities(defaultText);
+			updateParagraph();
+		}
+		function setLat1() {
+			var lat1 = "abcdefghijklm nopqrstuvwxyz ABCDEFGHIJKLM NOPQRSTUVWXYZ &Agrave;&Aacute;&Acirc;&Atilde;&Auml;&Aring;&AElig;&Ccedil;&Egrave;&Eacute;&Ecirc;&Euml;&Igrave;&Iacute;&Icirc;&Iuml;&ETH;&Ntilde;&Ograve;&Oacute;&Ocirc;&Otilde;&Ouml;&Oslash;&OElig;&THORN;&Ugrave;&Uacute;&Ucirc;&Uuml;&Yacute;&Yuml; &agrave;&aacute;&acirc;&atilde;&auml;&aring;&aelig;&ccedil;&egrave;&eacute;&ecirc;&euml;&igrave;&iacute;&icirc;&iuml;&eth;&ntilde;&ograve;&oacute;&ocirc;&otilde;&ouml;&oslash;&oelig;&thorn;&szlig;&ugrave;&uacute;&ucirc;&uuml;&yacute;&yuml; .,:;&middot;&hellip;&iquest;?&iexcl;!&laquo;&raquo;&lsaquo;&rsaquo; /|&brvbar;\()[]{}_-&ndash;&mdash;&sbquo;&bdquo;&lsquo;&rsquo;&ldquo;&rdquo;&quot;&#x27; #&amp;&sect;@&bull;&shy;*&dagger;&Dagger;&para; +&times;&divide;&plusmn;=&lt;&gt;&not;&mu; ^~&acute;`&circ;&macr;&tilde;&uml;&cedil; &yen;&euro;&pound;$&cent;&curren;&fnof; &trade;&reg;&copy; 1234567890 &ordf;&ordm;&deg;%&permil; &sup1;&sup2;&sup3;&frac14;&frac12;&frac34;";
+			return setDefaultText(lat1);
+		}
+		function setCharset() {
+			var completeCharSet = "&#x0041; &#x0042; &#x0043; &#x0044; &#x0045; &#x0046; &#x0047; &#x0048; &#x0049; &#x004A; &#x004B; &#x004C; &#x004D; &#x004E; &#x004F; &#x0050; &#x0051; &#x0052; &#x0053; &#x0054; &#x0055; &#x0056; &#x0057; &#x0058; &#x0059; &#x005A; &#x0061; &#x0062; &#x0063; &#x0064; &#x0065; &#x0066; &#x0067; &#x0068; &#x0069; &#x006A; &#x006B; &#x006C; &#x006D; &#x006E; &#x006F; &#x0070; &#x0071; &#x0072; &#x0073; &#x0074; &#x0075; &#x0076; &#x0077; &#x0078; &#x0079; &#x007A; &#x0621; &#x0627; &#xFE8E; &#x0623; &#xFE84; &#x0625; &#xFE88; &#x0622; &#xFE82; &#x0671; &#xFB51; &#x066E; &#x0628; &#xFE90; &#xFE92; &#xFE91; &#x067E; &#xFB57; &#xFB59; &#xFB58; &#x062A; &#xFE96; &#xFE98; &#xFE97; &#x062B; &#xFE9A; &#xFE9C; &#xFE9B; &#x062C; &#xFE9E; &#xFEA0; &#xFE9F; &#x0686; &#xFB7B; &#xFB7D; &#xFB7C; &#x062D; &#xFEA2; &#xFEA4; &#xFEA3; &#x062E; &#xFEA6; &#xFEA8; &#xFEA7; &#x062F; &#xFEAA; &#x0630; &#xFEAC; &#x0631; &#xFEAE; &#x0632; &#xFEB0; &#x0698; &#xFB8B; &#x0633; &#xFEB2; &#xFEB4; &#xFEB3; &#x0634; &#xFEB6; &#xFEB8; &#xFEB7; &#x0635; &#xFEBA; &#xFEBC; &#xFEBB; &#x0636; &#xFEBE; &#xFEC0; &#xFEBF; &#x0637; &#xFEC2; &#xFEC4; &#xFEC3; &#x0638; &#xFEC6; &#xFEC8; &#xFEC7; &#x0639; &#xFECA; &#xFECC; &#xFECB; &#x063A; &#xFECE; &#xFED0; &#xFECF; &#x0641; &#xFED2; &#xFED4; &#xFED3; &#x06A4; &#xFB6B; &#xFB6D; &#xFB6C; &#x06A1; &#x066F; &#x0642; &#xFED6; &#xFED8; &#xFED7; &#x0643; &#xFEDA; &#xFEDC; &#xFEDB; &#x06A9; &#xFB8F; &#xFB91; &#xFB90; &#x06AF; &#xFB93; &#xFB95; &#xFB94; &#x0644; &#xFEDE; &#xFEE0; &#xFEDF; &#x0645; &#xFEE2; &#xFEE4; &#xFEE3; &#x0646; &#xFEE6; &#xFEE8; &#xFEE7; &#x06BA; &#xFB9F; &#x0647; &#xFEEA; &#xFEEC; &#xFEEB; &#x06C0; &#xFBA4; &#xFBA5; &#x0629; &#xFE94; &#x0648; &#xFEEE; &#x0624; &#xFE86; &#x0649; &#xFEF0; &#x064A; &#xFEF2; &#xFEF4; &#xFEF3; &#x0626; &#xFE8A; &#xFE8C; &#xFE8B; &#x06CC; &#xFBFD; &#xFBFF; &#xFBFE; &#x0640; &#xFEFB; &#xFEFC; &#xFEF7; &#xFEF8; &#xFEF9; &#xFEFA; &#xFEF5; &#xFEF6; &#xFDF2; &#x0030; &#x0031; &#x0032; &#x0033; &#x0034; &#x0035; &#x0036; &#x0037; &#x0038; &#x0039; &#x066B; &#x066C; &#x0660; &#x0661; &#x0662; &#x0663; &#x0664; &#x0665; &#x0666; &#x0667; &#x0668; &#x0669; &#x06F0; &#x06F1; &#x06F2; &#x06F3; &#x06F4; &#x06F5; &#x06F6; &#x06F7; &#x06F8; &#x06F9; &#x002E; &#x002C; &#x003A; &#x003B; &#x0021; &#x003F; &#x002A; &#x0023; &#x002F; &#x005C; &#x0028; &#x0029; &#x007B; &#x007D; &#x005B; &#x005D; &#x002D; &#x005F; &#x201E; &#x201C; &#x201D; &#x2018; &#x2019; &#x00AB; &#x00BB; &#x2039; &#x203A; &#x0022; &#x0027; &#x060C; &#x061B; &#x061F; &#x066D; &#xFD3E; &#xFD3F; &#x200A; &#x0020; &#x00A0; &#x2009; &#x200B; &#x200D; &#x200C; &#x000D; &#xFEFF; &#xFDFC; &#x0024; &#x002B; &#x2212; &#x00D7; &#x00F7; &#x003D; &#x2260; &#x0025; &#x0040; &#x0026; &#x066A; &#xFBB2; &#xFBB3; &#xFBB4; &#xFBB5; &#xFBB9; &#xFBB6; &#x0670; &#x0656; &#x0654; &#x0655; &#x064B; &#x064C; &#x064D; &#x064E; &#x064F; &#x0650; &#x0651; &#x0652; &#x0653;";
+			setDefaultText(completeCharSet);
+		}
+		function decodeEntities(string){
+			var elem = document.createElement('div');
+			elem.innerHTML = string;
+			return elem.textContent;
+		}
+	</script>
+</head>
+<body id="fontTestBody">
+	<select size="1" id="fontFamilySelector" name="fontFamilySelector" onchange="changeFont()">
+		<option value="IRANSansX-thinD4.woff">WOFF IRANSansX-thin</option>
+		<option value="IRANSansX-UltraLightD4.woff">WOFF IRANSansX-UltraLight</option>
+		<option value="IRANSansX-lightD4.woff">WOFF IRANSansX-light</option>
+		<option value="IRANSansX-regularD4.woff">WOFF IRANSansX-regular</option>
+		<option value="IRANSansX-mediumD4.woff">WOFF IRANSansX-medium</option>
+		<option value="IRANSansX-demiboldD4.woff">WOFF IRANSansX-demibold</option>
+		<option value="IRANSansX-boldD4.woff">WOFF IRANSansX-bold</option>
+		<option value="IRANSansX-extraboldD4.woff">WOFF IRANSansX-extrabold</option>
+		<option value="IRANSansX-blackD4.woff">WOFF IRANSansX-black</option>
+		<option value="IRANSansX-extrablackD4.woff">WOFF IRANSansX-extrablack</option>
+		<option value="IRANSansX-heavyD4.woff">WOFF IRANSansX-heavy</option>
+		<option value="IRANSansX-thinD4.woff2">WOFF2 IRANSansX-thin</option>
+		<option value="IRANSansX-UltraLightD4.woff2">WOFF2 IRANSansX-UltraLight</option>
+		<option value="IRANSansX-lightD4.woff2">WOFF2 IRANSansX-light</option>
+		<option value="IRANSansX-regularD4.woff2">WOFF2 IRANSansX-regular</option>
+		<option value="IRANSansX-mediumD4.woff2">WOFF2 IRANSansX-medium</option>
+		<option value="IRANSansX-demiboldD4.woff2">WOFF2 IRANSansX-demibold</option>
+		<option value="IRANSansX-boldD4.woff2">WOFF2 IRANSansX-bold</option>
+		<option value="IRANSansX-extraboldD4.woff2">WOFF2 IRANSansX-extrabold</option>
+		<option value="IRANSansX-blackD4.woff2">WOFF2 IRANSansX-black</option>
+		<option value="IRANSansX-extrablackD4.woff2">WOFF2 IRANSansX-extrablack</option>
+		<option value="IRANSansX-heavyD4.woff2">WOFF2 IRANSansX-heavy</option>
+	</select>
+	<input type="text" value="Type Text Here." id="textInput" onclick="this.select();" onkeyup="updateParagraph()" size="80" />
+	<p class="features">
+		<a href="javascript:setCharset();">Charset</a>
+
+		&emsp;
+
+		
+	</p>
+	<p class="features" id="featureLine" style="display:none;">font-feature-settings: "kern" on, "liga" on, "calt" on;</p>
+	<p><span class="label">10</span> <span id="p08">
+چو ایران نَباشَد تَنِ مَن مَباد 
+بِدين بوم و بَر زنده يِک تَن مَباد
+</span></p>
+
+	<p><span class="label">11</span> <span id="p09">
+چو ایران نَباشَد تَنِ مَن مَباد 
+بِدين بوم و بَر زنده يِک تَن مَباد
+</span></p>
+
+	<p><span class="label">12</span> <span id="p10">
+چو ایران نَباشَد تَنِ مَن مَباد 
+بِدين بوم و بَر زنده يِک تَن مَباد
+</span></p>
+
+	<p><span class="label">13</span> <span id="p11">
+چو ایران نَباشَد تَنِ مَن مَباد 
+بِدين بوم و بَر زنده يِک تَن مَباد
+</span></p>
+
+	<p><span class="label">14</span> <span id="p12">
+چو ایران نَباشَد تَنِ مَن مَباد 
+بِدين بوم و بَر زنده يِک تَن مَباد
+</span></p>
+
+	<p><span class="label">15</span> <span id="p13">
+چو ایران نَباشَد تَنِ مَن مَباد 
+بِدين بوم و بَر زنده يِک تَن مَباد
+</span></p>
+
+	<p><span class="label">16</span> <span id="p14">
+چو ایران نَباشَد تَنِ مَن مَباد 
+بِدين بوم و بَر زنده يِک تَن مَباد
+</span></p>
+
+	<p><span class="label">17</span> <span id="p15">
+چو ایران نَباشَد تَنِ مَن مَباد 
+بِدين بوم و بَر زنده يِک تَن مَباد
+</span></p>
+
+	<p><span class="label">18</span> <span id="p16">
+چو ایران نَباشَد تَنِ مَن مَباد 
+بِدين بوم و بَر زنده يِک تَن مَباد
+</span></p>
+
+	<p><span id="largeParagraph">چو ایران نَباشَد تَنِ مَن مَباد 
+بِدين بوم و بَر زنده يِک تَن مَباد
+</span></p>
+
+	<p><span id="veryLargeParagraph">چو ایران نَباشَد تَنِ مَن مَباد 
+بِدين بوم و بَر زنده يِک تَن مَباد
+</span></p>
+
+</body>

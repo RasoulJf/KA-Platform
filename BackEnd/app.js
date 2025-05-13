@@ -11,6 +11,7 @@ import studentActivityRouter from "./Routes/StudentActivity.js";
 import studentRewardRouter from "./Routes/StudentReward.js";
 import updateStatusRouter from "./Routes/UpdateStatus.js";
 import adminActivityRouter from "./Routes/AdminActivity.js";
+import userRouter from "./Routes/User.js";
 
 const __filename = fileURLToPath(import.meta.url);
 export const __dirname = path.dirname(__filename);
@@ -29,6 +30,7 @@ app.use("/api/reward",rewardRouter)
 app.use("/api/studentActivity",studentActivityRouter)
 app.use("/api/adminActivity",adminActivityRouter)
 app.use("/api/studentReward",studentRewardRouter)
+app.use("/api/upload-users",userRouter)
 
 
 app.use("*", (req, res, next) => { 

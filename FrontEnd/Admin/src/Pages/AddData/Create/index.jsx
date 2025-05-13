@@ -78,7 +78,7 @@ export default function CreateNewData({ Open }) {
         <>
             <img src={union} className='absolute scale-75 top-[-4rem] left-[-10rem] z-0' alt="" />
 
-            <div className={`${!Open ? "w-[80%]" : "w-[94%]"} p-8 transition-all duration-500 flex flex-col h-screen relative z-10`}>
+            <div className={`${!Open ? "w-[80%]" : "w-[94%]"} p-8 transition-all duration-500 flex flex-col h-screen overflow-y-scroll relative z-10`}>
 
                 {/* هدر صفحه */}
                 <div className="flex justify-between items-center h-[5vh] mb-6">
@@ -132,7 +132,7 @@ export default function CreateNewData({ Open }) {
                 </div>
 
                 {/* بخش تب‌ها و فرم */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 flex-grow">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 flex-grow h-[60vh]">
                     {/* تب‌ها */}
                     <div className="flex mb-6 bg-gray-100 rounded-lg p-1"> {/* Changed background for tabs container */}
                         <button
@@ -281,7 +281,7 @@ export default function CreateNewData({ Open }) {
 
                             {/* ردیف چهارم: شرح اطلاعات (لیبل بالا) */}
 
-                            <div className="flex items-center justify-between gap-x-3 bg-gray-50 p-3 rounded-md border border-gray-200">
+                            <div className="flex items-center bg-gray-50 p-3 rounded-md border border-gray-200">
                                 <textarea
                                     id="description"
                                     name="description"
@@ -291,7 +291,7 @@ export default function CreateNewData({ Open }) {
                                     className="w-full px-3 py-2 h-[5vh] border-0 focus:ring-0 focus:outline-none text-sm text-right bg-transparent"
                                     placeholder="توضیحات بیشتر در مورد فعالیت..."
                                 ></textarea>
-                                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2 text-right w-10">شرح اطلاعات</label>
+                                <label htmlFor="description" className="w-20 text-sm font-medium text-gray-700 mb-2 text-right">شرح اطلاعات</label>
 
                             </div>
 

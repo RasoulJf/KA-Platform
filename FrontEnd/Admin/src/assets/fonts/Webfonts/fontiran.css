@@ -1,0 +1,109 @@
+/**
+*
+*	Name:			IRANSansX Fonts
+*	Version:			3
+*	Author:			Moslem Ebrahimi (moslemebrahimi.com)
+*	Created on:		Apr 22, 2021
+*	Updated on:		Jul 12, 2023
+*	Website:			http://fontiran.com
+*	Copyright:		Commercial/Proprietary Software
+--------------------------------------------------------------------------------------
+فونتایران سنس Xا یک نرم افزار مالکیتی محسوب می شود. جهت آگاهی از قوانین استفاده از این فونت ها لطفا به وب سایت (فونت ایران دات کام) مراجعه نمایید
+--------------------------------------------------------------------------------------
+IRANSansXFaNum fonts are considered a proprietary software. To gain information about the laws regarding the use of these fonts, please visit www.fontiran.com 
+--------------------------------------------------------------------------------------
+This set of fonts are used in this project under the license: (.....)
+------------------------------------------------------------------------------------- fonts/-
+*	
+**/
+
+
+@font-face {
+	font-family: IRANSansX;
+	font-style: normal;
+	font-weight: 100;
+	src: url('fonts/woff/IRANSansXFaNum-ThinD4.woff') format('woff'),   
+	url('fonts/woff2/IRANSansXFaNum-ThinD4.woff2') format('woff2');		
+}
+
+@font-face {
+	font-family: IRANSansX;
+	font-style: normal;
+	font-weight: 200;
+	src: url('fonts/woff/IRANSansXFaNum-UltraLightD4.woff') format('woff'),   
+	url('fonts/woff2/IRANSansXFaNum-UltraLightD4.woff2') format('woff2');	
+}
+
+@font-face {
+	font-family: IRANSansX;
+	font-style: normal;
+	font-weight: 300;
+	src: url('fonts/woff/IRANSansXFaNum-LightD4.woff') format('woff'),   
+	url('fonts/woff2/IRANSansXFaNum-LightD4.woff2') format('woff2');		 
+}
+
+@font-face {
+	font-family: IRANSansX;
+	font-style: normal;
+	font-weight: 500;
+	src: url('fonts/woff/IRANSansXFaNum-MediumD4.woff') format('woff'),   
+	url('fonts/woff2/IRANSansXFaNum-MediumD4.woff2') format('woff2');		 
+}
+
+@font-face {
+	font-family: IRANSansX;
+	font-style: normal;
+	font-weight: 600;
+	src: url('fonts/woff/IRANSansXFaNum-DemiBoldD4.woff') format('woff'),   
+	url('fonts/woff2/IRANSansXFaNum-DemiBoldD4.woff2') format('woff2');	 
+}
+
+@font-face {
+	font-family: IRANSansX;
+	font-style: normal;
+	font-weight: 800;
+	src: url('fonts/woff/IRANSansXFaNum-ExtraBoldD4.woff') format('woff'),   
+	url('fonts/woff2/IRANSansXFaNum-ExtraBoldD4.woff2') format('woff2');		 
+}
+
+@font-face {
+	font-family: IRANSansX;
+	font-style: normal;
+	font-weight: 900;
+	src: url('fonts/woff/IRANSansXFaNum-BlackD4.woff') format('woff'),   
+	url('fonts/woff2/IRANSansXFaNum-BlackD4.woff2') format('woff2');		 
+}
+
+@font-face {
+	font-family: IRANSansX;
+	font-style: normal;
+	font-weight: 950;
+	src: url('fonts/woff/IRANSansXFaNum-ExtraBlackD4.woff') format('woff'),   
+	url('fonts/woff2/IRANSansXFaNum-ExtraBlackD4.woff2') format('woff2');		 
+}
+
+@font-face {
+	font-family: IRANSansX;
+	font-style: normal;
+	font-weight: 1000;
+	src: url('fonts/woff/IRANSansXFaNum-HeavyD4.woff') format('woff'),   
+	url('fonts/woff2/IRANSansXFaNum-HeavyD4.woff2') format('woff2');		 
+}
+
+@font-face {
+	font-family: IRANSansX;
+	font-style: normal;
+	font-weight: bold;
+	src: url('fonts/woff/IRANSansXFaNum-BoldD4.woff') format('woff'),   
+	url('fonts/woff2/IRANSansXFaNum-BoldD4.woff2') format('woff2');	 
+}
+
+@font-face {
+	font-family: IRANSansX;
+	font-style: normal;
+	font-weight: normal;
+	src: url('fonts/woff/IRANSansXFaNum-RegularD4.woff') format('woff'),   
+	url('fonts/woff2/IRANSansXFaNum-RegularD4.woff2') format('woff2');	
+}
+
+
