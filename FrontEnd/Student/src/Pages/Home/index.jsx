@@ -1,6 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 // import union from '../../assets/images/Union4.png'; // اگر هنوز از این تصویر پس‌زمینه استفاده می‌کنید
 import frame156 from '../../assets/images/Frame156.png'; // برای کارت جمع کل امتیازات
+import frame21 from '../../assets/images/Frame21.png'; // برای کارت جمع کل امتیازات
+import frame22 from '../../assets/images/Frame22.png'; // برای کارت جمع کل امتیازات
+
+
 // import frame6 from '../../assets/images/Frame6.png'; // اگر برای کارت‌های میانی نیاز است یا پس‌زمینه جدیدی دارند
 
 import { BiSolidSchool } from "react-icons/bi";
@@ -55,10 +59,10 @@ export default function Home({ Open }) { // نام کامپوننت را به St
   const week = new Intl.DateTimeFormat('fa-IR', { weekday: 'short' }).format(date);
 
   const activityData = [
-    { title: "فعالیت آموزشی", score: "۲۰۳", progress: 75, color: "purple-600", bgColor: "bg-purple-600", scoreBoxColor: "bg-purple-500" },
-    { title: "فعالیت داوطلبانه و توسعه فردی", score: "۲۰۳", progress: 50, color: "pink-500", bgColor: "bg-pink-500", scoreBoxColor: "bg-pink-500" },
-    { title: "فعالیت شغلی", score: "۲۰۳", progress: 60, color: "amber-500", bgColor: "bg-amber-500", scoreBoxColor: "bg-yellow-500" },
-    { title: "امتیازات کسر شده", score: "-۲۰", progress: 90, color: "gray-500", bgColor: "bg-gray-500", scoreBoxColor: "bg-gray-400" },
+    { title: "فعالیت آموزشی", score: "۲۰۳", progress: 75, color: "text-[#652D90]", bgColor: "bg-[#652D90]", scoreBoxColor: "bg-[#652D90]" },
+    { title: "فعالیت داوطلبانه و توسعه فردی", score: "۲۰۳", progress: 50, color: "text-[#E0195B]", bgColor: "bg-[#E0195B]", scoreBoxColor: "bg-[#E0195B]" },
+    { title: "فعالیت شغلی", score: "۲۰۳", progress: 60, color: "text-[#F8A41D]", bgColor: "bg-[#F8A41D]", scoreBoxColor: "bg-[#F8A41D]" },
+    { title: "امتیازات کسر شده", score: "-۲۰", progress: 90, color: "text-[#787674]", bgColor: "bg-[#787674]", scoreBoxColor: "bg-[#787674]" },
   ];
 
   const topStudentsData = [
@@ -112,8 +116,8 @@ export default function Home({ Open }) { // نام کامپوننت را به St
         {/* بخش بالایی: جمع کل امتیازات و فعالیت‌ها */}
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           {/* کارت جمع کل امتیازات */}
-          <div className="relative lg:w-[35%] xl:w-[30%] h-[220px] sm:h-[250px] rounded-lg overflow-hidden p-4 flex flex-col justify-around items-center bg-gradient-to-br from-indigo-50 to-purple-100 shadow-lg">
-            <img src={frame156} className="absolute z-0 h-full w-full object-cover top-0 opacity-30" alt="" />
+          <div className="relative lg:w-[35%] xl:w-[30%] h-[220px] sm:h-[250px] rounded-lg overflow-hidden p-4 flex flex-col justify-around items-center  shadow-lg">
+            <img src={frame21} className="absolute z-0 h-full w-full object-cover scale-110 top-[-10px] " alt="" />
             {/* Decorative dots - simplified */}
             <span className="absolute top-10 left-10 w-3 h-3 bg-teal-400 rounded-full opacity-50 z-10"></span>
             <span className="absolute top-1/4 right-8 w-2 h-2 bg-pink-400 rounded-full opacity-50 z-10"></span>
@@ -129,19 +133,20 @@ export default function Home({ Open }) { // نام کامپوننت را به St
 
           {/* بخش فعالیت‌ها */}
           <div className="lg:w-[65%] xl:w-[70%] bg-gray-50 p-4 rounded-lg shadow-lg h-[220px] sm:h-[250px] flex flex-col justify-center">
+            
             {activityData.map((activity, idx) => (
-              <div key={idx} className="flex items-center gap-2 sm:gap-3 mb-2 last:mb-0">
-                <div className={`w-10 h-10 sm:w-12 sm:h-8 flex-shrink-0 ${activity.scoreBoxColor} text-white text-xs sm:text-sm font-semibold rounded flex items-center justify-center`}>
+              <div key={idx} className="flex h-20 gap-2 sm:gap-3 mb-2 last:mb-0">
+                <div className={`w-10 h-20 sm:w-12 sm:h-12 flex-shrink-0 ${activity.scoreBoxColor} text-white text-xs sm:text-sm font-semibold rounded flex items-center justify-center`}>
                   {activity.score}
                 </div>
                 <div className="flex-grow text-right">
                   <div className="flex justify-between items-center mb-1">
-                    <span className={`text-xs sm:text-sm font-medium text-gray-700`}>{activity.title}</span>
-                    <Link to="#" className="text-xs text-[#19A297] hover:underline">مشاهده</Link>
+                    <span className={`text-xs sm:text-sm font-medium ${activity.color}`}>{activity.title}</span>
+                    <Link to="#" className={`text-xs ${activity.color} hover:underline`}>مشاهده</Link>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 sm:h-2.5">
+                  <div className="w-full bg-gray-200 rounded-sm h-5 sm:h-5">
                     <div
-                      className={`${activity.bgColor} h-2 sm:h-2.5 rounded-full`}
+                      className={`${activity.bgColor} h-5 sm:h-5 rounded-sm`}
                       style={{ width: `${activity.progress}%` }}
                     ></div>
                   </div>
@@ -154,17 +159,17 @@ export default function Home({ Open }) { // نام کامپوننت را به St
         {/* بخش میانی: کارت‌های پاداش و توکن */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           {/* کارت پاداش‌های پرداخت‌شده */}
-          <div className="relative bg-gradient-to-r from-purple-50 via-fuchsia-50 to-pink-50 rounded-lg overflow-hidden h-[100px] sm:h-[12vh] p-4 sm:p-6 flex items-center justify-between shadow-lg">
-            {/* <img src={frame6} className="absolute z-0 h-full w-full object-contain scale-125 -right-5 top-0 opacity-20" alt="" /> */}
+          <div className="relative bg-gradient-to-r rounded-lg overflow-hidden h-[100px] sm:h-[12vh] p-4 sm:p-6 flex items-center justify-between shadow-lg">
+            <img src={frame22} className="absolute z-0 h-full w-full object-contain scale-150 -right-0 top-0" alt="" />
             <div className="absolute z-0 top-0 right-0 h-full w-1/3 bg-white/30" style={{ clipPath: 'polygon(25% 0%, 100% 0%, 100% 100%, 0% 100%)' }}></div>
             <h2 className="text-[#202A5A] font-semibold text-base sm:text-lg z-10">پاداش های پرداخت شده</h2>
             <p className="text-[#202A5A] font-bold text-xl sm:text-2xl z-10">۲۳,۷۸۶</p>
           </div>
 
           {/* کارت توکن‌های قابل استفاده */}
-          <div className="relative bg-gradient-to-r from-indigo-50 via-sky-50 to-cyan-50 rounded-lg overflow-hidden h-[100px] sm:h-[12vh] p-4 sm:p-6 flex items-center justify-between shadow-lg">
-            {/* <img src={frame6} className="absolute z-0 h-full w-full object-contain scale-125 -right-5 top-0 opacity-20" alt="" /> */}
-            <div className="absolute z-0 top-0 right-0 h-full w-1/3 bg-white/30" style={{ clipPath: 'polygon(25% 0%, 100% 0%, 100% 100%, 0% 100%)' }}></div>
+          <div className="relative bg-gradient-to-r rounded-lg overflow-hidden h-[100px] sm:h-[12vh] p-4 sm:p-6 flex items-center justify-between shadow-lg">
+          <img src={frame22} className="absolute z-0 h-full w-full object-contain scale-150 -right-0 top-0" alt="" />
+          <div className="absolute z-0 top-0 right-0 h-full w-1/3 bg-white/30" style={{ clipPath: 'polygon(25% 0%, 100% 0%, 100% 100%, 0% 100%)' }}></div>
             <h2 className="text-[#202A5A] font-semibold text-base sm:text-lg z-10">توکن های قابل استفاده</h2>
             <p className="text-[#202A5A] font-bold text-xl sm:text-2xl z-10">۲۳,۷۸۶</p>
           </div>
@@ -174,7 +179,7 @@ export default function Home({ Open }) { // نام کامپوننت را به St
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           {/* جدول برترین های پایه */}
           <div className="lg:w-1/2 flex flex-col">
-            <button className="w-full bg-purple-100 hover:bg-purple-200 text-purple-600 py-3 rounded-t-lg font-semibold text-sm sm:text-base flex items-center justify-center gap-2 transition-colors">
+            <button className="w-full bg-[#F5E8FF] hover:bg-purple-200 text-purple-600 py-3 rounded-t-lg font-semibold text-sm sm:text-base flex items-center justify-center gap-2 transition-colors">
               <FaPlus /> ثبت پاداش جدید
             </button>
             <div className="flex-grow overflow-hidden border-2 border-t-0 border-gray-200 rounded-b-lg shadow-lg">
@@ -204,7 +209,7 @@ export default function Home({ Open }) { // نام کامپوننت را به St
 
           {/* جدول رتبه شما */}
           <div className="lg:w-1/2 flex flex-col">
-            <button className="w-full bg-pink-100 hover:bg-pink-200 text-pink-600 py-3 rounded-t-lg font-semibold text-sm sm:text-base flex items-center justify-center gap-2 transition-colors">
+            <button className="w-full bg-[#FFE8F0] hover:bg-pink-200 text-pink-600 py-3 rounded-t-lg font-semibold text-sm sm:text-base flex items-center justify-center gap-2 transition-colors">
               <FaPlus /> ثبت فعالیت جدید
             </button>
             <div className="flex-grow overflow-hidden border-2 border-t-0 border-gray-200 rounded-b-lg shadow-lg">

@@ -57,11 +57,11 @@ export default function AddActivityModal({ isOpen, onClose, onSubmit }) {
           className="absolute top-4 left-4 text-red-500 hover:text-red-700 transition-colors z-10"
           aria-label="بستن"
         >
-          <IoClose size={28} />
+          <IoClose className='cursor-pointer' size={28} />
         </button>
 
         {/* عنوان مودال */}
-        <h2 className="text-xl sm:text-2xl font-semibold text-center text-indigo-800 mb-6 sm:mb-8">
+        <h2 className="text-xl sm:text-2xl font-semibold text-center text-[#202A5A] mb-6 sm:mb-8">
           فرم ثبت فعالیت
         </h2>
 
@@ -73,7 +73,7 @@ export default function AddActivityModal({ isOpen, onClose, onSubmit }) {
             </label>
             <div
               id="studentName"
-              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-indigo-700 text-sm text-right"
+              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-[#202A5A] text-sm text-right"
             >
               {studentName}
             </div>
@@ -86,7 +86,7 @@ export default function AddActivityModal({ isOpen, onClose, onSubmit }) {
             </label>
             <div
               id="submissionDate"
-              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-indigo-700 text-sm text-right"
+              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-[#202A5A] text-sm text-right"
             >
               {submissionDate}
             </div>
@@ -102,7 +102,7 @@ export default function AddActivityModal({ isOpen, onClose, onSubmit }) {
               value={activityType}
               onChange={(e) => setActivityType(e.target.value)}
               required
-              className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-1 focus:ring-[#19A297] focus:border-[#19A297] text-indigo-700 text-sm text-right appearance-none"
+              className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-1 focus:ring-[#19A297] focus:border-[#19A297] text-[#202A5A] text-sm text-right appearance-none"
             >
               <option value="" disabled className="text-gray-400">انتخاب کنید...</option>
               {activityOptions.map(option => (

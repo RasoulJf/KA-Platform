@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken'
 import HandleERROR from "../Utils/handleError.js";
 export const register=catchAsync(async(req,res,next)=>{
     const {idCode='',password='',role='', ...others}=req.body
-    if(req.role!="superAdmin"){
+    if(role!="superAdmin"){
         return next(new HandleERROR("you don't have permision",400))
     }
     let pass 

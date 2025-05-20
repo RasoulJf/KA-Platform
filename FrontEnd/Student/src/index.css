@@ -48,3 +48,8 @@ button{
 .rtl{
   direction: rtl;
 }
+
+::-webkit-scrollbar{
+  position: absolute;
+  left: 0;
+}

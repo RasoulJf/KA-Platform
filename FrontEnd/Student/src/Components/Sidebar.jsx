@@ -13,7 +13,8 @@ import { MdBackupTable } from "react-icons/md";
 import { IoIosArrowForward } from "react-icons/io";
 import { IoIosArrowBack } from "react-icons/io";
 import { SlArrowDown, SlArrowUp } from "react-icons/sl";
-import frame50 from '../assets/images/Frame50.png'
+import frame1 from '../assets/images/Frame1.png'
+
 
 
 import { Link, useNavigate } from 'react-router-dom';
@@ -47,7 +48,8 @@ export default function Sidebar({ activeNum = 1, getOpen }) {
 
         <div className={`absolute flex-column  right-0 w-[20%] h-screen transition duration-500 ease-in-out bg-[#F3F3F3] ${!open ? "translate-x-[70%]" : ""}`}>
             <div className="w-full h-[21vh] flex justify-center relative items-center bg-linear-to-r from-[#19A297] to-[#59BBAF]">
-                <img src={frame50} className='absolute z-1 h-full w-full object-cover top-[0]' alt="" />
+
+                <img src={frame1} className='absolute z-1 h-full w-full object-cover top-[0]' alt="" />
 
                 <div onClick={() => handleOpen()} className="w-9 z-2 h-9 rounded-[40px] flex items-center justify-center absolute top-20 left-[-18px] cursor-pointer bg-gray-200">
                     {open ? <IoIosArrowForward /> : <IoIosArrowBack />}

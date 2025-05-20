@@ -1,10 +1,12 @@
 import React from 'react';
 import { BiSolidSchool } from "react-icons/bi";
-import { BsChatText } from 'react-icons/bs';
 import { FaPlus } from 'react-icons/fa';
 import { IoNotificationsOutline } from "react-icons/io5";
 import { IoChevronDown } from "react-icons/io5";
+import { SiBasicattentiontoken } from 'react-icons/si';
 import { Link } from 'react-router-dom';
+import Frame25 from '../../assets/images/Frame25.png'
+import Frame26 from '../../assets/images/Frame26.png'
 
 // Sample data for the rewards table
 const rewardsTableData = [
@@ -102,17 +104,21 @@ export default function Rewards({ Open }) {
                 </div>
 
                 {/* کارت‌های آماری بالا */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
                     {rewardsStatCardsData.map((card, idx) => (
                         <div
                             key={idx}
                             className="relative bg-purple-50 p-6 rounded-xl shadow-lg flex flex-col items-center justify-center text-center min-h-[150px] overflow-hidden"
                         >
+                            <img src={Frame25} className="absolute z-0 h-full w-full object-cover scale-110 top-[0px] " alt="" />
+
                             {/* Decorative circles for "کل پاداش‌ها" card */}
                             {card.decorative && (
                                 <>
                                     <div className="absolute top-4 left-6 w-3 h-3 bg-blue-400 rounded-full opacity-70"></div>
                                     <div className="absolute top-8 right-8 w-2.5 h-2.5 bg-yellow-400 rounded-full opacity-70"></div>
+                                    <div className="absolute bottom-20 right-10 w-2 h-2 bg-white rounded-full opacity-90"></div>
+                                    <div className="absolute top-20 left-20 w-2.5 h-2.5 bg-yellow-400 rounded-full opacity-70"></div>
                                     <div className="absolute bottom-6 left-10 w-2 h-2 bg-white rounded-full opacity-90"></div>
                                     <div className="absolute bottom-4 right-6 w-4 h-4 bg-blue-500 rounded-full opacity-70"></div>
                                 </>
@@ -121,51 +127,53 @@ export default function Rewards({ Open }) {
                             <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/20 rounded-full opacity-50"></div>
                             <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-white/10 rounded-full opacity-50"></div>
 
-                            <h2 className="text-md font-semibold text-indigo-700 mb-2 z-10">{card.title}</h2>
-                            <p className="text-3xl font-bold text-indigo-700 z-10">{card.value}</p>
+                            <h2 className="text-md font-semibold text-[#652D90] mb-2 z-10">{card.title}</h2>
+                            <p className="text-3xl font-bold text-[#652D90] z-10">{card.value}</p>
                         </div>
                     ))}
                 </div>
-                 <div className="bg-indigo-50 p-4 sm:p-6 rounded-xl shadow-lg flex flex-col sm:flex-row items-center justify-between mb-8 relative overflow-hidden">
-                                    <div className="absolute -top-8 -left-8 w-24 h-24 bg-white/40 rounded-full opacity-70"></div>
-                                    <div className="absolute -bottom-5 -right-5 w-20 h-20 bg-white/30 rounded-full opacity-70"></div>
-                
-                                    <div className="flex items-center gap-70 z-10 mb-3 sm:mb-0"> {/* تغییر gap و text-right برای چیدمان بهتر */}
-                                    <Link to="/request-reward"> {/* مسیر به صفحه ثبت پاداش */}
+                <div className="bg-indigo-50 p-4 sm:p-6 rounded-xl shadow-lg flex flex-col sm:flex-row items-center justify-between mb-8 relative overflow-hidden">
+                    <div className="absolute -top-8 -left-8 w-24 h-24 bg-white/40 rounded-full opacity-70"></div>
+                    <div className="absolute -bottom-5 -right-5 w-20 h-20 bg-white/30 rounded-full opacity-70"></div>
 
-                                        <button
-                                             // اتصال تابع باز کردن مودال
-                                            className="bg-white text-indigo-500 border border-indigo-300 hover:bg-pink-100 transition-colors px-4 py-2 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                                        >
-                                            <FaPlus />
-                                            اضافه کردن
-                                        </button>
-                                        </Link>
-                                        <p className="text-indigo-700 text-xs sm:text-sm font-medium">برای ثبت فعالیت جدید بر روی اضافه کردن ضربه بزنید</p>
-                                    </div>
-                                    <div className="flex items-center gap-3 z-10">
-                                        <h2 className="text-indigo-600 font-semibold text-lg sm:text-xl">ثبت پاداش جدید</h2>
-                                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-indigo-500 flex items-center justify-center">
-                                            <BsChatText className="text-white text-2xl sm:text-3xl" />
-                                        </div>
-                                    </div>
-                                </div>
+                    <div className="flex items-center gap-70 z-10 mb-3 sm:mb-0"> {/* تغییر gap و text-right برای چیدمان بهتر */}
+                    <img src={Frame26} className="absolute z-0 h-full w-full object-cover scale-110 top-[0px] " alt="" />
+
+                        <Link to="/request-reward" className='z-10'> {/* مسیر به صفحه ثبت پاداش */}
+
+                            <button
+                                // اتصال تابع باز کردن مودال
+                                className="bg-white cursor-pointer text-[#652D90] z-10 hover:scale-110 transition-transform duration-100 px-4 py-2 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1.5"
+                            >
+                                <FaPlus />
+                                اضافه کردن
+                            </button>
+                        </Link>
+                        <p className="text-[#652D90] text-xs sm:text-sm font-medium z-10">برای ثبت فعالیت جدید بر روی اضافه کردن ضربه بزنید</p>
+                    </div>
+                    <div className="flex items-center gap-3 z-10">
+                        <h2 className="text-[#652D90] font-semibold text-lg sm:text-xl">ثبت پاداش جدید</h2>
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#652D90] flex items-center justify-center">
+                            <SiBasicattentiontoken className="text-white text-2xl sm:text-3xl" />
+                        </div>
+                    </div>
+                </div>
 
                 {/* فیلترها و عنوان جدول */}
                 <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
-                <div className="flex flex-wrap gap-3">
-                    {['عنوان', 'وضعیت', 'تاریخ'].map(filterName => (
-                        <button key={filterName} className="bg-white border border-gray-300 text-gray-700 px-4 py-2.5 rounded-lg text-sm flex items-center justify-between min-w-[120px] hover:border-gray-400 transition-colors">
-                            <span>{filterName}</span>
-                            <IoChevronDown className="text-gray-500" />
-                        </button>
-                    ))}
-                </div>
+                    <div className="flex flex-wrap gap-3">
+                        {['عنوان', 'وضعیت', 'تاریخ'].map(filterName => (
+                            <button key={filterName} className="bg-white border border-gray-300 text-gray-700 px-4 py-2.5 rounded-lg text-sm flex items-center justify-between min-w-[120px] hover:border-gray-400 transition-colors">
+                                <span>{filterName}</span>
+                                <IoChevronDown className="text-gray-500" />
+                            </button>
+                        ))}
+                    </div>
                     <p className="text-gray-500 text-xs sm:text-sm">در اینجا سوابق آخرین پاداش ها را مشاهده می کنید</p>
                     <h2 className="text-lg font-semibold text-[#19A297] mb-2 sm:mb-0">آخرین پاداش ها</h2>
 
                 </div>
-                
+
 
                 {/* جدول پاداش‌ها */}
                 <div className="bg-white rounded-xl shadow-xl overflow-hidden">

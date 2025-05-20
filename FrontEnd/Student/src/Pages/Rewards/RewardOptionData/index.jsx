@@ -103,7 +103,7 @@ export default function RequestRewardPage({ Open }) {
         </div>
 
         {/* گرید کارت‌های پاداش */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 rtl">
           {rewardOptionsData.map((reward) => (
             <div 
               key={reward.id} 

@@ -1,118 +1,105 @@
-import { useState } from 'react';
-import fetchData from '../../Utils/fetchData';
+import React, { useState } from 'react';
+import axios from 'axios';
 
-const ExcelUploader = () => {
+function ExcelUpload() {
   const [file, setFile] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
-
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      const ext = selectedFile.name.split('.').pop().toLowerCase();
-      if (!['xlsx', 'xls'].includes(ext)) {
-        setError('فقط فایل‌های اکسل با پسوند .xlsx یا .xls مجاز هستند');
-        return;
-      }
-      setFile(selectedFile);
-      setError('');
-      setMessage('');
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!file) {
-      setError('لطفاً یک فایل انتخاب کنید');
+    if (!selectedFile) return;
+  
+    // بررسی نوع فایل
+    if (!selectedFile.name.match(/\.(xlsx|xls)$/)) {
+      alert('لطفا فقط فایل‌های اکسل (xlsx یا xls) آپلود کنید');
       return;
     }
-
-    setIsLoading(true);
-    setError('');
-    setMessage('');
-
+  
+    // بررسی اندازه فایل
+    if (selectedFile.size > 5 * 1024 * 1024) {
+      alert('حجم فایل باید کمتر از 5 مگابایت باشد');
+      return;
+    }
+  
+    setFile(selectedFile);
+  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!file) return;
+  
     const formData = new FormData();
-    formData.append('file', file);
-
+    formData.append('excelFile', file, file.name); // اضافه کردن نام فایل
+  
     try {
-      const response = await fetchData("upload-users", {
-        method: "POST",
+      setLoading(true);
+      const response = await axios.post('http://localhost:5000/api/users/register/excel', formData, {
         headers: {
+          'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'X-Requested-With': 'XMLHttpRequest'
         },
-        body:formData
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          console.log(`${percentCompleted}% uploaded`);
+        }
       });
-
-      console.log(response)
-      setMessage(`کاربران با موفقیت اضافه شدند. تعداد: ${response.count}`);
-    } catch (err) {
-      setError(err.message || 'خطا در آپلود فایل');
-      console.error('Upload error:', err);
+      setResult(response.data);
+    } catch (error) {
+      console.error('Error details:', error.response?.data || error.message);
+      setResult({
+        success: false,
+        message: error.response?.data?.message || 
+          'خطا در آپلود فایل. لطفا فایل را بررسی کنید و مجددا تلاش نمایید'
+      });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  // ... rest of your component remains the same ...
-
-
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-xl font-bold text-gray-800 mb-4">آپلود فایل اکسل کاربران</h2>
-      
+    <div className="p-4">
+      <h2 className="text-lg font-bold mb-4">ثبت‌نام گروهی از طریق اکسل</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            فایل اکسل (.xlsx, .xls)
-          </label>
-          <input
-            type="file"
-            accept=".xlsx, .xls"
+          <label className="block mb-2">فایل اکسل</label>
+          <input 
+            type="file" 
+            accept=".xlsx, .xls" 
             onChange={handleFileChange}
-            className="block w-full text-sm text-gray-500
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-md file:border-0
-              file:text-sm file:font-semibold
-              file:bg-blue-50 file:text-blue-700
-              hover:file:bg-blue-100"
+            className="border p-2 rounded"
           />
         </div>
-
-        {error && (
-          <div className="p-3 bg-red-50 text-red-700 rounded-md text-sm">
-            {error}
-          </div>
-        )}
-
-        {message && (
-          <div className="p-3 bg-green-50 text-green-700 rounded-md text-sm">
-            {message}
-          </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={isLoading}
-          className={`w-full py-2 px-4 rounded-md text-white font-medium
-            ${isLoading ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'}
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+        <button 
+          type="submit" 
+          disabled={loading}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
         >
-          {isLoading ? 'در حال آپلود...' : 'آپلود فایل'}
+          {loading ? 'در حال پردازش...' : 'آپلود و ثبت‌نام'}
         </button>
       </form>
 
-      <div className="mt-6 p-4 bg-gray-50 rounded-md text-sm text-gray-600">
-        <h3 className="font-medium mb-2">راهنما:</h3>
-        <ul className="list-disc list-inside space-y-1">
-          <li>فایل باید با فرمت .xlsx یا .xls باشد</li>
-          <li>ستون‌های ضروری: fullName, role, idCode</li>
-          <li>برای دانش‌آموزان: fieldOfStudy, grade, class نیز نیاز است</li>
-        </ul>
-      </div>
+      {result && (
+        <div className={`mt-4 p-4 rounded ${result.success ? 'bg-green-100' : 'bg-red-100'}`}>
+          <h3 className="font-bold">{result.message}</h3>
+          {result.insertedCount !== undefined && (
+            <p>تعداد کاربران ثبت‌شده: {result.insertedCount}</p>
+          )}
+          {result.errorCount > 0 && (
+            <div className="mt-2">
+              <h4 className="font-bold">خطاها:</h4>
+              <ul className="list-disc list-inside">
+                {result.errors.map((error, i) => (
+                  <li key={i}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
-};
+}
 
-export default ExcelUploader;
+export default ExcelUpload;

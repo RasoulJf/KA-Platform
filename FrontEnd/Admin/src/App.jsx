@@ -11,6 +11,7 @@ import Requests from './Pages/Requests';
 import Sidebar from './Components/Sidebar';
 import CreateNewData from './Pages/AddData/Create';
 import ExcelUploader from './Pages/ExelUploader';
+import ExcelUpload from './Pages/ExelUploader';
 
 const App = () => {
   const { token, user } = useContext(AuthContext);
@@ -57,7 +58,7 @@ const App = () => {
           />
           <Route 
             path='/exel' 
-            element={<ExcelUploader Open={open} />} 
+            element={<ExcelUpload Open={open} />} 
           />
         </Routes>
         {token && <Sidebar activeNum={1} getOpen={getOpen} />}

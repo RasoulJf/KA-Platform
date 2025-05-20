@@ -5,6 +5,8 @@ import { FaPlus } from "react-icons/fa"; // FaRegCommentDots دیگر لازم �
 import { BsChatDots, BsChatFill, BsChatText } from "react-icons/bs"; // BsPlusCircle هم اگر استفاده نمی‌شود، حذف کنید
 import { IoChevronDown } from "react-icons/io5";
 import AddActivityModal from './AddActivityModal'; // مسیر صحیح به کامپوننت مودال
+import Frame23 from '../../assets/images/Frame23.png'
+import Frame24 from '../../assets/images/Frame24.png'
 
 // Sample data for the table
 const activitiesData = [
@@ -48,9 +50,9 @@ const activitiesData = [
 
 // Data for stat cards
 const statCardsData = [
-    { title: "فعالیت های در انتظار بررسی", count: "۴۴۶", Icon: BsChatDots, bgColor: "bg-pink-50", iconBgColor: "bg-pink-500", textColor: "text-pink-500" },
-    { title: "فعالیت های تایید شده", count: "۴۴۶", Icon: BsChatFill, bgColor: "bg-pink-50", iconBgColor: "bg-pink-500", textColor: "text-pink-500" },
-    { title: "همه فعالیت ها", count: "۴۴۶", Icon: BsChatText, bgColor: "bg-pink-50", iconBgColor: "bg-pink-500", textColor: "text-pink-500" },
+    { title: "فعالیت های در انتظار بررسی", count: "۴۴۶", Icon: BsChatDots, bgColor: "bg-pink-50", iconBgColor: "bg-[#D41A54]", textColor: "text-[#D41A54]" },
+    { title: "فعالیت های تایید شده", count: "۴۴۶", Icon: BsChatFill, bgColor: "bg-pink-50", iconBgColor: "bg-[#D41A54]", textColor: "text-[#D41A54]" },
+    { title: "همه فعالیت ها", count: "۴۴۶", Icon: BsChatText, bgColor: "bg-pink-50", iconBgColor: "bg-[#D41A54]", textColor: "text-[#D41A54]" },
 ];
 
 
@@ -106,6 +108,8 @@ export default function Activities({ Open }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
                     {statCardsData.map((card, idx) => (
                         <div key={idx} className={`relative ${card.bgColor} p-6 rounded-xl shadow-lg flex flex-col items-center justify-center text-center min-h-[180px] overflow-hidden`}>
+                            <img src={Frame23} className="absolute z-0 h-full w-full object-cover scale-110 top-[10px]" alt="" />
+
                             <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/30 rounded-full opacity-50"></div>
                             <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-white/20 rounded-full opacity-50"></div>
 
@@ -120,22 +124,24 @@ export default function Activities({ Open }) {
 
                 {/* بنر ثبت فعالیت جدید */}
                 <div className="bg-pink-50 p-4 sm:p-6 rounded-xl shadow-lg flex flex-col sm:flex-row items-center justify-between mb-8 relative overflow-hidden">
-                    <div className="absolute -top-8 -left-8 w-24 h-24 bg-white/40 rounded-full opacity-70"></div>
-                    <div className="absolute -bottom-5 -right-5 w-20 h-20 bg-white/30 rounded-full opacity-70"></div>
+                    {/* <div className="absolute -top-8 -left-8 w-24 h-24 bg-white/40 rounded-full opacity-70"></div>
+                    <div className="absolute -bottom-5 -right-5 w-20 h-20 bg-white/30 rounded-full opacity-70"></div> */}
 
                     <div className="flex items-center gap-70 z-10 mb-3 sm:mb-0"> {/* تغییر gap و text-right برای چیدمان بهتر */}
+                    <img src={Frame24} className="absolute z-0 h-full w-full object-cover scale-" alt="" />
+
                         <button
                             onClick={handleOpenModal} // اتصال تابع باز کردن مودال
-                            className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-100 transition-colors px-4 py-2 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1.5"
+                            className="bg-white cursor-pointer text-[#D41A54] z-10 hover:scale-110 duration-100  transition-transform px-4 py-2 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1.5"
                         >
                             <FaPlus />
                             اضافه کردن
                         </button>
-                        <p className="text-pink-700 text-xs sm:text-sm font-medium">برای ثبت فعالیت جدید بر روی اضافه کردن ضربه بزنید</p>
+                        <p className="text-[#FF9ABA] z-10 text-xs sm:text-sm font-medium">برای ثبت فعالیت جدید بر روی اضافه کردن ضربه بزنید</p>
                     </div>
                     <div className="flex items-center gap-3 z-10">
-                        <h2 className="text-pink-600 font-semibold text-lg sm:text-xl">فعالیت جدید</h2>
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-pink-500 flex items-center justify-center">
+                        <h2 className="text-[#D41A54] font-semibold text-lg sm:text-xl">فعالیت جدید</h2>
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#D41A54] flex items-center justify-center">
                             <BsChatText className="text-white text-2xl sm:text-3xl" />
                         </div>
                     </div>
@@ -166,7 +172,7 @@ export default function Activities({ Open }) {
                         <table className="w-full min-w-[700px] text-sm">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    {[ "وضعیت", "تاریخ بررسی","تاریخ ثبت","شرح","عنوان", ].map(header => (
+                                    {["وضعیت", "تاریخ بررسی", "تاریخ ثبت", "شرح", "عنوان",].map(header => (
                                         <th key={header} className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">{header}</th>
                                     ))}
                                 </tr>
