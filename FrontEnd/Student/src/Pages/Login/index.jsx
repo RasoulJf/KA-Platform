@@ -2,7 +2,7 @@ import React, { useContext } from 'react'
 import union from '../../assets/images/Union.png'
 import union2 from '../../assets/images/Union2.png'
 import union3 from '../../assets/images/Union3.png'
-import KAlogo from '../../assets/images/K-Logo.png'
+import KAlogo from '../../assets/images/KA-Logo.png'
 import useFormFields from '../../Utils/useFormFields'
 import fetchData from '../../Utils/fetchData'
 import { toast } from 'sonner'
@@ -73,7 +73,7 @@ export default function Login() {
                             <p className='text-[#59BBAF] text-xs'>سیستم جامع ارزیابی و پاداش</p>
                         </div>
                         <div className="rounded-[15px] flex justify-items-center items-center p-2 w-16 h-16 bg-[#59BBAF]">
-                            <img src={KAlogo} className='scale-50' alt="" />
+                            <img src={KAlogo} className='scale-120' alt="" />
                         </div>
                     </div>
                     <form onSubmit={handleSubmit} className="flex-column">
