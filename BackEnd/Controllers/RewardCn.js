@@ -10,18 +10,32 @@ export const createReward=catchAsync(async(req,res,next)=>{
         data:reward
     })
 })
-export const getAllRewards=catchAsync(async(req,res,next)=>{
-    const features=new ApiFeatures(Reward,req.query)
-    .sort()
-    .populate()
-    .filter()
-    .limitFields()
-    const rewards=await features.query
+export const getAllRewards = catchAsync(async (req, res, next) => {
+    // <<<< اصلاح: پاس دادن Reward.find() به جای Reward
+    const features = new ApiFeatures(Reward.find(), req.query) // یا Reward.find({})
+        .filter()       // ۱. فیلترها اول اعمال شوند
+        .sort()         // ۲. سپس مرتب‌سازی
+        .limitFields()  // ۳. سپس انتخاب فیلدها
+        .populate()     // ۴. سپس populate (اگر قبل از paginate باشد بهتر است)
+        // .paginate()  // ۵. و در نهایت صفحه‌بندی (اگر getAllRewards نیاز به صفحه‌بندی دارد)
+                        // اگر صفحه‌بندی لازم نیست، این خط را حذف کنید یا در ApiFeatures مدیریت کنید
+
+    const rewards = await features.query; // features.query اینجا باید نتیجه نهایی باشد
+
+    // اگر از paginate استفاده می‌کنید، معمولاً totalCount هم لازم است
+    // let totalCount;
+    // if (req.query.page || req.query.limit) { // فقط اگر صفحه‌بندی فعال است
+    //     const countFeatures = new ApiFeatures(Reward.find(), req.query).filter();
+    //     totalCount = await Reward.countDocuments(countFeatures.getQueryFilters());
+    // }
+
     return res.status(200).json({
-        success:true,
-        data:rewards
-    })
-})
+        success: true,
+        // results: rewards.length, // اگر صفحه‌بندی دارید
+        // totalCount,              // اگر صفحه‌بندی دارید
+        data: rewards
+    });
+});
 export const getOneReward=catchAsync(async(req,res,next)=>{
     const {id}=req.params
     const reward=await Reward.findById(id)

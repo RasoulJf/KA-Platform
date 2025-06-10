@@ -13,6 +13,10 @@ import updateStatusRouter from "./Routes/UpdateStatus.js";
 import adminActivityRouter from "./Routes/AdminActivity.js";
 import userRouter from "./Routes/User.js";
 import exelRouter from "./Routes/Exel.js";
+import dashboardRouter from "./Routes/dashboard.js";
+import studentDashboardRouter from "./Routes/studentDashboard.js";
+import myActivitiesRouter from "./Routes/myActivities.js";
+import adminReviewRouter from "./Routes/adminReview.js";
 
 const __filename = fileURLToPath(import.meta.url);
 export const __dirname = path.dirname(__filename);
@@ -25,14 +29,21 @@ app.use(express.static("Public"));
 
 
 app.use("/api/auth",authRouter)
-app.use("/api/updateStatus",updateStatusRouter)
+app.use("/api/update-status",updateStatusRouter)
 app.use("/api/activity",activityRouter)
 app.use("/api/reward",rewardRouter)
-app.use("/api/studentActivity",studentActivityRouter)
-app.use("/api/adminActivity",adminActivityRouter)
-app.use("/api/studentReward",studentRewardRouter)
-app.use("/api/upload-users",userRouter)
+app.use("/api/student-activity",studentActivityRouter)
+app.use("/api/admin-activity",adminActivityRouter)
+app.use("/api/student-reward",studentRewardRouter)
+app.use("/api/users",userRouter)
 app.use("/api/exel",exelRouter)
+app.use('/api/dashboard', dashboardRouter);
+app.use('/api/student-dashboard', studentDashboardRouter); // <--- روت جدید داشبورد دانش‌آموز را با یک پیشوند مناسب استفاده کنید
+app.use('/api/my-activities', myActivitiesRouter); // استفاده از روت با پیشوند
+app.use('/api/admin-review', adminReviewRouter); // <<--- پیشوند روت
+
+
+
 
 
 app.use("*", (req, res, next) => { 

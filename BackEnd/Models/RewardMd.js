@@ -3,12 +3,10 @@ import mongoose from "mongoose";
 const rewardSchema = new mongoose.Schema({
   parent: {
     type: String,
-    enum: ["پاداش های عمومی", "پاداش های اختصاصی", "پاداش نیکوکارانه"],
-    required: true,  
+    enum: ["پاداش‌های عمومی", "پاداش‌های اختصاصی", "پاداش نیکوکارانه"],
   },
   name: {
     type: String, 
-    required: [true, "Activity name is required"], 
   },
   description: {
     type: String,

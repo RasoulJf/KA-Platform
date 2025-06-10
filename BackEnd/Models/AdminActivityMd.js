@@ -18,11 +18,19 @@ const adminActivitySchema = new mongoose.Schema(
       type: String,
       required: [true, "Details is required"], 
       trim: true, 
+      default: undefined
     },
     scoreAwarded: {
       type: Number,      
       default: 0,   
     },
+    type:{
+      type:String,
+      enum:["گروهی","فردی"]
+    },
+    description:{
+      type:String
+    }
   },
   { timestamps: true, versionKey: false }
 );

@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema(
     },
     fieldOfStudy: {
       type: String,
-      enum: ["تولید و توسعه پایگاه‌های اینترنتی", "تولید محتوای چند رسانه‌ای"],
+      enum: ["تولید و توسعه پایگاه اینترنتی", "تولیدکننده چندرسانه‌ای"],
       required: [isStudent, "fieldOfStudy is required"],
     },
     grade: {
@@ -87,8 +87,13 @@ userSchema.pre("findOneAndUpdate", function (next) {
 });
 
 userSchema.pre("save", function (next) {
-  if (this.score !== undefined) {
+  if (this.isModified('score') || this.isNew) { // شرط شما
     this.token = Math.floor(this.score * 0.95);
+    console.log(`User pre-save hook: Score modified or new. User: ${this.fullName}, Score: ${this.score}, New Token: ${this.token}`);
+  } else {
+    console.log(`User pre-save hook: Score NOT modified. User: ${this.fullName}, Token before this hook: ${this.token}, Score: ${this.score}`);
+    // آیا اینجا به اشتباه this.token = Math.floor(this.score * 0.95) رو دوباره انجام میدی؟
+    // یا اینکه this.token در این لحظه هنوز مقدار قبلی (251) رو داره و save فقط همون رو ذخیره می‌کنه؟
   }
   next();
 });
