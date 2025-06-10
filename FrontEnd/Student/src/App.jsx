@@ -25,28 +25,28 @@ const App = () => {
         <Routes>
           <Route 
             path='/login' 
-            element={token && user?.role !== "student" ? <Navigate to="/" /> : <Login />} 
+            element={token && user?.role === "student" ? <Navigate to="/" /> : <Login />} 
           />
           <Route 
             path='/' 
-            element={!token || user?.role === "student" ? <Navigate to="/login" /> : <Home Open={open} />} 
+            element={!token || user?.role !== "student" ? <Navigate to="/login" /> : <Home Open={open} />} 
           />
     
           <Route 
             path='/activities' 
-            element={!token || user?.role === "student" ? <Navigate to="/login" /> : <Activities Open={open} />} 
+            element={!token || user?.role !== "student" ? <Navigate to="/login" /> : <Activities Open={open} />} 
           />
           <Route 
             path='/rewards' 
-            element={!token || user?.role === "student" ? <Navigate to="/login" /> : <Rewards Open={open} />} 
+            element={!token || user?.role !== "student" ? <Navigate to="/login" /> : <Rewards Open={open} />} 
           />
-           <Route path="/request-reward" element={!token || user?.role === "student" ? <Navigate to="/login" /> :<RequestRewardPage Open={open} />} /> 
+           <Route path="/request-reward" element={!token || user?.role !== "student" ? <Navigate to="/login" /> :<RequestRewardPage Open={open} />} /> 
           <Route 
             path='/results' 
-            element={!token || user?.role === "student" ? <Navigate to="/login" /> : <Result Open={open} />} 
+            element={!token || user?.role !== "student" ? <Navigate to="/login" /> : <Result Open={open} />} 
           />
         </Routes>
-        {token && <Sidebar activeNum={1} getOpen={getOpen} />}
+        {token || user?.role !== "student" ?   <Sidebar activeNum={1} getOpen={getOpen} /> : ""}
       </div>
     </BrowserRouter>
   );

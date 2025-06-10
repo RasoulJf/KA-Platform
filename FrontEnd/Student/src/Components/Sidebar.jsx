@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import KAlogo from '../assets/images/KA-Logo.png'
+import KAlogo from '../assets/images/K-LogoGreen.png'
 import right from '../assets/images/right.png'
 import aziz from '../assets/images/aziz.png'
 import profile from '../assets/images/profile.png'
@@ -64,8 +64,8 @@ export default function Sidebar({ activeNum = 1, getOpen }) {
                         }
 
                         <div className='flex-column gap-2 text-end'>
-                            <h3 className='text-sm font-semibold'>علیــرضا عزیــز‌پور</h3>
-                            <h5 className='text-sm text-gray-400'>معاون</h5>
+                            <h3 className='text-sm font-semibold'>امیرعلی آل رضا</h3>
+                            <h5 className='text-sm text-gray-400'>دانش آموز</h5>
                         </div>
                         <div className='w-12 h-12 bg-[#19A297] rounded-4xl'>
                             <img src={profile} className={`scale-75`} alt="" />
@@ -88,7 +88,7 @@ export default function Sidebar({ activeNum = 1, getOpen }) {
                         <p className='text-white text-[0.50rem] opacity-62'>سیستم جامع ارزیابی و پاداش</p>
                     </div>
                     <div className="rounded-xl flex justify-items-center items-center p-2 w-12 h-12 bg-white">
-                        <img src={KAlogo} className='scale-150' alt="" />
+                        <img src={KAlogo} className='scale-50' alt="" />
                     </div>
                 </div>
             </div>
