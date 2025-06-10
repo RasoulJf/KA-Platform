@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import KAlogo from '../assets/images/KA-Logo.png'
+import KAlogo from '../assets/images/K-LogoGreen.png'
 import right from '../assets/images/right.png'
 import aziz from '../assets/images/aziz.png'
 import { TbPencilPlus } from "react-icons/tb";
@@ -47,7 +47,7 @@ export default function Sidebar({ activeNum = 1, getOpen }) {
             <div className="w-full h-[21vh] flex justify-center relative items-center bg-linear-to-r from-[#19A297] to-[#59BBAF]">
                 <img src={frame50} className='absolute z-1 h-full w-full object-cover top-[0]' alt="" />
 
-                <div onClick={() => handleOpen()} className="w-9 z-2 h-9 rounded-[40px] flex items-center justify-center absolute top-20 left-[-18px] cursor-pointer bg-gray-200">
+                <div onClick={() => handleOpen()} className="w-9 h-9 rounded-[40px] flex items-center justify-center z-30 absolute top-20 left-[-18px] cursor-pointer bg-gray-200">
                     {open ? <IoIosArrowForward /> : <IoIosArrowBack />}
                 </div>
 
@@ -84,7 +84,7 @@ export default function Sidebar({ activeNum = 1, getOpen }) {
                         <p className='text-white text-[0.50rem] opacity-62'>سیستم جامع ارزیابی و پاداش</p>
                     </div>
                     <div className="rounded-xl flex justify-items-center items-center p-2 w-12 h-12 bg-white">
-                        <img src={KAlogo} className='scale-150' alt="" />
+                        <img src={KAlogo} className='scale-50' alt="" />
                     </div>
                 </div>
             </div>
