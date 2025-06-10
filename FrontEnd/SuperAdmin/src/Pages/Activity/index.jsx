@@ -46,7 +46,7 @@ function ActivityExcelUpload({ Open }) {
 
     try {
       setLoading(true);
-      const response = await axios.post('http://localhost:5000/api/activities/import', formData, {
+      const response = await axios.post('http://localhost:5000/api/exel/activity', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

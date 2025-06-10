@@ -4,15 +4,13 @@ import Home from './Pages/Home';
 import { Toaster } from 'sonner';
 import Login from './Pages/Login';
 import { AuthContext } from './Utils/AuthContext';
-import AddData from './Pages/AddData';
-import Rewards from './Pages/Rewards';
 import Result from './Pages/Results';
-import Requests from './Pages/Requests';
 import Sidebar from './Components/Sidebar';
-import CreateNewData from './Pages/AddData/Create';
+
 import ExcelUploader from './Pages/ExelUploader';
 import ExcelUpload from './Pages/ExelUploader';
 import ActivityExcelUpload from './Pages/Activity';
+import RewardExcelUpload from './Pages/Rewards';
 
 const App = () => {
   const { token, user } = useContext(AuthContext);
@@ -45,7 +43,7 @@ const App = () => {
           />
           <Route
             path='/rewards'
-            element={!token || user?.role === "student" ? <Navigate to="/login" /> : <Rewards Open={open} />}
+            element={!token || user?.role === "student" ? <Navigate to="/login" /> : <RewardExcelUpload Open={open} />}
           />
           <Route
             path='/results'
