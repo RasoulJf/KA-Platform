@@ -93,7 +93,7 @@ export default function StudentDashboard({ Open }) {
 
   return (
     <>
-      <div className={`${!Open ? "w-[calc(100%-20%)]" : "w-[calc(100%-6%)]"} p-6 md:p-8 transition-all duration-500 flex-col h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100`}>
+      <div className={`${!Open ? "w-[calc(100%-6%)]" : "w-[calc(100%-22%)]" } p-6 md:p-8 transition-all duration-500 flex-col h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100`}>
         {/* هدر بالا */}
         <div className="flex flex-col sm:flex-row justify-between items-center h-auto sm:h-[5vh] mb-6">
           <div className="flex justify-center items-center gap-3 sm:gap-5 mb-2 sm:mb-0">
@@ -120,7 +120,7 @@ export default function StudentDashboard({ Open }) {
           <div className="flex justify-center items-center gap-3 sm:gap-5">
             <p className="text-gray-400 text-xs sm:text-sm">امروز {week}، {day} {month} ماه {year}</p>
             <h1 className="text-[#19A297] font-semibold text-base sm:text-lg">
-                داشبورد {dashboardData?.headerInfo?.userFullName ? `(${dashboardData.headerInfo.userFullName})` : ''}
+                داشبورد
             </h1>
           </div>
         </div>

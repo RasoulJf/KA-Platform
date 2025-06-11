@@ -23,6 +23,8 @@ export default function Sidebar({ activeNum = 1, getOpen }) {
     //     setActive(activeNum)
 
     // }
+    const userString = localStorage.getItem('user');
+    const user = userString ? JSON.parse(userString) : null;
     const handleActive=(num)=>{
         setActive(num)
     }
@@ -36,9 +38,13 @@ export default function Sidebar({ activeNum = 1, getOpen }) {
         setOpenProfile(!openProfile)
     }
     const handleLogout = () => {
-        localStorage.removeItem("token")
-        localStorage.removeItem("user")
-        navigate('/login')
+        // ۱. توکن و اطلاعات کاربر را از حافظه مرورگر پاک کن
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+
+        // ۲. به جای navigate، صفحه را به صورت کامل رفرش و به آدرس لاگین هدایت کن
+        // این کار مشکل را به طور قطعی حل می‌کند
+        window.location.href = '/login';
     }
     return (
         // <div className='relative'>
@@ -61,7 +67,7 @@ export default function Sidebar({ activeNum = 1, getOpen }) {
 
                         <div className='flex-column gap-2 text-end'>
                             <h3 className='text-sm font-semibold'>علیــرضا عزیــز‌پور</h3>
-                            <h5 className='text-sm text-gray-400'>معاون</h5>
+                            <h5 className='text-sm text-gray-400'>مدیر سامانه</h5>
                         </div>
                         <div className='w-12 h-12'>
                             <img src={aziz} alt="" />

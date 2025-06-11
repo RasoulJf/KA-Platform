@@ -4,10 +4,10 @@ import union2 from '../../assets/images/Union2.png'
 import union3 from '../../assets/images/Union3.png'
 import KAlogo from '../../assets/images/K-Logo.png'
 import useFormFields from '../../Utils/useFormFields'
-import fetchData from '../../Utils/fetchData'
 import { toast } from 'sonner'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { AuthContext } from '../../Utils/AuthContext'
+import fetchData from '../../utils/fetchData'
 
 
 export default function Login() {

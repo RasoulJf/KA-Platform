@@ -44,7 +44,9 @@ export const login=catchAsync(async(req,res,next)=>{
                 id:user?._id,
                 fullName:user?.fullName,
                 role:user?.role,
-                idcode:user?.idCode
+                idcode:user?.idCode,
+                grade:user?.grade,
+                fieldOfStudy:user?.fieldOfStudy
             }
         }
     })
