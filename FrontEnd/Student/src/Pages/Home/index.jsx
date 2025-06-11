@@ -137,7 +137,7 @@ export default function StudentDashboard({ Open }) {
             {/* بخش بالایی: جمع کل امتیازات و فعالیت‌ها */}
             <div className="flex flex-col lg:flex-row gap-3 mb-3">
               {/* کارت جمع کل امتیازات */}
-              <div className="relative lg:w-1/2 bg-[#F8F7FF] rounded-lg p-4 flex flex-col justify-around items-center" style={{height: '250px'}}>
+              <div className="relative lg:w-1/3 bg-[#F8F7FF] rounded-lg p-4 flex flex-col justify-around items-center" style={{height: '250px'}}>
                 {/* Decorative dots from image */}
                 <span className="absolute top-[15%] right-[15%] w-2 h-2 bg-blue-300 rounded-full"></span>
                 <span className="absolute top-[20%] left-[10%] w-3 h-3 bg-purple-400 rounded-full"></span>
@@ -159,7 +159,7 @@ export default function StudentDashboard({ Open }) {
               </div>
 
               {/* بخش فعالیت‌ها */}
-              <div className="lg:w-1/2 bg-white p-6 rounded-lg shadow-sm flex flex-col justify-center" style={{height: '250px'}}>
+              <div className="lg:w-2/3 bg-white p-6 rounded-lg shadow-sm flex flex-col justify-center" style={{height: '250px'}}>
               {(dashboardData.activitySummary && dashboardData.activitySummary.length > 0) ? (
                   dashboardData.activitySummary.map((activity) => (
                       <div key={activity.id || activity.parentName} className="flex items-center gap-3 mb-4 last:mb-0">
@@ -195,17 +195,27 @@ export default function StudentDashboard({ Open }) {
 
             {/* بخش میانی: کارت‌های توکن */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-              <div className="bg-[#F8F7FF] rounded-lg h-[110px] p-6 flex items-center justify-between">
-                <h2 className="text-[#202A5A] font-semibold text-lg z-10">توکن‌های خرج شده (پاداش)</h2>
+              <div className="bg-[#F8F7FF] rounded-lg h-[110px] p-6 flex items-center relative">
+                  <img src={frame22} className="absolute z-0 h-full w-full object-cover top-0 left-0" alt="" />
+                <div className='lg:w-3/4 text-center z-100'> 
+                <h2 className="text-[#202A5A] font-semibold text-2xl z-10">توکن‌های استفاده‌شده</h2>
+                </div>
+                <div className='lg:w-1/4 text-center z-100'>
                 <p className="text-[#202A5A] font-bold text-2xl z-10">
-                  {formatNumberToPersian(dashboardData.paidRewardsTokenValue)}
+                {formatNumberToPersian(dashboardData.paidRewardsTokenValue)}
                 </p>
+                </div>
               </div>
-              <div className="bg-[#F8F7FF] rounded-lg h-[110px] p-6 flex items-center justify-between">
-                <h2 className="text-[#202A5A] font-semibold text-lg z-10">توکن های قابل استفاده</h2>
-                <p className="text-[#202A5A] font-bold text-2xl z-10">
+              <div className="bg-[#F8F7FF] rounded-lg h-[110px] p-6 flex items-center justify-between relative">
+              <img src={frame22} className="absolute z-0 h-full w-full object-cover top-0 left-0" alt="" />
+                <div className='lg:w-3/4 text-center z-100'> 
+                <h2 className="text-[#202A5A] font-semibold text-lg z-10">توکن‌های قابل‌استفاده</h2>
+                </div>
+                  <div className='lg:w-1/4 text-center z-100'>
+                  <p className="text-[#202A5A] font-bold text-2xl z-10">
                   {formatNumberToPersian(dashboardData.availableTokens)}
-                </p>
+                  </p>
+                  </div>
               </div>
             </div>
 
@@ -219,9 +229,8 @@ export default function StudentDashboard({ Open }) {
                 </Link>
                 <div className="flex-grow overflow-hidden rounded-b-lg bg-white border border-gray-200 border-t-0">
                   <div className="bg-[#19A297] text-white h-12 flex items-center px-4">
-                    <Link to="/rankings/grade" className="text-gray-200 hover:text-white text-sm">مشاهده همه</Link>
-                    <h3 className="flex-grow text-center font-semibold text-base">برترین های پایه</h3>
-                    <span className="w-16"></span>
+                    <Link to="/rankings/grade" className="text-gray-200 hover:text-white text-[10px]">مشاهدۀ همه</Link>
+                    <h3 className="flex-grow text-right font-semibold text-base">برترین‌های پایه</h3>
                   </div>
                   <div className="overflow-x-auto">
                     {(dashboardData.topStudentsInMyGrade && dashboardData.topStudentsInMyGrade.length > 0) ? (
@@ -252,9 +261,8 @@ export default function StudentDashboard({ Open }) {
                 </Link>
                 <div className="flex-grow overflow-hidden rounded-b-lg bg-white border border-gray-200 border-t-0">
                   <div className="bg-[#202A5A] text-white h-12 flex items-center px-4">
-                    <Link to="/rankings/all" className="text-gray-300 hover:text-white text-sm">مشاهده همه</Link>
-                    <h3 className="flex-grow mr-[-60px] text-right font-semibold text-base">رتبه شما در جدول امتیازات</h3>
-                    <span className="w-16"></span>
+                    <Link to="/rankings/all" className="text-gray-300 hover:text-white text-[10px]">مشاهدۀ همه</Link>
+                    <h3 className="flex-grow text-right font-semibold text-base">رتبۀ شما در جدول امتیازات</h3>
                   </div>
                   <div className="overflow-x-auto">
                     {(dashboardData.userRankingInfo?.rankingTableData && dashboardData.userRankingInfo.rankingTableData.length > 0) ? (
