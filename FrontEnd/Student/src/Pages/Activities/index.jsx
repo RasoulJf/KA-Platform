@@ -215,7 +215,7 @@ export default function Activities({ Open }) { // نام کامپوننت را A
 
     return (
         <>
-            <div className={`${!Open ? "w-[calc(100%-6%)]" : "w-[calc(100%-23%)]" } lg:w-[${!Open ? "80%" : "94%"}] p-6 md:p-8 transition-all duration-500 flex-col h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100`}>
+      <div className={`${!Open ? "w-[calc(100%-6%)]" : "w-[calc(100%-22%)]" } p-6 md:p-8 transition-all duration-500 flex-col h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100`}>
 
                 {/* هدر بالا */}
                 <div className="flex flex-col sm:flex-row justify-between items-center h-auto sm:h-[5vh] mb-6">

@@ -198,7 +198,7 @@ export default function StudentDashboard({ Open }) {
               <div className="bg-[#F8F7FF] rounded-lg h-[110px] p-6 flex items-center relative">
                   <img src={frame22} className="absolute z-0 h-full w-full object-cover top-0 left-0" alt="" />
                 <div className='lg:w-3/4 text-center z-100'> 
-                <h2 className="text-[#202A5A] font-semibold text-2xl z-10">توکن‌های استفاده‌شده</h2>
+                <h2 className="text-[#202A5A] font-semibold text-[22px] z-10">توکن‌های استفاده‌شده</h2>
                 </div>
                 <div className='lg:w-1/4 text-center z-100'>
                 <p className="text-[#202A5A] font-bold text-2xl z-10">
@@ -209,7 +209,7 @@ export default function StudentDashboard({ Open }) {
               <div className="bg-[#F8F7FF] rounded-lg h-[110px] p-6 flex items-center justify-between relative">
               <img src={frame22} className="absolute z-0 h-full w-full object-cover top-0 left-0" alt="" />
                 <div className='lg:w-3/4 text-center z-100'> 
-                <h2 className="text-[#202A5A] font-semibold text-lg z-10">توکن‌های قابل‌استفاده</h2>
+                <h2 className="text-[#202A5A] font-semibold text-[22px] z-10">توکن‌های قابل‌استفاده</h2>
                 </div>
                   <div className='lg:w-1/4 text-center z-100'>
                   <p className="text-[#202A5A] font-bold text-2xl z-10">

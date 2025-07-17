@@ -11,17 +11,12 @@ import { IoIosArrowForward, IoIosArrowBack } from "react-icons/io";
 import { SlArrowDown, SlArrowUp } from "react-icons/sl";
 import { Link, useLocation } from "react-router-dom";
 
-export default function Sidebar({ activeNum = 1, getOpen }) {
+export default function Sidebar({ getOpen }) {
   const userString = localStorage.getItem("user");
   const user = userString ? JSON.parse(userString) : null;
 
-  const [active, setActive] = useState(activeNum);
   const [open, setOpen] = useState(true);
   const [openProfile, setOpenProfile] = useState(false);
-
-  const handleActive = (num) => {
-    setActive(num);
-  };
 
   const handleOpen = () => {
     const newOpenState = !open;
@@ -48,8 +43,15 @@ export default function Sidebar({ activeNum = 1, getOpen }) {
     { num: 4, to: "/results", text: "جداول امتیازات", icon: <MdBackupTable /> },
   ];
 
-  // از useLocation برای تشخیص روت فعال استفاده می‌کنیم که روش بهتری است
   const location = useLocation();
+
+  // ====================== ۱. محاسبه موقعیت نشانگر ======================
+  // ارتفاع هر آیتم منو (h-14 در Tailwind برابر با 3.5rem یا 56px است)
+  const ITEM_HEIGHT = 56;
+  // پیدا کردن اندیس آیتم فعال در آرایه
+  const activeIndex = menuItems.findIndex(item => location.pathname === item.to);
+  // محاسبه موقعیت Y برای transform
+  const indicatorY = activeIndex !== -1 ? activeIndex * ITEM_HEIGHT : -ITEM_HEIGHT; // اگر آیتمی فعال نبود، نشانگر را مخفی کن
 
   return (
     <div
@@ -64,7 +66,6 @@ export default function Sidebar({ activeNum = 1, getOpen }) {
           alt=""
         />
 
-        {/* ۱. دکمه باز و بسته کردن به بالا منتقل شد */}
         <div
           onClick={handleOpen}
           className="w-8 h-8 z-20 rounded-full flex items-center justify-center absolute top-5 left-[-16px] cursor-pointer bg-white shadow-md"
@@ -76,7 +77,7 @@ export default function Sidebar({ activeNum = 1, getOpen }) {
           )}
         </div>
 
-        {/* کارت پروفایل کاربر - فقط در حالت باز */}
+        {/* کارت پروفایل کاربر */}
         <div
           className={`absolute z-20 top-[130px] 2xl:top-[16vh] items-center justify-center ${
             !open ? "hidden" : ""
@@ -84,15 +85,9 @@ export default function Sidebar({ activeNum = 1, getOpen }) {
         >
           <div className="flex justify-between items-center w-full py-3 px-3 gap-2">
             {openProfile ? (
-              <SlArrowUp
-                onClick={handleOpenProfile}
-                className="scale-75 cursor-pointer text-gray-400"
-              />
+              <SlArrowUp onClick={handleOpenProfile} className="scale-75 cursor-pointer text-gray-400" />
             ) : (
-              <SlArrowDown
-                onClick={handleOpenProfile}
-                className="scale-75 cursor-pointer text-gray-400"
-              />
+              <SlArrowDown onClick={handleOpenProfile} className="scale-75 cursor-pointer text-gray-400" />
             )}
             <div className="flex items-center gap-3">
               <div className="flex flex-col gap-1 text-end">
@@ -100,8 +95,7 @@ export default function Sidebar({ activeNum = 1, getOpen }) {
                   {user?.fullName || "کاربر مهمان"}
                 </h3>
                 <h5 className="text-[11px] text-gray-500">
-                  {" "}
-                  {`دانش‌آموز پایۀ ${user?.grade || "دهم"}`}{" "}
+                  {`دانش‌آموز پایۀ ${user?.grade || "نامشخص"}`}
                 </h5>
               </div>
               <div className="w-11 h-11 flex-shrink-0 bg-[#19A297] rounded-full flex items-center justify-center">
@@ -121,7 +115,7 @@ export default function Sidebar({ activeNum = 1, getOpen }) {
           )}
         </div>
 
-        {/* ۲. آیکون پروفایل در حالت بسته با استایل جدید */}
+        {/* آیکون پروفایل در حالت بسته */}
         <div
           className={`absolute z-20 top-[130px] left-0 right-0 mx-auto items-center justify-center flex ${
             open ? "hidden" : ""
@@ -132,7 +126,7 @@ export default function Sidebar({ activeNum = 1, getOpen }) {
           </div>
         </div>
 
-        {/* لوگو و عنوان - فقط در حالت باز */}
+        {/* لوگو و عنوان */}
         <div
           className={`flex z-10 gap-2 justify-center items-center mb-12 ${
             !open ? "hidden" : ""
@@ -150,62 +144,44 @@ export default function Sidebar({ activeNum = 1, getOpen }) {
         </div>
       </div>
 
-      {/* بخش اصلی محتوای سایدبار */}
       <div className="flex flex-col flex-grow w-full">
         <div className="relative w-full mt-24">
+        
+          {/* ====================== ۲. رندر کردن نشانگر متحرک ====================== */}
+          <div
+            className="absolute right-0 h-14 w-1.5 bg-[#19A297] z-10 transition-transform duration-300 ease-in-out"
+            style={{ transform: `translateY(${indicatorY}px)` }}
+          ></div>
+          {/* ==================================================================== */}
+
           {menuItems.map((item) => {
             const isActive = location.pathname === item.to;
             return (
               <Link
                 key={item.num}
-                onClick={() => handleActive(item.num)}
                 to={item.to}
-                className={`relative flex items-center h-14 transition-colors duration-500
-                                    ${
-                                      open
-                                        ? "justify-end pr-8"
-                                        : "justify-center"
-                                    }
-                                    ${
-                                      isActive
-                                        ? "text-[#19A297] font-semibold"
-                                        : "text-gray-400 hover:bg-gray-200/50"
-                                    }
-                                    // ۳. پس‌زمینه آیتم فعال در حالت بسته
-                                    ${
-                                      isActive && !open ? "bg-teal-500/10" : ""
-                                    }`}
+                className={`relative flex items-center h-14 transition-colors duration-200
+                  ${open ? "justify-end pr-8" : "justify-center"}
+                  ${isActive ? "text-[#19A297] font-semibold" : "text-gray-400 hover:bg-gray-200/50"}
+                  ${isActive && !open ? "bg-teal-500/10" : ""}
+                `}
               >
-                {/* پس‌زمینه آیتم فعال در حالت باز */}
                 {isActive && open && (
                   <div className="absolute inset-0 bg-gradient-to-l from-white to-[#F9F9F9]"></div>
                 )}
-
-                <div
-                  className={`relative z-10 flex items-center ${
-                    open ? "gap-3" : "gap-0"
-                  }`}
-                >
-                  <h4
-                    className={`text-base transition-all duration-0 ${
-                      open ? "opacity-100" : "w-0 opacity-0"
-                    }`}
-                  >
+                <div className={`relative z-10 flex items-center ${open ? "gap-3" : "gap-0"}`}>
+                  <h4 className={`text-base whitespace-nowrap transition-all duration-200 ${open ? "opacity-100" : "w-0 opacity-0"}`}>
                     {item.text}
                   </h4>
                   <div className="text-xl">{item.icon}</div>
                 </div>
 
-                {/* ۴. خط کنار آیتم فعال در هر دو حالت */}
-                {isActive && (
-                  <div className="absolute right-0 top-0 h-full w-1.5 bg-[#19A297] z-10"></div>
-                )}
+                {/* ============= ۳. نشانگر ثابت و قدیمی حذف شد ============= */}
               </Link>
             );
           })}
         </div>
 
-        {/* دکمه پایین سایدبار - فقط در حالت باز */}
         <div className={`mt-auto p-4 ${!open ? "hidden" : ""}`}>
           <button className="w-full py-2.5 rounded-lg bg-[#19A297] text-white font-semibold text-base hover:bg-[#148b80] transition-colors my-45">
             دستورالعمل
