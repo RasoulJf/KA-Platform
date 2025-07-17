@@ -8,7 +8,7 @@ import { FaVenus, FaPlus } from "react-icons/fa";
 import { IoNotificationsOutline } from "react-icons/io5";
 import { Link, useNavigate } from 'react-router-dom'; // اضافه کردن useNavigate
 import NotificationPanel from '../../Components/NotificationPanel'; // مسیر صحیح کامپوننت
-import fetchData from '../../utils/fetchData';
+import fetchData from '../../Utils/fetchData';
 
 export default function StudentDashboard({ Open }) {
     const token = localStorage.getItem("token");
@@ -55,7 +55,7 @@ export default function StudentDashboard({ Open }) {
             setErrorDashboard(null);
             try {
                 const response = await fetchData('student-dashboard',{
-                  headers:{authorization:`Beraer ${token}`}
+                  headers:{authorization:`Bearer ${token}`}
                 });
                 console.log("Fetched Dashboard Data (Frontend):", response.data);
                 console.log("Activity Summary from API (Frontend):", JSON.stringify(response.data.activitySummary, null, 2));
@@ -109,7 +109,7 @@ export default function StudentDashboard({ Open }) {
                     <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
                 )}
               </button>
-              <NotificationPanel isOpen={isNotificationOpen} onClose={closeNotificationPanel} />
+              <NotificationPanel isOpen={isNotificationOpen} onClose={closeNotificationPanel} token={token} />
             </div>
           </div>
           <div className="flex justify-center items-center gap-3 sm:gap-5">

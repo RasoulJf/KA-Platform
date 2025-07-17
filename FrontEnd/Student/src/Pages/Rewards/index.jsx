@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 
 import Frame25 from '../../assets/images/Frame25.png';
 import Frame26 from '../../assets/images/Frame26.png';
-import fetchData from '../../utils/fetchData';
+import fetchData from '../../Utils/fetchData';
 
 // کامپوننت کوچک و بهینه برای کارت‌های آماری
 const StatCard = React.memo(({ title, value, decorative, imageSrc }) => (
@@ -34,6 +34,8 @@ export default function Rewards({ Open }) {
     // ==================== FIX: حذف استیت‌های غیرضروری isReady و sidebarOpen ====================
     const [rewardsList, setRewardsList] = useState([]);
     const [isMounted, setIsMounted] = useState(false);
+      const [visibility, setVisibility] = useState(false);
+    
     useEffect(() => {
         // این useEffect فقط یک بار اجرا می‌شود و به کامپوننت می‌گوید که "نصب شده" است.
         setIsMounted(true);
@@ -123,6 +125,9 @@ export default function Rewards({ Open }) {
                 setError(err.message || "یک خطای ناشناخته رخ داد.");
             } finally {
                 setLoading(false);
+                setTimeout(() => {
+                  setVisibility(true)
+                }, 1);
             }
         };
 
@@ -170,7 +175,7 @@ export default function Rewards({ Open }) {
 
     return (
         // ==================== FIX: استفاده مستقیم از پراپ Open برای تعیین عرض ====================
-        <div className={`p-6 md:p-8 flex-col h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 ${
+        <div className={` ${!visibility ? "hidden opacity-0": ""} p-6 md:p-8 flex-col h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 ${
             Open
                 ? 'w-full md:w-[calc(100%-22%)]'
                 : 'w-full md:w-[calc(100%-6%)]'

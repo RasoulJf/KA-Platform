@@ -134,14 +134,29 @@ export default function Requests({ Open }) {
         await fetchRequestsList();
     };
 
-    const handleApprove = async (studentActivityId, score, adminComment) => {
-        // ... (کد handleApprove بدون تغییر، فقط مطمئن شوید refreshDataAfterAction را صدا می‌زند)
+    const handleApprove = async (studentActivityId, score, adminComment, details) => { // <<< `details` اینجا اضافه شد
         if (!token || !studentActivityId) return;
         try {
-            const response = await fetchData(`admin-review/student-activities/${studentActivityId}/approve`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', authorization: `Berear ${token}` }, body: JSON.stringify({ scoreAwarded: score, adminComment }) });
-            if (response.success) { await refreshDataAfterAction(); }
-            else { alert("خطا در تایید: " + (response.message || "خطای نامشخص")); }
-        } catch (err) { alert("خطای شبکه: " + err.message); }
+            const payload = {
+                scoreAwarded: score,
+                adminComment: adminComment,
+                details: details // <<< `details` به payload اضافه شد
+            };
+    
+            const response = await fetchData(`admin-review/student-activities/${studentActivityId}/approve`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', authorization: `Berear ${token}` },
+                body: JSON.stringify(payload)
+            });
+    
+            if (response.success) {
+                await refreshDataAfterAction();
+            } else {
+                alert("خطا در تایید: " + (response.message || "خطای نامشخص"));
+            }
+        } catch (err) {
+            alert("خطای شبکه: " + err.message);
+        }
         handleCloseModal();
     };
 
