@@ -5,7 +5,7 @@ import { __dirname } from "../app.js";
 
 export const uploadCn = catchAsync(async (req, res, next) => {
   const file = req.file;
-  // console.log(`File:${file}`)
+  console.log(`File:${file}`)
   if (!file) {
     return next(new HandleError("UPLOAD failed", 400));
   }

@@ -16,7 +16,7 @@ const studentActivitySchema = new mongoose.Schema(
     },
     details: {
       type: String,
-      // required: [true, "Details is required"], 
+      required: [true, "Details is required"], 
       trim: true, 
     },
     status: {
