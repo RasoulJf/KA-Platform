@@ -1,4 +1,3 @@
-
 import catchAsync from '../Utils/catchAsync.js';
 import User from '../Models/UserMd.js';
 import ApiFeatures from '../Utils/apiFeatures.js';
@@ -20,17 +19,42 @@ export const getUserSummaryStats = catchAsync(async (req, res, next) => {
 });
 
 export const getAllStudentsForSelection = catchAsync(async (req, res, next) => {
-  const features = new ApiFeatures(User.find({ role: 'student' }), req.query)
-      .sort() // می‌تواند پیش‌فرض fullName باشد یا از query string بگیرد
-      .limitFields() // select('fullName _id') را می‌توان در query string فرستاد یا اینجا هاردکد کرد
-      .paginate();
+  // دریافت پارامترهای فیلتر از query string
+  const { grade } = req.query;
+  
+  // ساخت شرط فیلتر اولیه
+  const filter = { role: 'student' };
+  
+  // اضافه کردن فیلتر پایه اگر وجود داشت
+  if (grade && ['دهم', 'یازدهم', 'دوازدهم'].includes(grade)) {
+    filter.grade = grade;
+  }
+
+  // ساخت کوئری با امکان فیلتر، مرتب‌سازی و صفحه‌بندی
+  const features = new ApiFeatures(
+    User.find(filter).select('_id fullName grade class'), // فقط فیلدهای مورد نیاز
+    req.query
+  )
+    .sort('fullName') // پیش‌فرض مرتب‌سازی بر اساس نام
+    .limitFields() // فقط فیلدهای انتخاب شده در select
+    .paginate(); // صفحه‌بندی اختیاری
+
   const students = await features.query;
-  // برای سادگی، فعلاً بدون totalCount برای این دراپ‌داون
+  
+  // تبدیل به فرمت مناسب برای dropdown
+  const studentsForDropdown = students.map(student => ({
+    value: student._id,
+    label: `${student.fullName} - پایه ${student.grade} - کلاس ${student.class || 'نامشخص'}`,
+    rawData: student // در صورت نیاز به تمام اطلاعات
+  }));
+
   res.status(200).json({
-      success: true,
-      data: students,
+    success: true,
+    results: students.length,
+    data: studentsForDropdown
   });
 });
+
 
 export const findStudentByDetails = catchAsync(async (req, res, next) => {
   const { fullName, grade, class: studentClass } = req.query; // class کلمه کلیدی است
@@ -376,9 +400,9 @@ export const getGradeRankingTable = catchAsync(async (req, res, next) => {
   // ---- پایان بخش گرفتن کاربران ----
 
 
-  console.log("--- DEBUG: Inside getGradeRankingTable (with AGGREGATES BYPASSED) ---"); // <<<< لاگ جدید
-  console.log("Target Grade:", targetGrade);
-  console.log(`Found ${usersInGrade.length} users in this grade.`);
+  // console.log("--- DEBUG: Inside getGradeRankingTable (with AGGREGATES BYPASSED) ---"); // <<<< لاگ جدید
+  // console.log("Target Grade:", targetGrade);
+  // console.log(`Found ${usersInGrade.length} users in this grade.`);
 
 
   // ۴. محاسبه امتیازات دسته‌بندی شده برای هر کاربر هم‌پایه

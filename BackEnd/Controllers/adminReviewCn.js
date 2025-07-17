@@ -7,6 +7,7 @@ import catchAsync from '../Utils/catchAsync.js';
 import mongoose from 'mongoose';
 import HandleERROR from '../Utils/handleError.js';
 import { updateUserScore } from "../Utils/UpdateScore.js";
+import Notification from '../Models/NotificationMd.js'; 
 
 /**
  * @desc    Get statistics for student activity requests
@@ -141,48 +142,66 @@ export const getAllStudentActivitiesForReview = catchAsync(async (req, res, next
  * @route   PATCH /api/admin-review/student-activities/:studentActivityId/approve
  * @access  Private (Admin, SuperAdmin)
  */
+// در فایل controllers/adminReviewController.js
+
+// در فایل controllers/adminReviewController.js
+
 export const approveStudentActivity = catchAsync(async (req, res, next) => {
     const { studentActivityId } = req.params;
-    // ادمین امتیاز نهایی را از مودال ارسال می‌کند
-    const { scoreAwarded, adminComment } = req.body;
+    const { scoreAwarded, adminComment, details } = req.body;
 
     if (scoreAwarded === undefined || scoreAwarded === null || isNaN(Number(scoreAwarded))) {
         return next(new HandleERROR('امتیاز تخصیص یافته برای تایید معتبر نیست.', 400));
     }
-    const finalScoreToAward = Number(scoreAwarded);
 
-    const studentActivity = await StudentActivity.findById(studentActivityId).populate('activityId');
-    if (!studentActivity) { return next(new HandleERROR('درخواست فعالیت یافت نشد.', 404)); }
-    if (studentActivity.status === 'approved') { return next(new HandleERROR('این درخواست قبلاً تأیید شده است.', 400)); }
-    if (studentActivity.status === 'rejected') { return next(new HandleERROR('این درخواست رد شده و قابل تایید مجدد نیست.', 400));}
+    const studentActivity = await StudentActivity.findById(studentActivityId);
+    if (!studentActivity) return next(new HandleERROR('درخواست فعالیت یافت نشد.', 404));
+    if (studentActivity.status === 'approved') return next(new HandleERROR('این درخواست قبلاً تأیید شده است.', 400));
 
-    // اعتبارسنجی امتیاز وارد شده توسط ادمین بر اساس تعریف فعالیت
-    const activityDef = studentActivity.activityId; // آبجکت کامل Activity
-    if (activityDef && activityDef.scoreDefinition) {
+    // خواندن تعریف فعالیت به صورت امن
+    const activityDef = await Activity.findById(studentActivity.activityId);
+    if (activityDef) {
         const scoreDef = activityDef.scoreDefinition;
         if (scoreDef.inputType === 'select_from_enum') {
-            if (!scoreDef.enumOptions || !scoreDef.enumOptions.includes(finalScoreToAward)) {
-                return next(new HandleERROR(`امتیاز ${finalScoreToAward} در لیست مجاز (${scoreDef.enumOptions?.join(', ')}) نیست.`, 400));
-            }
-        } else if (['number_in_range', 'manual_number_entry', 'calculated_from_value', 'fixed_from_enum_single'].includes(scoreDef.inputType)) {
-            // برای همه انواع دیگر که نهایتا به عدد ختم می شوند، min/max را چک می کنیم اگر تعریف شده باشند
-            // حتی اگر calculated یا fixed باشد، ادمین می تواند override کند، اما باید در محدوده باشد
-            if ((scoreDef.min != null && finalScoreToAward < scoreDef.min) || (scoreDef.max != null && finalScoreToAward > scoreDef.max)) {
-                return next(new HandleERROR(`امتیاز ${finalScoreToAward} باید بین ${scoreDef.min ?? '-∞'} و ${scoreDef.max ?? '+∞'} (طبق تعریف فعالیت) باشد.`, 400));
-            }
+            const allowedValues = scoreDef.enumOptions.map(opt => opt.value);
+            if (!allowedValues.includes(Number(scoreAwarded))) return next(new HandleERROR(`امتیاز ${scoreAwarded} در لیست مجاز نیست.`, 400));
+            const allowedLabels = scoreDef.enumOptions.map(opt => opt.label);
+            if (details && !allowedLabels.includes(details)) return next(new HandleERROR(`شرح "${details}" در لیست گزینه‌ها نیست.`, 400));
         }
+        // می‌توانید اعتبارسنجی برای انواع دیگر را هم اینجا اضافه کنید
     }
 
+    // آپدیت داکیومنت
     studentActivity.status = 'approved';
-    studentActivity.scoreAwarded = finalScoreToAward;
-    studentActivity.adminComment = adminComment || studentActivity.adminComment;
-    if (studentActivity.model('StudentActivity').schema.path('reviewedAt')) { // چک کردن وجود فیلد
-        studentActivity.reviewedAt = Date.now();
-    }
+    studentActivity.scoreAwarded = Number(scoreAwarded);
+    if (details !== undefined) studentActivity.details = details;
+    if (adminComment) studentActivity.adminComment = adminComment;
+    studentActivity.reviewedAt = Date.now();
+    
     await studentActivity.save();
 
+    // ایجاد اعلان به روشی امن (فقط اگر تعریف فعالیت وجود داشته باشد)
+    if (activityDef) {
+        try {
+            await Notification.create({
+                userId: studentActivity.userId,
+                title: `فعالیت "${activityDef.name}" تایید شد`,
+                message: `درخواست شما با موفقیت تایید و ${Number(scoreAwarded).toLocaleString('fa-IR')} امتیاز به شما تعلق گرفت.`,
+                type: 'activity_status',
+                relatedLink: '/my-activities',
+                relatedDocId: studentActivity._id,
+                iconBgColor: 'bg-green-500',
+            });
+        } catch (notificationError) {
+            console.error('Failed to create notification on approval:', notificationError);
+        }
+    } else {
+        console.warn(`Activity definition for activityId ${studentActivity.activityId} not found. Approving without creating notification.`);
+    }
+
+    // آپدیت امتیاز کاربر
     const user = await User.findById(studentActivity.userId);
-    if (user) { await updateUserScore(user); }
+    if (user) await updateUserScore(user);
 
     res.status(200).json({ success: true, message: "درخواست با موفقیت تایید شد.", data: studentActivity });
 });
@@ -197,24 +216,44 @@ export const rejectStudentActivity = catchAsync(async (req, res, next) => {
     const { adminComment } = req.body;
 
     const studentActivity = await StudentActivity.findById(studentActivityId);
-    if (!studentActivity) { return next(new HandleERROR('درخواست فعالیت یافت نشد.', 404)); }
-    if (studentActivity.status === 'rejected') { return next(new HandleERROR('این درخواست قبلاً رد شده است.', 400)); }
+    if (!studentActivity) return next(new HandleERROR('درخواست فعالیت یافت نشد.', 404));
+    if (studentActivity.status === 'rejected') return next(new HandleERROR('این درخواست قبلاً رد شده است.', 400));
+    
+    // خواندن تعریف فعالیت به صورت امن
+    const activityDef = await Activity.findById(studentActivity.activityId);
 
-    const previousScoreAwarded = studentActivity.scoreAwarded || 0;
+    // آپدیت داکیومنت
     const wasApproved = studentActivity.status === 'approved';
-
     studentActivity.status = 'rejected';
-    studentActivity.adminComment = adminComment || "رد شده توسط ادمین";
-    studentActivity.scoreAwarded = 0; // امتیاز فعالیت رد شده صفر می‌شود
-    if (studentActivity.model('StudentActivity').schema.path('reviewedAt')) {
-        studentActivity.reviewedAt = Date.now();
-    }
+    studentActivity.adminComment = adminComment || "توسط ادمین رد شد.";
+    studentActivity.scoreAwarded = 0;
+    studentActivity.reviewedAt = Date.now();
+    
     await studentActivity.save();
-
-    // اگر قبلاً تایید شده بود و امتیازی داشت، امتیاز کاربر باید اصلاح شود
-    if (wasApproved && previousScoreAwarded !== 0) {
+    
+    // ایجاد اعلان به روشی امن
+    if (activityDef) {
+        try {
+            await Notification.create({
+                userId: studentActivity.userId,
+                title: `فعالیت "${activityDef.name}" رد شد`,
+                message: `متاسفانه درخواست شما رد شد. کامنت ادمین: ${studentActivity.adminComment}`,
+                type: 'activity_status',
+                relatedLink: '/my-activities',
+                relatedDocId: studentActivity._id,
+                iconBgColor: 'bg-red-500',
+            });
+        } catch (notificationError) {
+            console.error('Failed to create notification on rejection:', notificationError);
+        }
+    } else {
+        console.warn(`Activity definition for activityId ${studentActivity.activityId} not found. Rejecting without creating notification.`);
+    }
+    
+    // آپدیت امتیاز کاربر در صورت نیاز
+    if (wasApproved) {
         const user = await User.findById(studentActivity.userId);
-        if (user) { await updateUserScore(user); }
+        if (user) await updateUserScore(user);
     }
 
     res.status(200).json({ success: true, message: "درخواست رد شد.", data: studentActivity });
