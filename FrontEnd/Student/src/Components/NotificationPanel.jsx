@@ -32,7 +32,7 @@ const NotificationPanel = ({ isOpen, onClose, token }) => {
             
             try {
                 // فقط 7 اعلان آخر را می‌گیریم
-                const response = await fetchData('notifications?limit=7', { headers: { authorization: `Bearer ${token}` } });
+                const response = await fetchData('notifications?limit=7', { headers: { authorization: Bearer ${token} } });
                 
                 if (response.success && Array.isArray(response.data)) {
                     setNotifications(response.data);
@@ -57,7 +57,7 @@ const NotificationPanel = ({ isOpen, onClose, token }) => {
         try {
             await fetchData('notifications/mark-as-read', {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` },
+                headers: { 'Content-Type': 'application/json', authorization: Bearer ${token} },
                 body: JSON.stringify({ notificationIds: [id] }), // فقط یک آیدی می‌فرستیم
             });
             // درخواست در پس‌زمینه ارسال می‌شود و نیازی به کار دیگری نیست
@@ -118,6 +118,16 @@ const NotificationPanel = ({ isOpen, onClose, token }) => {
                     );
                 })}
             </div>
+          ))
+        )}
+      </div>
+      {notificationsData.length > 0 && (
+        <div className="p-3 text-center border-t border-gray-200">
+          <button className="text-sm text-[#19A297] hover:underline">مشاهده همه اعلان ها</button>
+        </div>
+      )}
+    </div>
+  );
           ))
         )}
       </div>
