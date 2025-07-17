@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom'; // اگر از react-router-dom است�
 
 import Frame25 from '../../assets/images/Frame25.png'; // مسیر صحیح تصاویر
 import Frame26 from '../../assets/images/Frame26.png'; // مسیر صحیح تصاویر
-import fetchData from '../../utils/fetchData'; // مسیر صحیح به fetchData.js
+import fetchData from '../../Utils/fetchData'; // مسیر صحیح به fetchData.js
 
 // کامپوننت کوچک برای کارت‌های آماری
 const StatCard = ({ title, value, decorative, imageSrc }) => (
@@ -42,6 +42,8 @@ export default function Rewards({ Open }) {
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [visibility,setVisibility]=useState(false)
+
     const token =localStorage.getItem("token")
     // const navigate = useNavigate(); // اگر می‌خواهید برای خطای 401 به صفحه لاگین هدایت کنید
 
@@ -137,7 +139,10 @@ export default function Rewards({ Open }) {
                 console.error("Overall error in loadRewardsData:", err);
                 setError(err.message || "خطایی در بارگذاری اطلاعات رخ داد. لطفا دوباره تلاش کنید.");
             } finally {
-                setLoading(false);
+                    setLoading(false);
+                    setTimeout(() => {
+                        setVisibility(true)
+                    }, 1);
             }
         };
 
@@ -147,7 +152,7 @@ export default function Rewards({ Open }) {
     const date = new Date();
     const month = new Intl.DateTimeFormat('fa-IR', { month: 'long' }).format(date);
     const day = new Intl.DateTimeFormat('fa-IR', { day: 'numeric' }).format(date);
-    const year = new Intl.DateTimeFormat('fa-IR', { year: 'numeric' }).format(date).replace(/([۰-۹])/g, token => String.fromCharCode(token.charCodeAt(0) - 1728 + 48));
+    const year = new Intl.DateTimeFormat('fa-IR', { year: 'numeric' }).format(date)
     const week = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(date);
 
     if (loading) {
@@ -173,6 +178,8 @@ export default function Rewards({ Open }) {
         );
     }
 
+
+
     const dynamicStatCardsData = [
         { title: "پاداش‌های در انتظار پرداخت", value: statsData.rewardsPendingValue },
         { title: "پاداش‌های پرداخت‌شده", value: statsData.rewardsPaidValue },
@@ -184,7 +191,8 @@ export default function Rewards({ Open }) {
 
     return (
         <>
-            <div className={`${!Open ? "w-[calc(100%-6%)]" : "w-[calc(100%-22%)]"} p-6 md:p-8 transition-all duration-500 flex-col h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100`}>
+        
+        <div className={`${!visibility ? "hidden opacity-0" : ""}${!Open ? "w-[calc(100%-6%)]" : "w-[calc(100%-23%)]" } lg:w-[${!Open ? "80%" : "94%"}] p-6 md:p-8 transition-all duration-500 flex-col h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100`}>
 
                 {/* هدر بالا */}
                 <div className="flex flex-col sm:flex-row justify-between items-center h-auto sm:h-[5vh] mb-6">

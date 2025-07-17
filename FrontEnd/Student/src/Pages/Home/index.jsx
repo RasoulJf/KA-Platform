@@ -8,7 +8,7 @@ import { FaVenus, FaPlus } from "react-icons/fa";
 import { IoNotificationsOutline } from "react-icons/io5";
 import { Link, useNavigate } from 'react-router-dom'; // اضافه کردن useNavigate
 import NotificationPanel from '../../Components/NotificationPanel'; // مسیر صحیح کامپوننت
-import fetchData from '../../utils/fetchData';
+import fetchData from '../../Utils/fetchData';
 
 export default function StudentDashboard({ Open }) {
     const token = localStorage.getItem("token");
@@ -55,7 +55,7 @@ export default function StudentDashboard({ Open }) {
             setErrorDashboard(null);
             try {
                 const response = await fetchData('student-dashboard',{
-                  headers:{authorization:`Beraer ${token}`}
+                  headers:{authorization:`Bearer ${token}`}
                 });
                 console.log("Fetched Dashboard Data (Frontend):", response.data);
                 console.log("Activity Summary from API (Frontend):", JSON.stringify(response.data.activitySummary, null, 2));
@@ -109,7 +109,7 @@ export default function StudentDashboard({ Open }) {
                     <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
                 )}
               </button>
-              <NotificationPanel isOpen={isNotificationOpen} onClose={closeNotificationPanel} />
+              <NotificationPanel isOpen={isNotificationOpen} onClose={closeNotificationPanel} token={token} />
             </div>
           </div>
           <div className="flex justify-center items-center gap-3 sm:gap-5">
@@ -158,39 +158,52 @@ export default function StudentDashboard({ Open }) {
                 <h2 className="text-[#202A5A] text-xl z-10">جمع کل امتیازات</h2>
               </div>
 
+
+
               {/* بخش فعالیت‌ها */}
               <div className="lg:w-1/2 bg-white p-6 rounded-lg shadow-sm flex flex-col justify-center" style={{height: '250px'}}>
               {(dashboardData.activitySummary && dashboardData.activitySummary.length > 0) ? (
-                  dashboardData.activitySummary.map((activity) => (
-                      <div key={activity.id || activity.parentName} className="flex items-center gap-3 mb-4 last:mb-0">
-                        <div
-                          className="w-12 h-10 flex-shrink-0 text-white text-sm font-semibold rounded-md flex items-center justify-center"
-                          style={{ backgroundColor: activity.rawHexColor }}
-                        >
-                          {activity.totalScore < 0 ? `-${formatNumberToPersian(Math.abs(activity.totalScore))}` : formatNumberToPersian(activity.totalScore) }
-                        </div>
-                        <div className="flex-grow text-right">
-                          <div className="flex justify-between items-center mb-1.5">
-                            <span className={`text-sm font-medium text-gray-700`}>{activity.parentName}</span>
-                            <Link to={activity.detailsLink || "/"} className={`text-xs text-gray-500 hover:underline`}>مشاهده</Link>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                  dashboardData.activitySummary.map((activity) => {
+                      // ✅ FIX: یک متغیر برای تشخیص موارد کسر امتیاز
+                      const isDeduction = activity.parentName === 'موارد کسر امتیاز';
+                      
+                      return (
+                          <div key={activity.id || activity.parentName} className="flex items-center gap-3 mb-4 last:mb-0">
                             <div
-                              className="h-full rounded-full transition-all duration-500 ease-out"
-                              style={{
-                                width: `${activity.progressPercentage}%`,
-                                backgroundColor: activity.rawHexColor
-                              }}
-                              title={`${activity.progressPercentage}%`}
-                            ></div>
+                              className="w-12 h-10 flex-shrink-0 text-white text-sm font-semibold rounded-md flex items-center justify-center"
+                              style={{ backgroundColor: activity.rawHexColor }}
+                            >
+                              {activity.totalScore < 0 ? `-${formatNumberToPersian(Math.abs(activity.totalScore))}` : formatNumberToPersian(activity.totalScore) }
+                            </div>
+                            <div className="flex-grow text-right">
+                              <div className="flex justify-between items-center mb-1.5">
+                                <span className={`text-sm font-medium text-gray-700`}>{activity.parentName}</span>
+                                <Link to={activity.detailsLink || "/my-activities"} className={`text-xs text-gray-500 hover:underline`}>مشاهده</Link>
+                              </div>
+                              {/* ✅ FIX: تغییر در div والد نوار پیشرفت */}
+                              <div 
+                                className="w-full bg-gray-200 rounded-full h-2 overflow-hidden"
+                                // اگر کسر امتیاز بود، جهت را برعکس می‌کنیم
+                                dir={isDeduction ? 'rtl' : 'ltr'} 
+                              >
+                                <div
+                                  className="h-full rounded-full transition-all duration-500 ease-out"
+                                  style={{
+                                    width: `${isDeduction ? (activity.totalScore * -0.25) : activity.progressPercentage}%`,
+                                    backgroundColor: activity.rawHexColor
+                                  }}
+                                  title={`${activity.progressPercentage}%`}
+                                ></div>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    ))
+                      );
+                  })
                 ) : (
                   <p className="text-center text-gray-500 py-8">فعالیتی ثبت نشده است.</p>
                 )}
               </div>
+
             </div>
 
             {/* بخش میانی: کارت‌های توکن */}

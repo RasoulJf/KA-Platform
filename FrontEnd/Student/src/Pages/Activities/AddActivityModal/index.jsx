@@ -1,9 +1,9 @@
-// AddActivityModal.jsx
-import React, { useState, useEffect, useMemo } from 'react'; // useMemo اضافه شد
-import fetchData from '../../../utils/fetchData'; // مسیر صحیح
+// AddActivityModal.jsx (نسخه کامل و اصلاح شده)
+
+import React, { useState, useEffect, useMemo } from 'react';
+import fetchData from '../../../Utils/fetchData';
 import { IoClose, IoChevronDown } from "react-icons/io5";
 
-// INITIAL_FORM_DATA را بیرون از کامپوننت تعریف کنید تا رفرنس ثابت داشته باشد
 const INITIAL_FORM_DATA = {
     activityCategory: '',
     activityTitle: '',
@@ -16,18 +16,13 @@ export default function AddActivityModal({
     onClose,
     onSubmit,
     token,
-    // activityCategories, // اگر قرار است از والد بیاید و همیشه آپدیت باشد، نیازی به فچ داخلی نیست
-    // loadingActivityCategories
 }) {
     const [formData, setFormData] = useState(INITIAL_FORM_DATA);
-
     const [internalActivityCategories, setInternalActivityCategories] = useState([]);
     const [loadingInternalCategories, setLoadingInternalCategories] = useState(false);
-
     const [availableActivityTitles, setAvailableActivityTitles] = useState([]);
     const [loadingActivityTitles, setLoadingActivityTitles] = useState(false);
     const [selectedActivityFullDetails, setSelectedActivityFullDetails] = useState(null);
-
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
@@ -35,20 +30,12 @@ export default function AddActivityModal({
         new Intl.DateTimeFormat('fa-IR', { dateStyle: 'long' }).format(new Date())
     , []);
 
-    // ۱. لود دسته‌بندی‌ها
+    // ۱. لود دسته‌بندی‌ها (بدون تغییر)
     useEffect(() => {
         const fetchCategories = async () => {
-            // اگر activityCategories از props آمده و معتبر است، از آن استفاده کن
-            // if (activityCategories && activityCategories.length > 0) {
-            //     setInternalActivityCategories(activityCategories);
-            //     setLoadingInternalCategories(loadingActivityCategories || false); // وضعیت لودینگ والد
-            //     return;
-            // }
-            // در غیر این صورت، اگر توکن داریم و لیست داخلی خالی است، فچ کن
             if (token && internalActivityCategories.length === 0) {
                 setLoadingInternalCategories(true); setError('');
                 try {
-                    // مطمئن شوید که Berear به Bearer اصلاح شده
                     const response = await fetchData('admin-activity/distinct/parents', { headers: { authorization: `Bearer ${token}` } });
                     if (response.success) {
                         setInternalActivityCategories(response.data || []);
@@ -62,19 +49,17 @@ export default function AddActivityModal({
         if (isOpen) {
             fetchCategories();
         }
-    }, [isOpen, token, internalActivityCategories.length/*, activityCategories, loadingActivityCategories*/]); // dependency ها بر اساس اینکه از props می‌آید یا نه
+    }, [isOpen, token, internalActivityCategories.length]);
 
-
-    // ۲. لود عناوین فعالیت با تغییر دسته‌بندی
+    // ۲. لود عناوین فعالیت با تغییر دسته‌بندی (بدون تغییر)
     useEffect(() => {
         const fetchTitles = async () => {
             if (formData.activityCategory && token) {
                 setLoadingActivityTitles(true); setError('');
                 setAvailableActivityTitles([]); setSelectedActivityFullDetails(null);
-                // وقتی دسته‌بندی عوض میشه، فیلدهای وابسته رو ریست می‌کنیم
                 setFormData(prev => ({ ...prev, activityTitle: '', details: '' }));
                 try {
-                    const response = await fetchData(`activity/by-parent?parent=${encodeURIComponent(formData.activityCategory)}`, { headers: { authorization: `Bearer ${token}` } }); // Bearer اصلاح شده
+                    const response = await fetchData(`activity/by-parent?parent=${encodeURIComponent(formData.activityCategory)}`, { headers: { authorization: `Bearer ${token}` } });
                     if (response.success) {
                         setAvailableActivityTitles(response.data || []);
                         if (!response.data || response.data.length === 0) setError("عنوانی برای این دسته‌بندی یافت نشد.");
@@ -88,89 +73,107 @@ export default function AddActivityModal({
         if (isOpen) fetchTitles();
     }, [isOpen, formData.activityCategory, token]);
 
-
-    // ۴. ریست فرم وقتی مودال بسته یا باز می‌شود
+    // ۴. ریست فرم (بدون تغییر)
     useEffect(() => {
         if (isOpen) {
             setFormData(INITIAL_FORM_DATA);
             setSelectedActivityFullDetails(null);
             setAvailableActivityTitles([]);
-            // اگر internalActivityCategories هم باید با هر بار باز شدن ریست و فچ شود، length آن را از dependency useEffect اول بردارید
-            // setInternalActivityCategories([]); // این خط باعث فچ مجدد دسته بندی‌ها می‌شود
             setError('');
             setSubmitting(false);
         }
-    }, [isOpen]); // فقط به isOpen وابسته است
+    }, [isOpen]);
 
-
+    // تابع handleChange (بدون تغییر)
     const handleChange = (e) => {
         const { name, value } = e.target;
-
         setFormData(prevFormData => {
             const newState = { ...prevFormData, [name]: value };
-
-            // اگر عنوان فعالیت تغییر کرده (یعنی یک _id جدید انتخاب شده)
             if (name === "activityTitle") {
                 const foundActivity = availableActivityTitles.find(act => act._id === value);
                 setSelectedActivityFullDetails(foundActivity || null);
-                // با انتخاب عنوان جدید، فیلد details باید ریست شود تا کاربر مقدار جدید وارد کند
                 newState.details = '';
-                // اگر fixed_from_enum_single است، scoreAwarded (که در مودال دانش آموز استفاده نمی‌شود) و details را می‌توانستیم ست کنیم
-                // اما چون این مودال دانش آموز است و امتیاز ست نمی‌شود، فقط details ریست می‌شود.
             }
             return newState;
         });
     };
 
-
+    // <<< تغییر کلیدی ۱: اصلاح منطق handleFormSubmit >>>
     const handleFormSubmit = async (e) => {
         e.preventDefault();
         if (!formData.activityCategory || !formData.activityTitle) { setError("لطفاً دسته‌بندی و عنوان فعالیت را انتخاب کنید."); return; }
-        if (selectedActivityFullDetails?.valueInput?.required && selectedActivityFullDetails?.valueInput?.type !== 'none' && !formData.details.trim()) {
-            setError(`فیلد '${selectedActivityFullDetails.valueInput.label || "جزئیات/مقدار"}' الزامی است.`); return;
-        }
         if (!token) { setError("توکن احراز هویت یافت نشد."); return; }
 
+        // تشخیص می‌دهیم که آیا انتخاب سطح با ادمین است یا خیر
+        const isLevelSelectByAdmin =
+            selectedActivityFullDetails?.valueInput?.type === 'select' &&
+            selectedActivityFullDetails?.valueInput?.label?.includes('سطح');
+
+        // اعتبارسنجی را فقط برای مواردی اجرا می‌کنیم که انتخاب سطح با دانش‌آموز است
+        if (!isLevelSelectByAdmin && selectedActivityFullDetails?.valueInput?.required && !formData.details.trim()) {
+            setError(`فیلد '${selectedActivityFullDetails.valueInput.label || "جزئیات/مقدار"}' الزامی است.`);
+            return;
+        }
+
         setSubmitting(true); setError('');
+
         const payload = {
             activityId: formData.activityTitle,
-            details: (selectedActivityFullDetails?.valueInput?.type !== 'none' && formData.details.trim() !== '') ? formData.details.trim() : undefined,
+            // اگر انتخاب با ادمین بود، details را ارسال نکن
+            details: isLevelSelectByAdmin
+                ? undefined
+                : ((selectedActivityFullDetails?.valueInput?.type !== 'none' && formData.details.trim() !== '') ? formData.details.trim() : undefined),
             description: formData.studentDescription.trim() || undefined,
         };
+
         try {
-            const response = await fetchData('student-activity', { method: 'POST', headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` }, body: JSON.stringify(payload) }); // Bearer اصلاح شده
+            const response = await fetchData('student-activity', { method: 'POST', headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` }, body: JSON.stringify(payload) });
             if (response.success) {
-                if (onSubmit) onSubmit(response.data); // onSubmit از والد برای رفرش لیست
-                onClose(); // بستن مودال
+                if (onSubmit) onSubmit(response.data);
+                onClose();
             } else { setError(response.message || "خطا در ثبت فعالیت."); }
         } catch (err) { setError("خطای شبکه یا سرور: " + (err.message || "خطای ناشناخته")); }
         finally { setSubmitting(false); }
     };
 
+    // <<< تغییر کلیدی ۲: اصلاح منطق renderDynamicValueInputField >>>
     const renderDynamicValueInputField = () => {
         if (!selectedActivityFullDetails || !selectedActivityFullDetails.valueInput || selectedActivityFullDetails.valueInput.type === 'none') {
             return null;
         }
+
+        // تشخیص می‌دهیم که آیا انتخاب سطح با ادمین است یا خیر
+        const isLevelSelectByAdmin =
+            selectedActivityFullDetails.valueInput.type === 'select' &&
+            selectedActivityFullDetails.valueInput.label?.includes('سطح');
+
+        // اگر انتخاب سطح با ادمین است، یک پیام راهنما نشان بده و فیلد را نمایش نده
+        if (isLevelSelectByAdmin) {
+            return (
+                <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm p-3 rounded-lg text-right">
+                    <p>برای این فعالیت، سطح‌بندی توسط ادمین انجام می‌شود. لطفاً توضیحات لازم را در کادر پایین وارد کنید.</p>
+                </div>
+            );
+        }
+
+        // در غیر این صورت، فیلد را طبق معمول نمایش بده
         const { type, label, required, numberMin, numberMax } = selectedActivityFullDetails.valueInput;
-        // گزینه‌های select از scoreDefinition.enumOptions خوانده می‌شوند چون در مدل جدید Activity،
-        // فیلد valueInput.options حذف شده و گزینه‌ها برای select_from_enum در scoreDefinition هستند.
         const optionsForSelect = selectedActivityFullDetails.scoreDefinition?.inputType === 'select_from_enum'
-                               ? selectedActivityFullDetails.scoreDefinition.enumOptions
-                               : []; // اگر نوع دیگری از select دارید، valueInput.options قدیمی را اینجا بخوانید (که در مدل جدید نیست)
+            ? selectedActivityFullDetails.scoreDefinition.enumOptions
+            : [];
 
         return (
             <div>
                 <label htmlFor="details" className="block text-xs font-medium text-gray-500 mb-1 text-right">
                     {label || 'جزئیات/مقدار'} {required && <span className="text-red-500">*</span>}
                 </label>
-                {type === 'select' ? ( // این select مربوط به valueInput.type است
+                {type === 'select' ? (
                     <div className="relative">
                         <select
                             id="details" name="details" value={formData.details} onChange={handleChange} required={required}
                             className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-1 focus:ring-[#19A297] focus:border-[#19A297] text-[#202A5A] text-sm text-right appearance-none"
                         >
                             <option value="" disabled>-- {label || "یک گزینه انتخاب کنید"} --</option>
-                            {/* این بخش باید با ساختار enumOptions مدل Activity (که [{label, value}]) هماهنگ باشد */}
                             {Array.isArray(optionsForSelect) && optionsForSelect.map((opt, idx) => (
                                 <option key={opt.label + '-' + idx} value={opt.label}>{opt.label}</option>
                             ))}
@@ -188,16 +191,16 @@ export default function AddActivityModal({
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-[#19A297] focus:border-[#19A297] text-[#202A5A] text-sm text-right placeholder-gray-400"
                     />
                 )}
-                 {selectedActivityFullDetails.description && !type.includes('select') && (
+                {selectedActivityFullDetails.description && !type.includes('select') && (
                     <p className="mt-1 text-xs text-gray-500 text-right">{selectedActivityFullDetails.description}</p>
                 )}
             </div>
         );
     };
 
-    if (!isOpen) return null; // این خط باید بعد از تمام هوک‌ها باشد
+    if (!isOpen) return null;
 
-    // JSX اصلی مودال (بدون تغییر در ساختار کلی شما، فقط فراخوانی handleChange صحیح و اصلاح Bearer)
+    // JSX اصلی مودال (کاملاً بدون تغییر)
     return (
         <div className="fixed inset-0 bg-black/50 bg-opacity-60 flex items-center justify-center z-50 p-4 transition-opacity duration-300 ease-in-out" dir="rtl">
             <div className="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-lg relative transform transition-all duration-300 ease-in-out scale-100">
@@ -205,7 +208,7 @@ export default function AddActivityModal({
                     <IoClose size={26} />
                 </button>
                 <h2 className="text-xl sm:text-2xl font-semibold text-center text-[#202A5A] mb-6 sm:mb-8">
-                    فرم ثبت فعالیت {/* عنوان مودال شما */}
+                    فرم ثبت فعالیت
                 </h2>
 
                 {error && <p className="text-sm text-red-600 bg-red-100 p-3 rounded-md mb-4 text-center">{error}</p>}

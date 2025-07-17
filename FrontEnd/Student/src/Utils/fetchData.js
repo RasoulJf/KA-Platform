@@ -4,7 +4,7 @@ const fetchData=async (url,option={}) => {
         const data=await res.json()
         return data
     } catch (error) {
-        return {success:false,message:'Connection Lost'}
+        return {success:false,message:'Connection Lost',error}
     }
 }
 export default fetchData

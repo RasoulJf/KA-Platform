@@ -2,7 +2,7 @@
 // RequestRewardPage.jsx (کامل با مودال تعریف شده در داخل)
 // =========================================================================
 import React, { useState, useEffect, useMemo } from 'react';
-import fetchData from '../../../utils/fetchData'; // مسیر صحیح به fetchData
+import fetchData from '../../../Utils/fetchData'; // مسیر صحیح به fetchData
 import { BiSolidSchool } from "react-icons/bi";
 import { IoClose, IoNotificationsOutline } from "react-icons/io5";
 import { FaGraduationCap, FaDollarSign, FaGift, FaLandmark } from "react-icons/fa";
@@ -341,7 +341,7 @@ export default function RequestRewardPage({ Open }) {
 
   return (
     <>
-      <div className={`${!Open ? "w-[calc(100%-20%)]" : "w-[calc(100%-6%)]"} p-6 md:p-8 transition-all duration-500 flex-col h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100`}>
+      <div className={`${!Open ? "w-[calc(100%-6%)]" : "w-[calc(100%-20%)]"} p-6 md:p-8 transition-all duration-500 flex-col h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100`}>
         {/* هدر بالا */}
         <div className="flex flex-col sm:flex-row justify-between items-center h-auto sm:h-[5vh] mb-8">
           <div className="flex justify-center items-center gap-3 sm:gap-5 mb-2 sm:mb-0">
@@ -369,7 +369,7 @@ export default function RequestRewardPage({ Open }) {
         )}
 
         {!loadingRewards && !errorRewards && rewardsFromApi.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8" dir="rtl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 w-full gap-6 md:gap-8" dir="rtl">
             {rewardsFromApi.map((reward) => (
               <div
                 key={reward.id}

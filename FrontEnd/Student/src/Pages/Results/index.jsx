@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { BiSolidSchool } from "react-icons/bi";
 import { IoNotificationsOutline } from "react-icons/io5";
 // import { useNavigate } from 'react-router-dom';
-import fetchData from '../../utils/fetchData'; // مسیر صحیح
+import fetchData from '../../Utils/fetchData'; // مسیر صحیح
 
 // headerConfig مثل قبل (ترتیب ستون‌ها را چک کنید)
 const headerConfig = [
@@ -28,6 +28,7 @@ export default function StudentResultsPage({ Open }) { // نام کامپونن�
   const [totalPages, setTotalPages] = useState(1);
   const [totalResultsCount, setTotalResultsCount] = useState(0);
   const [currentUserInfo, setCurrentUserInfo] = useState(null); // برای نمایش اطلاعات کاربر فعلی
+  const [visibility,setVisibility]=useState(false)
 
   const date = new Date();
   const year = new Intl.DateTimeFormat('fa-IR', { year: 'numeric' }).format(date)
@@ -89,6 +90,9 @@ export default function StudentResultsPage({ Open }) { // نام کامپونن�
         setResultsTableData([]);
       } finally {
         setLoading(false);
+        setTimeout(() => {
+          setVisibility(true)
+      }, 1);
       }
     };
 
@@ -113,7 +117,7 @@ export default function StudentResultsPage({ Open }) { // نام کامپونن�
 
   return (
     <>
-      <div className={`p-6 md:p-8 transition-all duration-500 flex-col h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 ${!Open ? "w-[calc(100%-6%)]" : "w-[calc(100%-22%)]" }`}>
+      <div className={`${!visibility ? "hidden opacity-0" : ""}p-6 md:p-8 transition-all duration-500 flex-col h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 ${!Open ? "w-[calc(100%-6%)]" : "w-[calc(100%-22%)]" }`}>
         {/* هدر بالا */}
         <div className="flex flex-col sm:flex-row justify-between items-center h-auto sm:h-[5vh] mb-6">
             <div className="flex justify-center items-center gap-3 sm:gap-5 mb-2 sm:mb-0">

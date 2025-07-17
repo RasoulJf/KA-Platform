@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import fetchData from '../../utils/fetchData';
+import fetchData from '../../Utils/fetchData';
 import Frame23 from '../../assets/images/Frame23.png'; // برای کارت آمار
 import Frame24 from '../../assets/images/Frame24.png'; // برای بنر فعالیت جدید
 
