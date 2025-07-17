@@ -51,7 +51,6 @@ const NotificationPanel = ({ isOpen, onClose }) => {
 
   return (
     <div 
-      className="absolute top-10 right-4 sm:right-[-200px] md:right-[-200px] w-80 sm:w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-40 overflow-hidden"
 =======
       className="absolute top-16 right-4 sm:right-[-200px] md:right-[-200px] w-80 sm:w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-40 overflow-hidden"
 >>>>>>> parent of 0fe3a78 (result and notif)
