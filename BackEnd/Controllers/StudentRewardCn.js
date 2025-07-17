@@ -71,39 +71,39 @@ export const changeStatusRe = catchAsync(async (req, res, next) => {
         if (oldStatus === "approved") { /* ... */ }
         if (user.token < studentReward.token) { return next(new HandleERROR("کاربر توکن کافی ندارد.", 400)); }
 
-        console.log(`CHANGE_STATUS_RE: User ${user.fullName} token BEFORE manual deduction: ${user.token} (for reward ${studentReward._id} with token ${studentReward.token})`);
+        // console.log(`CHANGE_STATUS_RE: User ${user.fullName} token BEFORE manual deduction: ${user.token} (for reward ${studentReward._id} with token ${studentReward.token})`);
         user.token -= studentReward.token;
         userTokenChanged = true;
-        console.log(`CHANGE_STATUS_RE: User ${user.fullName} token AFTER manual deduction: ${user.token}`);
+        // console.log(`CHANGE_STATUS_RE: User ${user.fullName} token AFTER manual deduction: ${user.token}`);
 
         studentReward.status = "approved";
     } else if (newStatus === "rejected" || newStatus === "pending") {
         if (oldStatus === "approved") {
-            console.log(`CHANGE_STATUS_RE: User ${user.fullName} token BEFORE manual refund: ${user.token} (for reward ${studentReward._id} with token ${studentReward.token})`);
+            // console.log(`CHANGE_STATUS_RE: User ${user.fullName} token BEFORE manual refund: ${user.token} (for reward ${studentReward._id} with token ${studentReward.token})`);
             user.token += studentReward.token;
             userTokenChanged = true;
-            console.log(`CHANGE_STATUS_RE: User ${user.fullName} token AFTER manual refund: ${user.token}`);
+            // console.log(`CHANGE_STATUS_RE: User ${user.fullName} token AFTER manual refund: ${user.token}`);
         }
         studentReward.status = newStatus;
     } else { /* ... خطای وضعیت نامعتبر ... */ }
 
     // ابتدا کاربر را ذخیره می‌کنیم (اگر توکنش تغییر کرده)
     if (userTokenChanged) {
-        console.log(`CHANGE_STATUS_RE: Saving user ${user.fullName} with new token: ${user.token}`);
+        // console.log(`CHANGE_STATUS_RE: Saving user ${user.fullName} with new token: ${user.token}`);
         await user.save({ validateBeforeSave: false }); // این save هوک pre('save') را اجرا می‌کند
         const userAfterSave = await User.findById(user._id); // دوباره کاربر را بخوان تا مطمئن شویم توکن درست ذخیره شده
-        console.log(`CHANGE_STATUS_RE: User ${user.fullName} token AFTER save (fetched again): ${userAfterSave.token}`);
+        // console.log(`CHANGE_STATUS_RE: User ${user.fullName} token AFTER save (fetched again): ${userAfterSave.token}`);
     }
 
     // سپس وضعیت پاداش را ذخیره می‌کنیم
     const updatedStudentReward = await studentReward.save();
-    console.log(`CHANGE_STATUS_RE: StudentReward ${updatedStudentReward._id} status saved as ${updatedStudentReward.status}`);
+    // console.log(`CHANGE_STATUS_RE: StudentReward ${updatedStudentReward._id} status saved as ${updatedStudentReward.status}`);
 
     // ***** حالا updateUserScore رو بعد از تمام تغییرات و save ها صدا بزن *****
     // کاربر را دوباره از دیتابیس می‌خوانیم تا مطمئن شویم آخرین نسخه را دارد
     const finalUserForUpdateScore = await User.findById(user._id);
     await updateUserScore(finalUserForUpdateScore);
-    console.log(`CHANGE_STATUS_RE: updateUserScore called for user ${finalUserForUpdateScore.fullName}`);
+    // console.log(`CHANGE_STATUS_RE: updateUserScore called for user ${finalUserForUpdateScore.fullName}`);
 
     return res.status(200).json({
         success: true,
@@ -117,9 +117,9 @@ export const changeStatusRe = catchAsync(async (req, res, next) => {
 
 
 export const createStudentReward = catchAsync(async (req, res, next) => {
-    console.log("--- createStudentReward Controller ---");
-    console.log("req.userId:", req.userId);
-    console.log("req.body:", req.body);
+    // console.log("--- createStudentReward Controller ---");
+    // console.log("req.userId:", req.userId);
+    // console.log("req.body:", req.body);
 
     const { rewardId, token: requestedTokenStr } = req.body; // اسم رو به requestedTokenStr تغییر دادم برای وضوح
     const requestedTokenNum = Number(requestedTokenStr); // تبدیل به عدد
@@ -170,7 +170,7 @@ export const createStudentReward = catchAsync(async (req, res, next) => {
                                         // معمولاً بهتره توکن موقع تایید (approved) توسط ادمین کسر بشه.
                                         // پس این خط رو اینجا کامنت می‌کنیم.
         await user.save({ validateBeforeSave: false }); // ذخیره کاربر با پاداش جدید در لیستش
-        console.log(`StudentReward ${studentReward._id} added to user ${user._id} rewards list.`);
+        // console.log(`StudentReward ${studentReward._id} added to user ${user._id} rewards list.`);
     } else {
         // اگر studentReward به هر دلیلی ساخته نشد (که بعیده بعد از create موفق)
         return next(new HandleERROR("خطا در ایجاد رکورد درخواست پاداش.", 500));
@@ -212,7 +212,7 @@ export const getMyStudentRewards = catchAsync(async (req, res, next) => {
 
 // --- کنترلر getAllStudentRewardsForAdmin ---
 export const getAllStudentRewardsForAdmin = catchAsync(async (req, res, next) => {
-    console.log("getAllStudentRewardsForAdmin called with query:", req.query);
+    // console.log("getAllStudentRewardsForAdmin called with query:", req.query);
 
     // فیلترهای اولیه که می‌خواهیم قبل از populate اعمال شوند (اگر وجود دارند و ApiFeatures آنها را نمی‌سازد)
     const initialFilters = {}; // مثال: { status: req.query.status } اگر status یک فیلتر اصلی است
@@ -234,14 +234,14 @@ export const getAllStudentRewardsForAdmin = catchAsync(async (req, res, next) =>
     const countFeatures = new ApiFeatures(StudentReward.find(initialFilters), req.query).filter();
     const totalCount = await StudentReward.countDocuments(countFeatures.getQueryFilters ? countFeatures.getQueryFilters() : initialFilters);
 
-    console.log("--- getAllStudentRewardsForAdmin - Final Output to Frontend ---");
+    // console.log("--- getAllStudentRewardsForAdmin - Final Output to Frontend ---");
     if (studentRewards && studentRewards.length > 0) {
-        console.log(`Returning ${studentRewards.length} (paginated) student rewards. Total matching: ${totalCount}`);
-        console.log("Sample FINAL studentReward to be sent:", JSON.stringify(studentRewards[0], null, 2));
+        // console.log(`Returning ${studentRewards.length} (paginated) student rewards. Total matching: ${totalCount}`);
+        // console.log("Sample FINAL studentReward to be sent:", JSON.stringify(studentRewards[0], null, 2));
     } else {
-        console.log("No student rewards to return for admin view with current filters.");
+        // console.log("No student rewards to return for admin view with current filters.");
     }
-    console.log("----------------------------------------------------------");
+    // console.log("----------------------------------------------------------");
 
     return res.status(200).json({
         success: true,
@@ -307,11 +307,11 @@ export const getAdminRewardStats = catchAsync(async (req, res, next) => {
     }
 
     // ---- دیباگ برای مقادیر نهایی آمار ----
-    console.log("--- Admin Stats Data to be Sent ---");
-    console.log("Calculated rewardStats:", rewardStats);
-    console.log("totalRegisteredRewardTokensValue:", totalRegisteredRewardTokensValue);
-    console.log("systemTotalAvailableTokensValue:", systemTotalAvailableTokensValue);
-    console.log("----------------------------------");
+    // console.log("--- Admin Stats Data to be Sent ---");
+    // console.log("Calculated rewardStats:", rewardStats);
+    // console.log("totalRegisteredRewardTokensValue:", totalRegisteredRewardTokensValue);
+    // console.log("systemTotalAvailableTokensValue:", systemTotalAvailableTokensValue);
+    // console.log("----------------------------------");
     // ---- پایان دیباگ ----
 
     res.status(200).json({
