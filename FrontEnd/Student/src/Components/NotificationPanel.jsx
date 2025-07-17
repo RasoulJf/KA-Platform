@@ -118,15 +118,16 @@ const NotificationPanel = ({ isOpen, onClose, token }) => {
                     );
                 })}
             </div>
-            {!loading && notifications.length > 0 && (
-                <div className="p-3 text-center border-t border-gray-200 flex-shrink-0">
-                    <button onClick={() => { navigate('/notifications'); onClose(); }} className="text-sm text-[#19A297] hover:underline">
-                        مشاهده همه اعلان ها
-                    </button>
-                </div>
-            )}
+          ))
+        )}
+      </div>
+      {notificationsData.length > 0 && (
+        <div className="p-3 text-center border-t border-gray-200">
+          <button className="text-sm text-[#19A297] hover:underline">مشاهده همه اعلان ها</button>
         </div>
-    );
+      )}
+    </div>
+  );
 };
 
 export default NotificationPanel;
