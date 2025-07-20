@@ -191,6 +191,7 @@ export const getOverallRankingTable = catchAsync(async (req, res, next) => {
 
     const users = await features.query.lean(); // .lean() برای پرفورمنس
     const totalUsers = await User.countDocuments(features.getQueryFilters ? features.getQueryFilters() : { role: 'student', ...req.query.filters });
+    console.log(totalUsers)
 
 
     // --- مرحله ۲: برای هر کاربر، مجموع امتیازات را در دسته‌های مختلف فعالیت محاسبه کن ---
@@ -390,6 +391,9 @@ export const getGradeRankingTable = catchAsync(async (req, res, next) => {
   const features = new ApiFeatures(userQuery, req.query).paginate();
   const usersInGrade = await features.query.lean();
   const totalUsersInGrade = await User.countDocuments(features.getQueryFilters ? features.getQueryFilters() : { role: 'student', grade: targetGrade });
+
+
+
 
   if (!usersInGrade || usersInGrade.length === 0) {
       return res.status(200).json({

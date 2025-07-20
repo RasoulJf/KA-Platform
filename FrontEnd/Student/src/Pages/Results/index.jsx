@@ -150,7 +150,7 @@ export default function StudentResultsPage({ Open }) {
         setLoading(false);
         setTimeout(() => {
           setVisibility(true)
-        }, 1);
+        }, 200);
       }
     };
 

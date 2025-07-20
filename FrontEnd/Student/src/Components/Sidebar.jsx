@@ -13,6 +13,7 @@ import { Link, useLocation } from "react-router-dom";
 
 export default function Sidebar({ getOpen }) {
   const userString = localStorage.getItem("user");
+  console.log(userString)
   const user = userString ? JSON.parse(userString) : null;
 
   const [open, setOpen] = useState(true);

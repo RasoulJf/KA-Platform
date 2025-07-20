@@ -7,7 +7,7 @@ import useFormFields from '../../Utils/useFormFields'
 import { toast } from 'sonner'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { AuthContext } from '../../Utils/AuthContext'
-import fetchData from '../../utils/fetchData'
+import fetchData from '../../Utils/fetchData'
 
 
 export default function Login() {

@@ -9,6 +9,7 @@ import { FaPlus } from "react-icons/fa";
 import { BsChatDots, BsChatFill, BsChatText } from "react-icons/bs";
 import { IoChevronDown } from "react-icons/io5";
 import AddActivityModal from './AddActivityModal'; // مسیر صحیح به کامپوننت مودال
+import ActivityDetailsModal from './ActivityDetailsModal';
 // NotificationPanel را هم اگر لازم دارید import کنید
 // import NotificationPanel from '../../Components/NotificationPanel';
 
@@ -22,6 +23,9 @@ export default function Activities({ Open }) { // نام کامپوننت را A
     const week = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(date);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [selectedActivity, setSelectedActivity] = useState(null);
 
     const [statCardData, setStatCardData] = useState({
         pendingStudentActivities: 0,
@@ -38,6 +42,8 @@ export default function Activities({ Open }) { // نام کامپوننت را A
     const [filters, setFilters] = useState({
         status: '',
         activityTitle: '',
+        entryType: '' // <-- فقط این خط اضافه میشه
+
         // dateRange: { from: null, to: null } // برای فیلتر تاریخ اگر لازم شد
     });
     const [sort, setSort] = useState({ sortBy: 'submissionDate', order: 'desc' });
@@ -50,6 +56,8 @@ export default function Activities({ Open }) { // نام کامپوننت را A
 
     const [openFilterDropdowns, setOpenFilterDropdowns] = useState({
         status: false,
+        entryType: false, // <-- فقط این خط اضافه میشه
+
         // date: false, // اگر فیلتر تاریخ دارید
     });
 
@@ -107,6 +115,8 @@ export default function Activities({ Open }) { // نام کامپوننت را A
             const queryParams = new URLSearchParams();
             if (filters.status) queryParams.append('status', filters.status);
             if (filters.activityTitle) queryParams.append('activityTitle', filters.activityTitle);
+            if (filters.entryType) queryParams.append('entryType', filters.entryType); // <-- اضافه کردن این خط
+
             // if (filters.dateRange.from) queryParams.append('dateFrom', filters.dateRange.from.toISOString());
             // if (filters.dateRange.to) queryParams.append('dateTo', filters.dateRange.to.toISOString());
             queryParams.append('sortBy', sort.sortBy);
@@ -139,6 +149,16 @@ export default function Activities({ Open }) { // نام کامپوننت را A
         };
         fetchActivities();
     }, [token, filters, sort, pagination.currentPage, pagination.limit]);
+
+    const handleOpenDetailsModal = (activity) => {
+        setSelectedActivity(activity);
+        setIsDetailsModalOpen(true);
+    };
+
+    const handleCloseDetailsModal = () => {
+        setIsDetailsModalOpen(false);
+        setSelectedActivity(null);
+    };
 
     const handleOpenModal = () => setIsModalOpen(true);
     const handleCloseModal = () => setIsModalOpen(false);
@@ -205,6 +225,11 @@ export default function Activities({ Open }) { // نام کامپوننت را A
         // می‌توانید "ثبت توسط ادمین" را هم اضافه کنید اگر بک‌اند آن را به عنوان یک وضعیت برمی‌گرداند
         // { value: 'admin_approved', label: 'ثبت توسط ادمین' },
     ];
+    const entryTypeOptions = [
+        { value: '', label: 'همه انواع ثبت' },
+        { value: 'student', label: 'ثبت توسط من' },
+        { value: 'admin', label: 'ثبت توسط ادمین' },
+    ];
 
     const statCardsDisplayData = [
         { title: "فعالیت های در انتظار بررسی", count: statCardData.pendingStudentActivities, Icon: BsChatDots, bgColorClass: "bg-yellow-500", textColorClass: "text-yellow-700", iconBgColorClass: "bg-yellow-400" },
@@ -215,7 +240,7 @@ export default function Activities({ Open }) { // نام کامپوننت را A
 
     return (
         <>
-      <div className={`${!Open ? "w-[calc(100%-6%)]" : "w-[calc(100%-22%)]" } p-6 md:p-8 transition-all duration-500 flex-col h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100`}>
+            <div className={`${!Open ? "w-[calc(100%-6%)]" : "w-[calc(100%-22%)]"} p-6 md:p-8 transition-all duration-500 flex-col h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100`}>
 
                 {/* هدر بالا */}
                 <div className="flex flex-col sm:flex-row justify-between items-center h-auto sm:h-[5vh] mb-6">
@@ -240,7 +265,7 @@ export default function Activities({ Open }) { // نام کامپوننت را A
                     ))}
                     {errorStats && <p className="col-span-full text-center text-red-500 bg-red-100 p-4 rounded-md">{errorStats}</p>}
                     {!loadingStats && !errorStats && statCardsDisplayData.map((card, idx) => (
-                        <div key={idx} className={`relative p-6 rounded-xl shadow-lg flex flex-col items-center justify-center text-center min-h-[180px] overflow-hidden ${card.bgColorClass.replace('bg-','bg-opacity-10 ')}`}>
+                        <div key={idx} className={`relative p-6 rounded-xl shadow-lg flex flex-col items-center justify-center text-center min-h-[180px] overflow-hidden ${card.bgColorClass.replace('bg-', 'bg-opacity-10 ')}`}>
                             <img src={Frame23} className="absolute z-0 h-full w-full object-cover scale-110 top-[10px]" alt="" />
                             <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/30 rounded-full opacity-50"></div>
                             <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-white/20 rounded-full opacity-50"></div>
@@ -284,6 +309,23 @@ export default function Activities({ Open }) { // نام کامپوننت را A
                                 <div className="absolute z-20 top-full right-0 sm:left-0 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg py-1">
                                     {statusOptions.map(opt => (
                                         <button key={opt.value} onClick={() => handleFilterChange('status', opt.value)}
+                                            className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                            {opt.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        {/* JSX فیلتر جدید */}
+                        <div className="relative">
+                            <button onClick={() => toggleFilterDropdown('entryType')} className="bg-white border border-gray-300 text-gray-700 px-4 py-2.5 rounded-lg text-sm flex items-center justify-between min-w-[150px] hover:border-gray-400 transition-colors">
+                                <span>نوع ثبت: {entryTypeOptions.find(opt => opt.value === filters.entryType)?.label || "همه"}</span>
+                                <IoChevronDown className={`text-gray-500 transition-transform duration-200 ${openFilterDropdowns.entryType ? 'rotate-180' : ''}`} />
+                            </button>
+                            {openFilterDropdowns.entryType && (
+                                <div className="absolute z-20 top-full right-0 sm:left-0 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg py-1">
+                                    {entryTypeOptions.map(opt => (
+                                        <button key={opt.value} onClick={() => handleFilterChange('entryType', opt.value)}
                                             className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                             {opt.label}
                                         </button>
@@ -336,10 +378,10 @@ export default function Activities({ Open }) { // نام کامپوننت را A
                                         else if (activity.status === "ثبت توسط ادمین") { statusColor = "text-blue-500"; }
 
                                         return (
-                                            <tr key={activity._id || idx} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-gray-100 transition-colors`}>
+                                            <tr key={activity._id || idx} onClick={() => handleOpenDetailsModal(activity)} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-gray-100 transition-colors`}>
                                                 <td className={`px-4 text-center py-3 whitespace-nowrap font-semibold ${statusColor}`}>{statusText}</td>
-                                                <td className="px-4 text-center py-3 whitespace-nowrap text-gray-600">{activity.reviewDate ? new Intl.DateTimeFormat('fa-IR', {year: 'numeric', month: 'short', day: 'numeric'}).format(new Date(activity.reviewDate)) : '-'}</td>
-                                                <td className="px-4 text-center py-3 whitespace-nowrap text-gray-600">{activity.submissionDate ? new Intl.DateTimeFormat('fa-IR', {year: 'numeric', month: 'short', day: 'numeric'}).format(new Date(activity.submissionDate)) : '-'}</td>
+                                                <td className="px-4 text-center py-3 whitespace-nowrap text-gray-600">{activity.reviewDate ? new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(activity.reviewDate)) : '-'}</td>
+                                                <td className="px-4 text-center py-3 whitespace-nowrap text-gray-600">{activity.submissionDate ? new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(activity.submissionDate)) : '-'}</td>
                                                 <td className="px-4 text-center py-3 whitespace-nowrap text-gray-600 max-w-[200px] truncate" title={activity.descriptionFromEntry}>{activity.descriptionFromEntry || '-'}</td>
                                                 <td className="px-4 text-center py-3 whitespace-nowrap text-gray-800 font-medium">{activity.activityName || 'نامشخص'}</td>
                                                 <td className="px-4 text-center py-3 whitespace-nowrap text-gray-600 font-semibold">{activity.scoreAwarded?.toLocaleString('fa-IR') ?? '-'}</td>
@@ -351,7 +393,7 @@ export default function Activities({ Open }) { // نام کامپوننت را A
                             </table>
                         )}
                     </div>
-                     {/* Pagination Controls */}
+                    {/* Pagination Controls */}
                     {!loadingActivities && !errorActivities && activitiesList.length > 0 && pagination.totalPages > 1 && (
                         <div className="flex justify-center items-center gap-2 mt-6 p-4 bg-gray-50 rounded-b-xl border-t border-gray-200">
                             <button onClick={() => handlePageChange(pagination.currentPage - 1)} disabled={pagination.currentPage === 1}
@@ -372,9 +414,15 @@ export default function Activities({ Open }) { // نام کامپوننت را A
                 onClose={handleCloseModal}
                 onSubmit={handleActivitySubmit} // این تابع باید لیست را رفرش کند
                 token={token}
-                // پاس دادن activityCategories به مودال اگر لازم است
-                // activityCategories={activityCategories}
-                // loadingActivityCategories={loadingStats && activityCategories.length === 0}
+            // پاس دادن activityCategories به مودال اگر لازم است
+            // activityCategories={activityCategories}
+            // loadingActivityCategories={loadingStats && activityCategories.length === 0}
+            />
+            {/* <<< ۵. رندر کردن مودال جدید >>> */}
+            <ActivityDetailsModal
+                isOpen={isDetailsModalOpen}
+                onClose={handleCloseDetailsModal}
+                activity={selectedActivity}
             />
         </>
     );

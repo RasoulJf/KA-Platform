@@ -15,14 +15,17 @@ import mongoose from 'mongoose';
 // ... (import های قبلی) ...
 import Activity from '../Models/ActivityMd.js'; // اطمینان از import
 
+// controllers/studentActivityController.js (یا هر فایلی که این کنترلر در آن است)
+
+
+
 export const getMyActivitiesList = catchAsync(async (req, res, next) => {
     const userId = req.userId;
     const userObjectId = new mongoose.Types.ObjectId(userId);
 
-    // --- پارامترهای Query برای فیلتر، مرتب‌سازی و صفحه‌بندی ---
-    const { status, activityTitle, sortBy = 'submissionDate', order = 'desc', page = 1, limit = 10 } = req.query;
+    // ۲. پارامتر جدید entryType را از query می‌خوانیم
+    const { status, activityTitle, sortBy = 'submissionDate', order = 'desc', page = 1, limit = 10, entryType } = req.query;
 
-    // --- پایپ‌لاین پایه برای هر دو نوع فعالیت ---
     const baseActivityPipeline = (collectionName) => [
         { $match: { userId: userObjectId } },
         {
@@ -34,71 +37,60 @@ export const getMyActivitiesList = catchAsync(async (req, res, next) => {
             }
         },
         { $unwind: { path: '$activityInfo', preserveNullAndEmptyArrays: true } },
-        // فیلدهای مشترک و تغییر نام یافته را انتخاب می‌کنیم
         {
             $project: {
                 _id: 1,
                 activityName: '$activityInfo.name',
-                descriptionFromEntry: '$details', // جزئیات وارد شده توسط کاربر/ادمین
+                details: '$details', // نام فیلد در مدل شما (ممکن است متفاوت باشد)
                 submissionDate: '$createdAt',
-                reviewDate: '$updatedAt', // این ممکن است نیاز به منطق دقیق‌تری داشته باشد
-                                         // مثلاً فقط updatedAt زمانی که status تغییر کرده
-                status: collectionName === 'studentactivities' ? '$status' : 'ثبت توسط ادمین', // برای AdminActivity وضعیت ثابت است
+                reviewDate: '$updatedAt',
+                status: collectionName === 'studentactivities' ? '$status' : 'ثبت توسط ادمین',
                 scoreAwarded: 1,
                 adminComment: collectionName === 'studentactivities' ? '$adminComment' : undefined,
+                description: collectionName === 'studentactivities' ? '$description' : undefined, // توضیحات دانش آموز
                 type: collectionName === 'studentactivities' ? 'ثبت توسط دانش‌آموز' : 'ثبت توسط ادمین',
-                // یک فیلد برای مرتب‌سازی یکسان (createdAt برای هر دو)
                 sortDate: '$createdAt'
             }
         },
     ];
+    
+    let studentActivities = [];
+    let adminActivities = [];
 
-    // اعمال فیلترهای خاص
-    const studentActivityMatch = { userId: userObjectId };
-    if (status && ['pending', 'approved', 'rejected'].includes(status)) {
-        studentActivityMatch.status = status;
-    }
-
-    const studentActivitiesPipeline = [
-        { $match: studentActivityMatch },
-        ...baseActivityPipeline('studentactivities').slice(1) // از match اول صرف نظر کن چون بالاتر اعمال شده
-    ];
-
-    const adminActivitiesPipeline = baseActivityPipeline('adminactivities');
-
-    // برای فیلتر بر اساس عنوان فعالیت (activityTitle)
-    // این فیلتر باید بعد از $lookup و $project اولیه اعمال شود که activityName را داریم
-    const titleFilterStage = [];
-    if (activityTitle) {
-        titleFilterStage.push({
-            $match: { activityName: { $regex: activityTitle, $options: 'i' } }
-        });
-    }
-
-    // اجرای پایپ‌لاین‌ها
-    let studentActivities = await StudentActivity.aggregate(studentActivitiesPipeline);
-    let adminActivities = await AdminActivity.aggregate(adminActivitiesPipeline);
-
-    // اعمال فیلتر عنوان روی نتایج هر دو
-    if (titleFilterStage.length > 0) {
-        // برای اعمال فیلتر روی نتایج موجود، یک پایپ‌لاین دیگر اجرا نمی‌کنیم، بلکه در کد فیلتر می‌کنیم
-        // یا اینکه titleFilterStage را به انتهای baseActivityPipeline اضافه کنیم (قبل از اجرای aggregate)
-        // راه حل ساده تر: فیلتر در کد
-        if (activityTitle) {
-            const regex = new RegExp(activityTitle, 'i');
-            studentActivities = studentActivities.filter(act => act.activityName && regex.test(act.activityName));
-            adminActivities = adminActivities.filter(act => act.activityName && regex.test(act.activityName));
+    // ۳. بر اساس entryType تصمیم می‌گیریم کدام داده‌ها را واکشی کنیم
+    if (!entryType || entryType === 'student') {
+        const studentActivityMatch = { userId: userObjectId };
+        if (status && ['pending', 'approved', 'rejected'].includes(status)) {
+            studentActivityMatch.status = status;
         }
+        const studentActivitiesPipeline = [
+            { $match: studentActivityMatch },
+            ...baseActivityPipeline('studentactivities').slice(1)
+        ];
+        studentActivities = await StudentActivity.aggregate(studentActivitiesPipeline);
+    }
+    
+    // اگر نوع ثبت "ادمین" بود یا هیچ فیلتری نبود، فعالیت‌های ادمین را هم بیاور
+    if (!entryType || entryType === 'admin') {
+        const adminActivitiesPipeline = baseActivityPipeline('adminactivities');
+        adminActivities = await AdminActivity.aggregate(adminActivitiesPipeline);
     }
 
-
-    // ترکیب نتایج
+    // اگر فیلتر عنوان وجود داشت، روی نتایج اعمال می‌کنیم
+    if (activityTitle) {
+        const regex = new RegExp(activityTitle, 'i');
+        studentActivities = studentActivities.filter(act => act.activityName && regex.test(act.activityName));
+        adminActivities = adminActivities.filter(act => act.activityName && regex.test(act.activityName));
+    }
+    
     let combinedActivities = [...studentActivities, ...adminActivities];
 
-    // مرتب‌سازی
+    // مرتب‌سازی نتایج ترکیبی
     combinedActivities.sort((a, b) => {
-        const fieldA = a[sortBy] || a.sortDate; // sortDate به عنوان fallback
-        const fieldB = b[sortBy] || b.sortDate;
+        const sortKey = sortBy === 'activityName' ? 'activityName' : 'sortDate'; // مرتب سازی بر اساس نام یا تاریخ
+        const fieldA = a[sortKey];
+        const fieldB = b[sortKey];
+        
         if (order === 'asc') {
             return fieldA > fieldB ? 1 : (fieldA < fieldB ? -1 : 0);
         } else { // desc
@@ -110,10 +102,8 @@ export const getMyActivitiesList = catchAsync(async (req, res, next) => {
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
     const startIndex = (pageNum - 1) * limitNum;
-    const endIndex = pageNum * limitNum;
-    const paginatedActivities = combinedActivities.slice(startIndex, endIndex);
+    const paginatedActivities = combinedActivities.slice(startIndex, startIndex + limitNum);
     const totalCount = combinedActivities.length;
-
 
     res.status(200).json({
         success: true,

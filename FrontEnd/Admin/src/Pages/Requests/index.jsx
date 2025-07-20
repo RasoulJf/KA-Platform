@@ -48,7 +48,7 @@ export default function Requests({ Open }) {
         currentPage: 1,
         totalPages: 1,
         totalCount: 0,
-        limit: 10,
+        limit: 6,
     });
     const [openFilterDropdowns, setOpenFilterDropdowns] = useState({
         status: false,
@@ -186,6 +186,11 @@ export default function Requests({ Open }) {
             setOpenFilterDropdowns(prev => ({ ...prev, [filterName]: false }));
         }
     };
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= pagination.totalPages && !loadingRequests) {
+            setPagination(prev => ({ ...prev, currentPage: newPage }));
+        }
+    };
     const toggleFilterDropdown = (filterName) => { /* ... (بدون تغییر) ... */
         setOpenFilterDropdowns(prev => ({
             ...Object.keys(prev).reduce((acc, key) => { acc[key] = false; return acc; }, {}),
@@ -302,8 +307,8 @@ export default function Requests({ Open }) {
 
 
                 {/* ... (جدول درخواست‌ها با استفاده از requestsList و کنترل‌های صفحه‌بندی - بدون تغییر زیاد از کد قبلی شما، فقط مطمئن شوید `key` برای `<tr>` از `request._id` باشد) ... */}
-                 <div className="flex-grow overflow-auto bg-white rounded-xl shadow-xl border border-gray-100">
-                    {loadingRequests && <p className="text-center py-10 text-gray-600">در حال بارگذاری درخواست‌ها...</p>}
+                <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+                {loadingRequests && <p className="text-center py-10 text-gray-600">در حال بارگذاری درخواست‌ها...</p>}
                     {errorRequests && <p className="text-center py-10 text-red-600 bg-red-100 p-4 rounded-md">{errorRequests}</p>}
                     {!loadingRequests && !errorRequests && requestsList.length === 0 && (
                         <p className="text-center py-10 text-gray-500">درخواستی برای نمایش یافت نشد.</p>

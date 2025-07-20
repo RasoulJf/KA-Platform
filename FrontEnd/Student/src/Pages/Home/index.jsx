@@ -11,6 +11,37 @@ import NotificationPanel from '../../Components/NotificationPanel'; // مسیر 
 import fetchData from '../../Utils/fetchData';
 
 export default function StudentDashboard({ Open }) {
+
+    const MOCKET_ACTIVITY_DATA=[
+      {
+        "parentName": "فعالیت‌های آموزشی",
+        "totalScore": 0,
+        "progressPercentage": 0,
+        "color": "text-[#652D90]",
+        "rawHexColor": "#652D90"
+      },
+      {
+        "parentName": "فعالیت‌های داوطلبانه و توسعه فردی",
+        "totalScore": 0,
+        "progressPercentage": 0,
+        "color": "text-[#E0195B]",
+        "rawHexColor": "#E0195B"
+      },
+      {
+        "parentName": "فعالیت‌های شغلی",
+        "totalScore":0,
+        "progressPercentage": 0,
+        "color": "text-[#F8A41D]",
+        "rawHexColor": "#F8A41D"
+      },
+      {
+        "parentName": "موارد کسر امتیاز",
+        "totalScore": 0,
+        "progressPercentage": 0,
+        "color": "text-[#787674]",
+        "rawHexColor": "#787674"
+      }
+    ]
     const token = localStorage.getItem("token");
     const navigate = useNavigate();
 
@@ -161,36 +192,81 @@ export default function StudentDashboard({ Open }) {
               {/* بخش فعالیت‌ها */}
               <div className="lg:w-2/3 bg-white p-6 rounded-lg shadow-sm flex flex-col justify-center" style={{height: '250px'}}>
               {(dashboardData.activitySummary && dashboardData.activitySummary.length > 0) ? (
-                  dashboardData.activitySummary.map((activity) => (
-                      <div key={activity.id || activity.parentName} className="flex items-center gap-3 mb-4 last:mb-0">
-                        <div
-                          className="w-12 h-10 flex-shrink-0 text-white text-sm font-semibold rounded-md flex items-center justify-center"
-                          style={{ backgroundColor: activity.rawHexColor }}
-                        >
-                          {activity.totalScore < 0 ? `-${formatNumberToPersian(Math.abs(activity.totalScore))}` : formatNumberToPersian(activity.totalScore) }
-                        </div>
-                        <div className="flex-grow text-right">
-                          <div className="flex justify-between items-center mb-1.5">
-                            <span className={`text-sm font-medium text-gray-700`}>{activity.parentName}</span>
-                            <Link to={activity.detailsLink || "/"} className={`text-xs text-gray-500 hover:underline`}>مشاهده</Link>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                  dashboardData.activitySummary.map((activity) => {
+                      // ✅ FIX: یک متغیر برای تشخیص موارد کسر امتیاز
+                      const isDeduction = activity.parentName === 'موارد کسر امتیاز';
+                      
+                      return (
+                          <div key={activity.id || activity.parentName} className="flex items-center gap-3 mb-4 last:mb-0">
                             <div
-                              className="h-full rounded-full transition-all duration-500 ease-out"
-                              style={{
-                                width: `${activity.progressPercentage}%`,
-                                backgroundColor: activity.rawHexColor
-                              }}
-                              title={`${activity.progressPercentage}%`}
-                            ></div>
+                              className="w-12 h-10 flex-shrink-0 text-white text-sm font-semibold rounded-md flex items-center justify-center"
+                              style={{ backgroundColor: activity.rawHexColor }}
+                            >
+                              {activity.totalScore < 0 ? `-${formatNumberToPersian(Math.abs(activity.totalScore))}` : formatNumberToPersian(activity.totalScore) }
+                            </div>
+                            <div className="flex-grow text-right">
+                              <div className="flex justify-between items-center mb-1.5">
+                                <span className={`text-sm font-medium text-gray-700`}>{activity.parentName}</span>
+                                <Link to={activity.detailsLink || "/my-activities"} className={`text-xs text-gray-500 hover:underline`}>مشاهده</Link>
+                              </div>
+                              {/* ✅ FIX: تغییر در div والد نوار پیشرفت */}
+                              <div 
+                                className="w-full bg-gray-200 rounded-full h-2 overflow-hidden"
+                                // اگر کسر امتیاز بود، جهت را برعکس می‌کنیم
+                                dir={isDeduction ? 'rtl' : 'ltr'} 
+                              >
+                                <div
+                                  className="h-full rounded-full transition-all duration-500 ease-out"
+                                  style={{
+                                    width: `${isDeduction ? (activity.totalScore * -0.25) : activity.progressPercentage}%`,
+                                    backgroundColor: activity.rawHexColor
+                                  }}
+                                  title={`${activity.progressPercentage}%`}
+                                ></div>
+                              </div>
+                            </div>
+                          </div>
+                      );
+                  })
+                ) : (
+                  MOCKET_ACTIVITY_DATA.map((activity) => {
+                    // ✅ FIX: یک متغیر برای تشخیص موارد کسر امتیاز
+                    const isDeduction = activity.parentName === 'موارد کسر امتیاز';
+                    
+                    return (
+                        <div key={activity.id || activity.parentName} className="flex items-center gap-3 mb-4 last:mb-0">
+                          <div
+                            className="w-12 h-10 flex-shrink-0 text-white text-sm font-semibold rounded-md flex items-center justify-center"
+                            style={{ backgroundColor: activity.rawHexColor }}
+                          >
+                            {activity.totalScore < 0 ? `-${formatNumberToPersian(Math.abs(activity.totalScore))}` : formatNumberToPersian(activity.totalScore) }
+                          </div>
+                          <div className="flex-grow text-right">
+                            <div className="flex justify-between items-center mb-1.5">
+                              <span className={`text-sm font-medium text-gray-700`}>{activity.parentName}</span>
+                              <Link to={activity.detailsLink || "/my-activities"} className={`text-xs text-gray-500 hover:underline`}>مشاهده</Link>
+                            </div>
+                            {/* ✅ FIX: تغییر در div والد نوار پیشرفت */}
+                            <div 
+                              className="w-full bg-gray-200 rounded-full h-2 overflow-hidden"
+                              // اگر کسر امتیاز بود، جهت را برعکس می‌کنیم
+                              dir={isDeduction ? 'rtl' : 'ltr'} 
+                            >
+                              <div
+                                className="h-full rounded-full transition-all duration-500 ease-out"
+                                style={{
+                                  width: `${isDeduction ? (activity.totalScore * -0.25) : activity.progressPercentage}%`,
+                                  backgroundColor: activity.rawHexColor
+                                }}
+                                title={`${activity.progressPercentage}%`}
+                              ></div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
-                ) : (
-                  <p className="text-center text-gray-500 py-8">فعالیتی ثبت نشده است.</p>
-                )}
+                    );
+                })                )}
               </div>
+
             </div>
 
             {/* بخش میانی: کارت‌های توکن */}
@@ -229,7 +305,7 @@ export default function StudentDashboard({ Open }) {
                 </Link>
                 <div className="flex-grow overflow-hidden rounded-b-lg bg-white border border-gray-200 border-t-0">
                   <div className="bg-[#19A297] text-white h-12 flex items-center px-4">
-                    <Link to="/rankings/grade" className="text-gray-200 hover:text-white text-[10px]">مشاهدۀ همه</Link>
+                    <Link to="/results" className="text-gray-200 hover:text-white text-[10px]">مشاهدۀ همه</Link>
                     <h3 className="flex-grow text-right font-semibold text-base">برترین‌های پایه</h3>
                   </div>
                   <div className="overflow-x-auto">
@@ -261,7 +337,7 @@ export default function StudentDashboard({ Open }) {
                 </Link>
                 <div className="flex-grow overflow-hidden rounded-b-lg bg-white border border-gray-200 border-t-0">
                   <div className="bg-[#202A5A] text-white h-12 flex items-center px-4">
-                    <Link to="/rankings/all" className="text-gray-300 hover:text-white text-[10px]">مشاهدۀ همه</Link>
+                    <Link to="/results" className="text-gray-300 hover:text-white text-[10px]">مشاهدۀ همه</Link>
                     <h3 className="flex-grow text-right font-semibold text-base">رتبۀ شما در جدول امتیازات</h3>
                   </div>
                   <div className="overflow-x-auto">
