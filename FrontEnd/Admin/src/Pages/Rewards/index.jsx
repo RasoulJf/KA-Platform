@@ -1,7 +1,7 @@
 // =========================================================================
 // RewardsAdminPage.jsx (کامل با اتصال به مودال و بک‌اند)
 // =========================================================================
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect,useCallback, useRef } from 'react';
 import union from '../../assets/images/Union4.png'; // مسیر صحیح
 import Frame20 from '../../assets/images/Frame20.png'; // مسیر صحیح
 
@@ -20,6 +20,7 @@ export default function RewardsAdminPage({ Open }) {
     const year = new Intl.DateTimeFormat('fa-IR', { year: 'numeric' }).format(date)
     const week = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(date);
     // const navigate = useNavigate(); // در صورت نیاز
+    const filterDebounceTimer = useRef(null); // << این خط را اضافه کنید
 
     const [rewardsData, setRewardsData] = useState([]);
     const [statCardsDisplayData, setStatCardsDisplayData] = useState([
@@ -35,7 +36,15 @@ export default function RewardsAdminPage({ Open }) {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalResults, setTotalResults] = useState(0);
-
+    // ... بعد از بقیه state ها
+    const [filters, setFilters] = useState({
+        status: '',
+        rewardName: '',
+        studentName: ''
+    });
+    const [openFilterDropdowns, setOpenFilterDropdowns] = useState({
+        status: false,
+    });
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [selectedRewardForPayment, setSelectedRewardForPayment] = useState(null);
 
@@ -57,80 +66,136 @@ export default function RewardsAdminPage({ Open }) {
         }
     };
 
-    const fetchAllAdminData = async (page = 1) => {
-        setLoading(true);
-        setError(null);
-        const token = localStorage.getItem("token");
-        if (!token) {
-            setError("توکن احراز هویت یافت نشد. لطفا ابتدا وارد شوید.");
-            setLoading(false);
-            // navigate('/login');
-            return;
-        }
 
-        try {
-            const headers = { 'Authorization': `Bearer ${token}` };
-            const [rewardsResponse, statsResponse] = await Promise.all([
-                fetchData(`student-reward/all-for-admin?page=${page}&limit=10`, { method: 'GET', headers }),
-                fetchData('student-reward/admin-stats', { method: 'GET', headers })
-            ]);
 
-            // پردازش لیست StudentReward ها
-            if (rewardsResponse && rewardsResponse.success && Array.isArray(rewardsResponse.data)) {
-                const formattedRewards = rewardsResponse.data.map((reward, index) => {
-                    const statusDetails = getStatusDetailsAdmin(reward.status);
-                    return {
-                        id: reward._id, // این _id از StudentReward است
-                        name: reward.userId && reward.userId.fullName ? reward.userId.fullName : "نامشخص",
-                        grade: reward.userId && reward.userId.grade ? reward.userId.grade : "نامشخص",
-                        image: reward.userId && reward.userId.image ? `${import.meta.env.VITE_BASE_FILE}${reward.userId.image}` : Frame20,
-                        title: reward.rewardId && (reward.rewardId.name || reward.rewardId.description) ? (reward.rewardId.name || reward.rewardId.description) : "بدون عنوان",
-                        description: reward.rewardId && reward.rewardId.description ? reward.rewardId.description : "بدون توضیحات",
-                        submissionDate: formatDateToPersian(reward.createdAt),
-                        paymentDate: reward.status === 'approved' && reward.updatedAt ? formatDateToPersian(reward.updatedAt) : "نامشخص",
-                        status: statusDetails.text,
-                        statusClass: statusDetails.class,
-                        isPending: statusDetails.isPending,
-                        tokenAmount: reward.token, // توکن ثبت شده در StudentReward
-                        isOdd: index % 2 !== 0,
-                    };
-                });
-                setRewardsData(formattedRewards);
-                setCurrentPage(page);
-                setTotalResults(rewardsResponse.totalCount || 0);
-                setTotalPages(Math.ceil((rewardsResponse.totalCount || 0) / 10));
-            } else {
-                throw new Error(rewardsResponse?.message || "خطا در دریافت لیست پاداش‌ها از سرور.");
-            }
+// =====================================================================
+// >>>>> این قسمت را با کد فعلی خود جایگزین کنید <<<<<
+// =====================================================================
 
-            // پردازش آمار ادمین
-            if (statsResponse && statsResponse.success && statsResponse.data) {
-                const apiStats = statsResponse.data;
-                setStatCardsDisplayData([
-                    { title: "پاداش‌های در انتظار پرداخت", value: formatNumberToPersian(apiStats.rewardsPendingValue) },
-                    { title: "پاداش‌های پرداخت‌شده", value: formatNumberToPersian(apiStats.rewardsPaidValue) },
-                    { title: "کل توکن‌های درخواستی", value: formatNumberToPersian(apiStats.rewardsTotalRegisteredValue), decorated: true },
-                    { title: "توکن‌های قابل استفاده (کل)", value: formatNumberToPersian(apiStats.systemTotalAvailableTokens) },
-                    { title: "توکن‌های پرداخت شده (کل)", value: formatNumberToPersian(apiStats.systemTotalUsedOrPaidTokens) },
-                    { title: "جمع کل توکن‌های کاربران", value: formatNumberToPersian(apiStats.systemOverallStudentTokens) },
-                ]);
-            } else {
-                 console.warn("Could not fetch admin stats:", statsResponse?.message);
-                 // می‌توانید مقادیر پیش‌فرض یا پیام خطا برای کارت‌های آماری ست کنید
-            }
-        } catch (err) {
-            console.error("Error loading admin rewards data:", err);
-            setError(err.message || "خطایی در بارگذاری اطلاعات رخ داد.");
+// تابع loadAdminData را با استفاده از useCallback در اینجا تعریف می‌کنیم
+const loadAdminData = useCallback(async () => {
+    // برای جلوگیری از درخواست‌های همزمان، اگر در حال لود شدن بود، کاری نکن
+
+    setLoading(true);
+    setError(null);
+    const token = localStorage.getItem("token");
+    if (!token) {
+        setError("توکن یافت نشد.");
+        setLoading(false);
+        return;
+    }
+
+    try {
+        const headers = { 'Authorization': `Bearer ${token}` };
+
+        const queryParams = new URLSearchParams(Object.fromEntries(
+            Object.entries({
+                ...filters,
+                page: currentPage,
+                limit: 10,
+            }).filter(([_, v]) => v)
+        ));
+
+        // فقط درخواست لیست پاداش‌ها را دوباره ارسال می‌کنیم
+        // آمار معمولا نیازی به رفرش شدن با هر تغییر صفحه ندارد
+        // مگر اینکه بخواهید بعد از هر تایید، آمار هم رفرش شود
+        const rewardsResponse = await fetchData(`student-reward/rewards-list?${queryParams.toString()}`, { headers });
+
+        if (rewardsResponse?.success && Array.isArray(rewardsResponse.data)) {
+            const formattedRewards = rewardsResponse.data.map((reward, index) => {
+                const statusDetails = getStatusDetailsAdmin(reward.status);
+                return {
+                    id: reward._id,
+                    name: reward.studentName || "نامشخص",
+                    grade: reward.studentGrade || "نامشخص",
+                    image: reward.studentImage ? `${import.meta.env.VITE_BASE_FILE}${reward.studentImage}` : Frame20,
+                    title: reward.rewardTitle || "بدون عنوان",
+                    submissionDate: formatDateToPersian(reward.submissionDate),
+                    paymentDate: reward.status === 'approved' && reward.reviewDate ? formatDateToPersian(reward.reviewDate) : "نامشخص",
+                    status: statusDetails.text,
+                    statusClass: statusDetails.class,
+                    isPending: statusDetails.isPending,
+                    tokenAmount: reward.tokenCost,
+                    isOdd: index % 2 !== 0,
+                    raw: reward.raw || reward
+                };
+            });
+            setRewardsData(formattedRewards);
+            setCurrentPage(rewardsResponse.currentPage || 1);
+            setTotalResults(rewardsResponse.totalCount || 0);
+            setTotalPages(rewardsResponse.totalPages || 1);
+        } else {
             setRewardsData([]);
-        } finally {
-            setLoading(false);
+            throw new Error(rewardsResponse?.message || "خطا در دریافت لیست پاداش‌ها.");
         }
+    } catch (err) {
+        setError(err.message || "خطایی در بارگذاری رخ داد.");
+    } finally {
+        setLoading(false);
+    }
+}, [currentPage, filters]); // وابستگی‌های تابع
+
+// این تابع فقط برای بارگذاری آمار در ابتدای کار است
+const loadInitialStats = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+        const headers = { 'Authorization': `Bearer ${token}` };
+        const statsResponse = await fetchData('student-reward/admin-stats', { headers });
+        if (statsResponse?.success) {
+            const apiStats = statsResponse.data;
+            setStatCardsDisplayData([
+                { title: "پاداش‌های در انتظار پرداخت", value: formatNumberToPersian(apiStats.rewardsPendingValue) },
+                { title: "پاداش‌های پرداخت‌شده", value: formatNumberToPersian(apiStats.rewardsPaidValue) },
+                { title: "کل توکن‌های درخواستی", value: formatNumberToPersian(apiStats.rewardsTotalRegisteredValue), decorated: true },
+                { title: "توکن‌های قابل استفاده (کل)", value: formatNumberToPersian(apiStats.systemTotalAvailableTokens) },
+                { title: "توکن‌های پرداخت شده (کل)", value: formatNumberToPersian(apiStats.systemTotalUsedOrPaidTokens) },
+                { title: "جمع کل توکن‌های کاربران", value: formatNumberToPersian(apiStats.systemOverallStudentTokens) },
+            ]);
+        }
+    } catch (err) {
+        console.warn("Could not fetch admin stats:", err.message);
+    }
+};
+
+// useEffect اصلی برای بارگذاری داده‌های جدول
+useEffect(() => {
+    loadAdminData();
+}, [loadAdminData]); // فقط به loadAdminData وابسته است
+
+// useEffect برای بارگذاری اولیه آمار (فقط یک بار)
+useEffect(() => {
+    loadInitialStats();
+}, []); // وابستگی خالی یعنی فقط یک بار در زمان mount شدن اجرا شود
+
+
+const handleFilterChange = (name, value) => {
+    // پاک کردن تایمر قبلی
+    if (filterDebounceTimer.current) {
+        clearTimeout(filterDebounceTimer.current);
+    }
+
+    // تنظیم تایمر جدید
+    filterDebounceTimer.current = setTimeout(() => {
+        setFilters(prev => ({ ...prev, [name]: value }));
+        setCurrentPage(1); // ریست کردن صفحه هنگام اعمال فیلتر
+    }, 500); // بعد از 500 میلی‌ثانیه توقف، فیلتر اعمال شود
+
+    if (openFilterDropdowns[name] !== undefined) {
+        setOpenFilterDropdowns(prev => ({ ...prev, [name]: false }));
+    }
+};
+
+    const toggleFilterDropdown = (name) => {
+        setOpenFilterDropdowns(prev => ({ ...prev, [name]: !prev[name] }));
     };
 
-    useEffect(() => {
-        fetchAllAdminData(currentPage);
-    }, [currentPage]); // توکن را از اینجا حذف کردم چون در خود تابع گرفته می‌شود، اما اگر لاگین/لاگ‌اوت دارید، بهتر است باشد
-
+    const statusOptions = [
+        { value: '', label: 'همه وضعیت‌ها' },
+        { value: 'pending', label: 'در انتظار' },
+        { value: 'approved', label: 'تایید شده' },
+        { value: 'rejected', label: 'رد شده' },
+    ];
 
     const handleRowClick = (rewardClicked) => {
         // شرط if (rewardClicked.isPending) حذف شد
@@ -177,8 +242,10 @@ export default function RewardsAdminPage({ Open }) {
             if (response && response.success) {
                 alert(`وضعیت پاداش با موفقیت به '${newStatus === 'approved' ? 'تایید شده' : (newStatus === 'rejected' ? 'رد شده' : newStatus)}' تغییر کرد.`);
                 handleClosePaymentModal();
-                await fetchAllAdminData(currentPage); // رفرش داده‌های جدول و آمار
-            } else {
+                await Promise.all([
+                    loadAdminData(),
+                    loadInitialStats()
+                ]);            } else {
                 throw new Error(response?.message || `خطا در تغییر وضعیت پاداش.`);
             }
         } catch (err) {
@@ -200,15 +267,13 @@ export default function RewardsAdminPage({ Open }) {
     if (error && rewardsData.length === 0) {
         return <div className="flex flex-col justify-center items-center h-screen w-full p-6 text-center">
             <p className="text-xl text-red-500 mb-4">خطا: {error}</p>
-            <button onClick={() => fetchAllAdminData(1)} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded">تلاش مجدد</button>
-        </div>;
+            <button onClick={() => loadAdminData()} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded">تلاش مجدد</button>        </div>;
     }
 
     return (
         <>
             <img src={union} className='absolute scale-75 top-[-4rem] left-[-10rem] z-0 opacity-30' alt="" />
-            <div className={`${!Open ? "w-[calc(100%-1rem)] md:w-[80%]" : "w-[calc(100%-1rem)] md:w-[94%]"} p-4 md:p-8 transition-all duration-500 flex flex-col h-screen relative z-10 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100`}>
-                {/* هدر */}
+            <div className={`${!Open ? "w-[calc(100%-1rem)] md:w-[80%]" : "w-[calc(100%-1rem)] md:w-[94%]"} p-4 md:p-8 transition-all duration-500 flex flex-col relative z-10`}>                {/* هدر */}
                 <div className="flex flex-col sm:flex-row justify-between items-center h-auto sm:h-[5vh] mb-6">
                     <div className="flex items-center gap-3 sm:gap-5 mb-2 sm:mb-0">
                         <h3 className='text-[#19A297] text-xs sm:text-sm'>هنرستان استارتاپی رکاد</h3>
@@ -244,15 +309,38 @@ export default function RewardsAdminPage({ Open }) {
                     ))}
                 </div>
 
-                {/* فیلترها و عنوان جدول */}
                 <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4 mt-8">
                     <div className="flex flex-wrap gap-2 mb-3 md:mb-0">
-                        {['عنوان', 'وضعیت', 'تاریخ'].map(filterName => (
-                             <button key={filterName} className="bg-white border border-gray-300 text-gray-600 px-3 py-1.5 rounded-lg text-xs flex items-center justify-between min-w-[90px] hover:border-gray-400 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-300">
-                                <span>{filterName}</span>
-                                <IoIosArrowDown className="text-gray-400 ml-2" />
+
+                        {/* فیلتر وضعیت */}
+                        <div className="relative">
+                            <button onClick={() => toggleFilterDropdown('status')} className="bg-white border border-gray-300 text-gray-600 px-3 py-1.5 rounded-lg text-xs flex items-center justify-between min-w-[120px] hover:border-gray-400">
+                                <span>وضعیت: {statusOptions.find(opt => opt.value === filters.status)?.label || 'همه'}</span>
+                                <IoIosArrowDown className={`text-gray-400 ml-2 transition-transform ${openFilterDropdowns.status ? 'rotate-180' : ''}`} />
                             </button>
-                        ))}
+                            {openFilterDropdowns.status && (
+                                <div className="absolute z-10 top-full mt-1 w-full bg-white border rounded-md shadow-lg py-1">
+                                    {statusOptions.map(opt => (
+                                        <button key={opt.value} onClick={() => handleFilterChange('status', opt.value)} className="block w-full text-right px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100">{opt.label}</button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* فیلتر نام دانش‌آموز */}
+                        <input type="text" placeholder="نام دانش‌آموز..."
+                            value={filters.studentName}
+                            onChange={(e) => handleFilterChange('studentName', e.target.value)}
+                            className="bg-white border border-gray-300 text-gray-600 px-3 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300"
+                        />
+
+                        {/* فیلتر نام پاداش */}
+                        <input type="text" placeholder="عنوان پاداش..."
+                            value={filters.rewardName}
+                            onChange={(e) => handleFilterChange('rewardName', e.target.value)}
+                            className="bg-white border border-gray-300 text-gray-600 px-3 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300"
+                        />
+
                     </div>
                     <div className="flex items-center gap-2 md:gap-4 text-right md:text-left">
                         <p className='text-gray-500 text-xs'>سوابق آخرین درخواست‌های پاداش</p>
@@ -264,15 +352,15 @@ export default function RewardsAdminPage({ Open }) {
                 {loading && rewardsData.length > 0 && <p className="text-center text-sm text-gray-500 py-2">در حال به‌روزرسانی جدول...</p>}
                 {error && rewardsData.length > 0 && !loading && <p className="text-center text-sm text-red-500 py-2">خطا در بارگذاری داده‌ها: {error}</p>}
 
-                <div className="flex-grow overflow-x-auto bg-white rounded-xl shadow-xl border border-gray-200/80 mb-6">
-                    <table className='w-full min-w-[850px] border-collapse'>
+                <div className="overflow-x-auto bg-white rounded-xl shadow-xl border border-gray-200/80 mb-6">
+                <table className='w-full min-w-[850px] border-collapse'>
                         <thead className='bg-gray-100 text-xs text-gray-600 uppercase'>
                             <tr>
-                            <th className='font-medium text-center px-3 py-3 border-b border-gray-200'>وضعیت</th>
-                            <th className='font-medium text-center px-3 py-3 border-b border-gray-200'>تاریخ پرداخت</th>
-                            <th className='font-medium text-center px-3 py-3 border-b border-gray-200'>تاریخ ثبت</th>
-                            <th className='font-medium text-center px-3 py-3 border-b border-gray-200'>توکن درخواستی</th>
-                            <th className='font-medium text-center px-3 py-3 border-b border-gray-200'>عنوان پاداش</th>
+                                <th className='font-medium text-center px-3 py-3 border-b border-gray-200'>وضعیت</th>
+                                <th className='font-medium text-center px-3 py-3 border-b border-gray-200'>تاریخ پرداخت</th>
+                                <th className='font-medium text-center px-3 py-3 border-b border-gray-200'>تاریخ ثبت</th>
+                                <th className='font-medium text-center px-3 py-3 border-b border-gray-200'>توکن درخواستی</th>
+                                <th className='font-medium text-center px-3 py-3 border-b border-gray-200'>عنوان پاداش</th>
 
                                 <th className='font-medium text-center px-3 py-3 border-b border-gray-200'>دانش‌آموز</th>
                             </tr>
@@ -283,7 +371,7 @@ export default function RewardsAdminPage({ Open }) {
                                     className={`${row.isOdd ? 'bg-gray-50/40' : 'bg-white'} text-xs hover:bg-indigo-50/50 transition-colors ${row.isPending ? 'cursor-pointer hover:shadow-md' : 'cursor-default'}`}
                                     onClick={() => handleRowClick(row)}
                                 >
-                                                                        <td className={`px-3 py-3 text-center whitespace-nowrap font-semibold`}>
+                                    <td className={`px-3 py-3 text-center whitespace-nowrap font-semibold`}>
                                         <span className={`inline-block px-2.5 py-1 rounded-full text-xs leading-tight ${row.statusClass} ${row.statusClass.replace('text-', 'bg-').replace('-600', '-100')}`}>
                                             {row.status}
                                         </span>
@@ -302,10 +390,30 @@ export default function RewardsAdminPage({ Open }) {
                         </tbody>
                     </table>
                 </div>
-                {/* کامپوننت صفحه‌بندی */}
                 {totalPages > 1 && (
-                    <div className="flex justify-center items-center space-x-2 space-x-reverse mt-4 mb-8">
-                        {/* ... (کد صفحه‌بندی مثل قبل) ... */}
+                    <div className="flex justify-between items-center w-full mt-4 mb-8 px-4">
+                        {/* اطلاعات تعداد نتایج */}
+                        <p className="text-sm text-gray-500">
+                            نمایش صفحه <span className="font-semibold">{formatNumberToPersian(currentPage)}</span> از <span className="font-semibold">{formatNumberToPersian(totalPages)}</span> ({formatNumberToPersian(totalResults)} نتیجه)
+                        </p>
+
+                        {/* دکمه‌های صفحه‌بندی */}
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1 || loading}
+                                className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                قبلی
+                            </button>
+                            <button
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages || loading}
+                                className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                بعدی
+                            </button>
+                        </div>
                     </div>
                 )}
 

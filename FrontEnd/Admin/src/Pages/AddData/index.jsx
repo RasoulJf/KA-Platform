@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import fetchData from '../../Utils/fetchData'; // مسیر صحیح به ابزار fetchData شما
 import union from '../../assets/images/Union4.png';
 import frame7 from '../../assets/images/frame7.png';
@@ -12,139 +12,174 @@ import { BsGrid1X2 } from "react-icons/bs";
 import { IoIosArrowDown } from "react-icons/io";
 import { Link } from 'react-router-dom';
 
+
+const formatDate = (dateString) => {
+  // اگر ورودی معتبر نیست، "نامشخص" برگردان
+  if (!dateString || new Date(dateString).toString() === 'Invalid Date') {
+    return 'نامشخص';
+  }
+  return new Date(dateString).toLocaleDateString('fa-IR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+};
+// کامپوننت داخلی برای فرمت‌دهی اعداد به فارسی
+const formatNumber = (num) => (num !== undefined && num !== null) ? Number(num).toLocaleString('fa-IR') : "۰";
+
 export default function AddData({ Open }) {
   const token = localStorage.getItem("token");
 
-  // --- State ها ---
-  const [totalUserScore, setTotalUserScore] = useState(0);
-  const [totalAdminActivitiesCount, setTotalAdminActivitiesCount] = useState(0);
-  const [adminActivitiesList, setAdminActivitiesList] = useState([]);
-  const [loading, setLoading] = useState({
-    stats: true,
-    list: true,
-  });
-  const [error, setError] = useState({
-    stats: null,
-    list: null,
-  });
+  
 
-  // --- منطق تاریخ ---
+  // --- State های جدید برای فیلتر و صفحه‌بندی ---
+  const [filters, setFilters] = useState({
+    studentName: '',
+    category: '',
+  });
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+    limit: 10,
+  });
+  const [openDropdown, setOpenDropdown] = useState(false);
+  const debounceTimer = useRef(null); // برای بهینه‌سازی جستجو
+
+  // --- State های اصلی ---
+  const [stats, setStats] = useState({ totalUserScore: 0, totalAdminActivitiesCount: 0 });
+  const [adminActivitiesList, setAdminActivitiesList] = useState([]);
+  const [loading, setLoading] = useState({ stats: true, list: true });
+  const [error, setError] = useState({ stats: null, list: null });
+
+  // --- منطق تاریخ (بدون تغییر) ---
   const date = new Date();
   const month = new Intl.DateTimeFormat('fa-IR', { month: 'short' }).format(date);
   const day = new Intl.DateTimeFormat('fa-IR', { day: 'numeric' }).format(date);
   const year = new Intl.DateTimeFormat('fa-IR', { year: 'numeric' }).format(date);
   const week = new Intl.DateTimeFormat('fa-IR', { weekday: 'short' }).format(date);
+  
+  // دسته‌بندی‌های ثابت برای فیلتر
+  const categories = ['فعالیت‌های آموزشی', 'فعالیت‌های داوطلبانه و توسعه فردی', 'فعالیت‌های شغلی', 'موارد کسر امتیاز'];
 
-  // --- useEffect برای بارگذاری داده‌ها ---
+  // --- useEffect بهینه‌شده برای بارگذاری تمام داده‌ها ---
+  const loadPageData = useCallback(async () => {
+    if (!token) {
+      setError({ stats: "توکن یافت نشد.", list: "توکن یافت نشد." });
+      setLoading({ stats: false, list: false });
+      return;
+    }
+
+    setLoading(prev => ({ ...prev, list: true }));
+    setError(prev => ({ ...prev, list: null }));
+
+    try {
+      const queryParams = new URLSearchParams({
+        sort: '-createdAt',
+        page: pagination.currentPage,
+        limit: pagination.limit,
+        populate: 'activityId,userId',
+      });
+
+      // افزودن فیلترها به کوئری
+      if (filters.studentName) queryParams.append('studentName', filters.studentName);
+      if (filters.category) queryParams.append('category', filters.category);
+
+      const activitiesListResponse = await fetchData(`admin-activity?${queryParams.toString()}`, {
+        headers: { authorization: `Bearer ${token}` }
+      });
+
+      if (activitiesListResponse.success && activitiesListResponse.data) {
+        setAdminActivitiesList(activitiesListResponse.data);
+        setPagination(prev => ({
+            ...prev,
+            totalPages: activitiesListResponse.totalPages || 1,
+            totalCount: activitiesListResponse.totalCount || 0,
+            currentPage: activitiesListResponse.currentPage || 1
+        }));
+      } else {
+        throw new Error(activitiesListResponse.message || 'خطا در دریافت لیست فعالیت‌ها');
+      }
+    } catch (err) {
+      setError(prev => ({ ...prev, list: err.message || 'خطای سرور در بارگذاری لیست' }));
+      setAdminActivitiesList([]);
+    } finally {
+      setLoading(prev => ({ ...prev, list: false }));
+    }
+  }, [token, pagination.currentPage, pagination.limit, filters]);
+
+
   useEffect(() => {
-    const loadPageData = async () => {
-      if (!token) {
-        setError({ stats: "توکن احراز هویت یافت نشد.", list: "توکن احراز هویت یافت نشد." });
-        setLoading({ stats: false, list: false });
-        return;
-      }
-
-      // بارگذاری آمارهای بالا
-      setLoading(prev => ({ ...prev, stats: true }));
-      setError(prev => ({ ...prev, stats: null }));
-      try {
-        const userStatsPromise = fetchData('users/summary-stats', {
-          headers: {
-            authorization: `Bearer ${token}` // اصلاح شده
-          }
-        });
-        const adminActivityCountPromise = fetchData('admin-activity/stats/count', {
-          headers: {
-            authorization: `Bearer ${token}` // اصلاح شده
-          }
-        });
-
-        const [userStatsResponse, adminActivityCountResponse] = await Promise.all([
-          userStatsPromise,
-          adminActivityCountPromise
-        ]);
-
-        if (userStatsResponse.success && userStatsResponse.data) {
-          setTotalUserScore(userStatsResponse.data.totalScore);
-        } else {
-          setError(prev => ({ ...prev, stats: userStatsResponse.message || 'خطا در دریافت امتیاز کل کاربران' }));
-        }
-
-        if (adminActivityCountResponse.success && adminActivityCountResponse.data) {
-          setTotalAdminActivitiesCount(adminActivityCountResponse.data.count);
-        } else {
-          setError(prev => ({ ...prev, stats: (prev.stats ? prev.stats + '; ' : '') + (adminActivityCountResponse.message || 'خطا در دریافت تعداد فعالیت‌های ثبت‌شده') }));
-        }
-      } catch (err) {
-        console.error("Failed to load stats data:", err);
-        setError(prev => ({ ...prev, stats: err.message || 'خطای سرور در بارگذاری آمارها' }));
-      } finally {
-        setLoading(prev => ({ ...prev, stats: false }));
-      }
-
-      // بارگذاری لیست AdminActivities
-      setLoading(prev => ({ ...prev, list: true }));
-      setError(prev => ({ ...prev, list: null }));
-      try {
-        const populateParams = "activityId,userId"; // فیلدهایی که می‌خواهید populate شوند، با کاما جدا شده
-        const activitiesListResponse = await fetchData(`admin-activity?sort=-createdAt&limit=10&populate=${populateParams}`, {
-          headers: {
-            authorization: `Bearer ${token}` // اصلاح شده
-          }
-        });
-
-        if (activitiesListResponse.success && activitiesListResponse.data) {
-          setAdminActivitiesList(activitiesListResponse.data);
-        } else {
-          console.error("Error fetching admin activities list:", activitiesListResponse.message);
-          setError(prev => ({ ...prev, list: activitiesListResponse.message || 'خطا در دریافت لیست فعالیت‌ها' }));
-          setAdminActivitiesList([]);
-        }
-      } catch (err) {
-        console.error("Failed to load admin activities list:", err);
-        setError(prev => ({ ...prev, list: err.message || 'خطای سرور در بارگذاری لیست' }));
-        setAdminActivitiesList([]);
-      } finally {
-        setLoading(prev => ({ ...prev, list: false }));
-      }
-    };
-
     loadPageData();
-  }, [token]); // اجرای مجدد در صورت تغییر توکن (اگرچه معمولاً ثابت است پس از لاگین)
+  }, [loadPageData]);
 
+  // useEffect جداگانه برای آمارها که فقط یکبار لود شوند
+  useEffect(() => {
+    const loadStats = async () => {
+        if (!token) return;
+        setLoading(prev => ({...prev, stats: true}));
+        setError(prev => ({...prev, stats: null}));
+        try {
+            const [userStats, activityCount] = await Promise.all([
+                fetchData('users/summary-stats', { headers: { authorization: `Bearer ${token}` } }),
+                fetchData('admin-activity/stats/count', { headers: { authorization: `Bearer ${token}` } })
+            ]);
+            
+            const newStats = {};
+            if(userStats.success) newStats.totalUserScore = userStats.data.totalScore;
+            if(activityCount.success) newStats.totalAdminActivitiesCount = activityCount.data.count;
+            setStats(newStats);
+
+        } catch(err) {
+            setError(prev => ({...prev, stats: err.message || 'خطا در بارگذاری آمار'}));
+        } finally {
+            setLoading(prev => ({...prev, stats: false}));
+        }
+    };
+    loadStats();
+  }, [token]);
+
+  // --- Handlers برای فیلتر و صفحه‌بندی ---
+  const handleFilterChange = (filterName, value) => {
+    // برای جستجو از debounce استفاده می‌کنیم
+    if (filterName === 'studentName') {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+      debounceTimer.current = setTimeout(() => {
+        setFilters(prev => ({ ...prev, [filterName]: value }));
+        setPagination(prev => ({ ...prev, currentPage: 1 })); // ریست صفحه به ۱
+      }, 500); // تاخیر نیم ثانیه‌ای
+    } else {
+      setFilters(prev => ({ ...prev, [filterName]: value }));
+      setPagination(prev => ({ ...prev, currentPage: 1 }));
+      if (filterName === 'category') setOpenDropdown(false);
+    }
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= pagination.totalPages && !loading.list) {
+      setPagination(prev => ({ ...prev, currentPage: newPage }));
+    }
+  };
 
   // --- نمایش حالت لودینگ کلی یا خطای کلی ---
-  if (loading.stats && loading.list) {
-    return (
-      <div className={`flex justify-center items-center h-screen ${!Open ? "w-[80%]" : "w-[94%]"} p-8`}>
-        <p className="text-xl text-[#19A297]">در حال بارگذاری اطلاعات صفحه...</p>
-      </div>
-    );
+  if (loading.stats && adminActivitiesList.length === 0) {
+    return <div className="flex justify-center items-center h-screen w-full"><p>در حال بارگذاری...</p></div>;
   }
-
-  if (error.stats || error.list) {
-    return (
-      <div className={`flex flex-col justify-center items-center h-screen ${!Open ? "w-[80%]" : "w-[94%]"} p-8`}>
-        <p className="text-xl text-red-500">خطا در بارگذاری صفحه</p>
-        {error.stats && <p className="text-md text-gray-600 mt-2">خطای آمار: {error.stats}</p>}
-        {error.list && <p className="text-md text-gray-600 mt-2">خطای لیست: {error.list}</p>}
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 bg-[#19A297] text-white px-4 py-2 rounded hover:bg-[#157a70]"
-        >
-          تلاش مجدد
-        </button>
-      </div>
-    );
+  if ((error.stats || error.list) && adminActivitiesList.length === 0) {
+      return (
+        <div className="flex flex-col justify-center items-center h-screen w-full p-8">
+          <p className="text-xl text-red-500">خطا در بارگذاری صفحه</p>
+          <button onClick={() => window.location.reload()} className="mt-4 bg-[#19A297] text-white px-4 py-2 rounded">تلاش مجدد</button>
+        </div>
+      );
   }
-
 
   return (
     <>
-      <img src={union} className='absolute scale-75 top-[-4rem] left-[-10rem] z-0' alt="" />
-      <div className={`${!Open ? "w-[80%]" : "w-[94%]"} p-8 transition-all duration-500 flex flex-col h-screen relative z-10 overflow-y-auto`}>
+      <img src={union} className='absolute scale-75 top-[-4rem] left-[-10rem] z-0 opacity-50' alt="" />
+      <div className={`${!Open ? "w-[calc(100%-1rem)] md:w-[80%]" : "w-[calc(100%-1rem)] md:w-[94%]"} p-4 md:p-8 transition-all duration-500 flex flex-col relative z-10`}>
 
-        {/* هدر صفحه */}
+        {/* هدر صفحه (بدون تغییر) */}
         <div className="flex justify-between items-center h-[5vh] mb-6">
           <div className="flex justify-center items-center gap-5">
             <h3 className='text-[#19A297] text-xs'>هنرستان استارتاپی رکاد</h3>
@@ -158,32 +193,25 @@ export default function AddData({ Open }) {
             <h1 className='text-[#19A297] font-semibold text-lg'>ثبت اطلاعات توسط ادمین</h1>
           </div>
         </div>
-
-        {/* بخش کارت‌های بالا */}
-        <div className="flex flex-col md:flex-row gap-5 mb-6 h-auto md:h-[12vh]">
-          <div className="relative flex-1 bg-white rounded-lg overflow-hidden p-6 md:p-8 flex items-center justify-between shadow-sm border border-gray-100">
-            <img src={frame7} className='absolute z-0 h-full w-full object-cover scale-110 top-0 left-0 opacity-100' alt="" />
-            {loading.stats ? <p className="z-10 animate-pulse">...</p> : <p className='text-[#202A5A] font-semibold text-2xl z-10'>{totalUserScore.toLocaleString('fa-IR')}</p>}
-            <div className='flex items-center gap-2 md:gap-4 z-10'>
-              <h2 className='text-[#202A5A] font-semibold text-sm md:text-lg'>جمع کل امتیازات کاربران</h2>
-              <div className="bg-[#202A5A] flex justify-center items-center w-10 h-10 md:w-12 md:h-12 rounded-full">
-                <BsGrid1X2 className='scale-125 md:scale-150 text-white' />
-              </div>
-            </div>
-          </div>
-          <div className="relative flex-1 bg-white rounded-lg overflow-hidden p-6 md:p-8 flex items-center justify-between shadow-sm border border-gray-100">
-            <img src={frame7} className='absolute z-0 h-full w-full object-cover scale-110 top-0 left-0 opacity-100' alt="" />
-            {loading.stats ? <p className="z-10 animate-pulse">...</p> : <p className='text-[#202A5A] font-semibold text-2xl z-10'>{totalAdminActivitiesCount.toLocaleString('fa-IR')}</p>}
-            <div className='flex items-center gap-2 md:gap-4 z-10'>
-              <h2 className='text-[#202A5A] font-semibold text-sm md:text-lg'>کل فعالیت‌های ثبت‌شده (ادمین)</h2>
-              <div className="bg-[#202A5A] flex justify-center items-center w-10 h-10 md:w-12 md:h-12 rounded-full">
-                <IoDocumentTextOutline className='scale-125 md:scale-150 text-white' />
-              </div>
-            </div>
-          </div>
+        
+        {/* کارت‌های بالا (اصلاح شده برای خوانایی) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+            {[
+                { title: 'جمع کل امتیازات کاربران', value: stats.totalUserScore, icon: <BsGrid1X2 className='scale-150 text-white' /> },
+                { title: 'کل فعالیت‌های ثبت‌شده (ادمین)', value: stats.totalAdminActivitiesCount, icon: <IoDocumentTextOutline className='scale-150 text-white' /> }
+            ].map((card, index) => (
+                <div key={index} className="relative bg-white rounded-lg overflow-hidden p-6 flex items-center justify-between shadow-sm border border-gray-100 min-h-[12vh]">
+                    <img src={frame7} className='absolute z-0 h-full w-full object-cover scale-110 top-0 left-0' alt="" />
+                    {loading.stats ? <p className="z-10 animate-pulse">...</p> : <p className='text-[#202A5A] font-semibold text-2xl z-10'>{formatNumber(card.value)}</p>}
+                    <div className='flex items-center gap-4 z-10'>
+                        <h2 className='text-[#202A5A] font-semibold text-lg'>{card.title}</h2>
+                        <div className="bg-[#202A5A] flex justify-center items-center w-12 h-12 rounded-full">{card.icon}</div>
+                    </div>
+                </div>
+            ))}
         </div>
-
-        {/* بخش ثبت اطلاعات جدید */}
+        
+        {/* بخش ثبت اطلاعات جدید (بدون تغییر) */}
         <div className="relative bg-white rounded-lg overflow-hidden mb-6 p-4 flex items-center justify-between shadow-sm border border-gray-100 h-auto md:h-[12vh]">
           <img src={frame72} className='absolute z-0 h-full w-full object-cover top-0 left-[-30px] opacity-100 scale-110' alt="" />
           <Link to={"create"} className='bg-white cursor-pointer text-[#202A5A] px-5 py-2 rounded-lg text-sm font-medium flex items-center gap-2 z-10 hover:bg-gray-100 transition-colors shadow'>
@@ -198,59 +226,82 @@ export default function AddData({ Open }) {
           </div>
         </div>
 
-        {/* بخش فیلترها و عنوان جدول */}
-        <div className="flex flex-col md:flex-row justify-between items-center w-full mb-3 mt-4">
-          <div className="flex gap-2 mb-2 md:mb-0">
-            {/* TODO: پیاده‌سازی فیلترها در آینده */}
-            <div className="bg-white border border-gray-300 rounded px-3 py-1.5 flex items-center justify-between text-xs text-gray-600 cursor-not-allowed opacity-50 min-w-[100px] shadow-sm">
-              <span>دسته‌بندی</span> <IoIosArrowDown className="text-gray-400" />
+        {/* بخش فیلترها و عنوان جدول - کاملاً جدید و کاربردی */}
+        <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4 mt-6">
+          <div className="flex flex-wrap gap-3 mb-3 md:mb-0">
+            {/* فیلتر دسته‌بندی */}
+            <div className="relative">
+              <button onClick={() => setOpenDropdown(!openDropdown)} className="bg-white border border-gray-300 rounded-md px-4 py-2 flex items-center justify-between text-xs text-gray-700 min-w-[150px] shadow-sm hover:border-gray-400">
+                <span>{filters.category || "همه دسته‌بندی‌ها"}</span>
+                <IoIosArrowDown className={`text-gray-400 transition-transform ${openDropdown ? 'rotate-180' : ''}`} />
+              </button>
+              {openDropdown && (
+                <div className="absolute z-20 top-full mt-1 w-full bg-white border rounded-md shadow-lg py-1">
+                  <button onClick={() => handleFilterChange('category', '')} className="block w-full text-right px-4 py-2 text-xs text-gray-700 hover:bg-gray-100">همه دسته‌بندی‌ها</button>
+                  {categories.map(cat => (
+                    <button key={cat} onClick={() => handleFilterChange('category', cat)} className="block w-full text-right px-4 py-2 text-xs text-gray-700 hover:bg-gray-100">{cat}</button>
+                  ))}
+                </div>
+              )}
             </div>
-            <div className="bg-white border border-gray-300 rounded px-3 py-1.5 flex items-center justify-between text-xs text-gray-600 cursor-not-allowed opacity-50 min-w-[90px] shadow-sm">
-              <span>نوع فعالیت</span> <IoIosArrowDown className="text-gray-400" />
-            </div>
-            <div className="bg-white border border-gray-300 rounded px-3 py-1.5 flex items-center justify-between text-xs text-gray-600 cursor-not-allowed opacity-50 min-w-[80px] shadow-sm">
-              <span>تاریخ</span> <IoIosArrowDown className="text-gray-400" />
-            </div>
+            {/* فیلتر جستجو */}
+            <input
+              type="text"
+              placeholder="جستجوی نام دانش‌آموز..."
+              onChange={(e) => handleFilterChange('studentName', e.target.value)}
+              className="bg-white border border-gray-300 rounded-md px-4 py-2 text-xs text-gray-700 shadow-sm focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none"
+            />
           </div>
-          <div className="flex items-center gap-4">
-            <p className='text-gray-400 text-xs hidden md:block'>سوابق آخرین فعالیت‌های ثبت‌شده توسط ادمین</p>
-            <h3 className='text-[#19A297] font-semibold text-base md:text-lg'>آخرین فعالیت‌های ثبت‌شده (ادمین)</h3>
-          </div>
+          <h3 className='text-[#19A297] font-semibold text-lg'>آخرین فعالیت‌های ثبت‌شده</h3>
         </div>
 
-        {/* جدول اطلاعات - اصلاح شده برای جلوگیری از خطای hydration */}
-        <div className="flex-grow overflow-x-auto mb-8">
-          <table className='w-full min-w-[600px] rounded-lg bg-white shadow-md'>
-            <thead className='bg-gray-50 text-xs md:text-sm text-[#202A5A] border-b border-gray-300'>
+        {/* جدول اطلاعات */}
+        <div className="overflow-x-auto bg-white rounded-lg shadow-md border border-gray-200/80">
+          <table className='w-full min-w-[700px]'>
+            <thead className='bg-gray-100 text-sm text-[#202A5A]'>
               <tr>
-                <th className='font-medium text-center px-3 py-3'>نوع فعالیت</th>
-                <th className='font-medium text-center px-3 py-3'>تاریخ ثبت</th>
+                <th className='font-medium text-center px-3 py-3'>دانش‌آموز</th>
+                <th className='font-medium text-center px-3 py-3'>امتیاز</th>
+                <th className='font-medium text-center px-3 py-3'>دسته‌بندی</th>
                 <th className='font-medium text-center px-3 py-3'>عنوان/جزئیات</th>
-                <th className='font-medium text-center px-3 py-3'>دسته‌بندی فعالیت</th>
-                <th className='font-medium text-center px-3 py-3'>امتیاز داده شده</th>
-                <th className='font-medium text-center px-3 py-3 hidden md:table-cell'>دانش‌آموز</th>
+                <th className='font-medium text-center px-3 py-3'>تاریخ ثبت</th>
+                <th className='font-medium text-center px-3 py-3'>نوع</th>
               </tr>
             </thead>
             <tbody className='divide-y divide-gray-200'>
               {loading.list ? (
-                <tr><td colSpan="6" className="text-center py-10 text-gray-500 animate-pulse">در حال بارگذاری لیست...</td></tr>
+                <tr><td colSpan="6" className="text-center py-10 text-gray-500 animate-pulse">در حال به‌روزرسانی لیست...</td></tr>
               ) : adminActivitiesList.length > 0 ? (
                 adminActivitiesList.map((row, index) => (
-                  <tr key={row._id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} text-xs md:text-sm hover:bg-gray-100 transition-colors`}>
-                    <td className='px-3 py-3 text-center whitespace-nowrap text-[#19A297] font-medium'>{row?.type || 'نامشخص'}</td>
-                    <td className='px-3 py-3 text-center whitespace-nowrap text-[#202A5A]'>{new Date(row.createdAt).toLocaleDateString('fa-IR')}</td>
-                    <td className='px-3 py-3 text-center whitespace-nowrap text-[#202A5A] max-w-[150px] sm:max-w-[200px] truncate' title={row.activityId?.name || row.details}>{row.activityId?.name || row.details}</td>
-                    <td className='px-3 py-3 text-center whitespace-nowrap text-[#202A5A]'>{row.activityId?.parent || 'نامشخص'}</td>
-                    <td className='px-3 py-3 text-center whitespace-nowrap text-green-600 font-semibold'>{row.scoreAwarded?.toLocaleString('fa-IR') || '0'}</td>
-                    <td className='px-3 py-3 text-center whitespace-nowrap text-[#202A5A] hidden md:table-cell'>{row.userId?.fullName || 'نامشخص'}</td>
+                  <tr key={row._id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/70'} text-sm hover:bg-gray-100 transition-colors`}>
+                    <td className='px-3 py-3 text-center text-gray-800 font-medium'>{row.userId?.fullName || 'نامشخص'}</td>
+                    <td className='px-3 py-3 text-center text-green-600 font-semibold'>{formatNumber(row.scoreAwarded)}</td>
+                    <td className='px-3 py-3 text-center text-gray-600'>{row.activityId?.parent || 'نامشخص'}</td>
+                    <td className='px-3 py-3 text-center text-gray-600 max-w-xs truncate' title={row.activityId?.name || row.details}>{row.activityId?.name || row.details}</td>
+                    <td className='px-3 py-3 text-center text-gray-500'>{formatDate(row.createdAt)}</td>
+                    <td className='px-3 py-3 text-center text-[#19A297] font-medium'>{row?.type || 'نامشخص'}</td>
                   </tr>
                 ))
               ) : (
-                <tr><td colSpan="6" className="text-center py-10 text-gray-500">هیچ فعالیتی توسط ادمین ثبت نشده است.</td></tr>
+                <tr><td colSpan="6" className="text-center py-10 text-gray-500">موردی مطابق با فیلترها یافت نشد.</td></tr>
               )}
             </tbody>
           </table>
         </div>
+        
+        {/* بخش صفحه‌بندی */}
+        {pagination.totalPages > 1 && !loading.list && (
+            <div className="flex justify-between items-center w-full mt-4 px-2">
+                <p className="text-sm text-gray-600">
+                    نمایش صفحه <span className="font-semibold">{formatNumber(pagination.currentPage)}</span> از <span className="font-semibold">{formatNumber(pagination.totalPages)}</span> (کل: {formatNumber(pagination.totalCount)} مورد)
+                </p>
+                <div className="flex items-center gap-2">
+                    <button onClick={() => handlePageChange(pagination.currentPage - 1)} disabled={pagination.currentPage === 1} className="px-3 py-1 text-sm bg-white border rounded-md shadow-sm hover:bg-gray-50 disabled:opacity-50">قبلی</button>
+                    <button onClick={() => handlePageChange(pagination.currentPage + 1)} disabled={pagination.currentPage === pagination.totalPages} className="px-3 py-1 text-sm bg-white border rounded-md shadow-sm hover:bg-gray-50 disabled:opacity-50">بعدی</button>
+                </div>
+            </div>
+        )}
+
       </div>
     </>
   );

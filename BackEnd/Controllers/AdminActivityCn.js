@@ -159,8 +159,8 @@ export const getActivitiesByParent = catchAsync(async (req, res, next) => {
     }
 
     const activities = await Activity.find({ parent: parentCategory })
-                                     .sort({ order: 1, name: 1 }) // مرتب‌سازی اولیه بر اساس فیلد order، سپس بر اساس نام
-                                     .lean();
+        .sort({ order: 1, name: 1 }) // مرتب‌سازی اولیه بر اساس فیلد order، سپس بر اساس نام
+        .lean();
 
     // اگر می‌خواهید در صورتی که فعالیتی یافت نشد، پیام مناسب‌تری بدهید (اختیاری)
     // if (activities.length === 0) {
@@ -186,24 +186,76 @@ export const getActivitiesByParent = catchAsync(async (req, res, next) => {
 // اگر در اکسل برای select_from_enum، "لیبل گزینه" دارید، منطقش باید شبیه createAdminActivity جدید شود.
 // اگر "امتیاز عددی" دارید، باید چک کند که آن عدد در مقادیر value آبجکت‌های enumOptions جدید وجود دارد یا خیر.
 // ===================================================================================
+// controllers/AdminActivityCn.js
+
+// ... (سایر import ها مثل قبل)
+
+// controllers/AdminActivityCn.js
+
 export const getAllAdminActivities = catchAsync(async (req, res, next) => {
-    const features = new ApiFeatures(AdminActivity.find(), req.query)
-        .sort({ createdAt: -1 })
-        .populate([
-            { path: "activityId", select: "name parent" },
-            { path: "userId", select: "fullName idCode grade class" }
-        ])
-        .filter()
-        .limitFields()
-        .paginate();
-    const adminActivities = await features.query;
-    const totalCount = await AdminActivity.countDocuments(features.getQueryFilters());
+    let aggregationPipeline = [];
+
+    // ... (مراحل $lookup و $unwind مثل قبل)
+    aggregationPipeline.push({ $lookup: { from: User.collection.name, localField: 'userId', foreignField: '_id', as: 'user' } });
+    aggregationPipeline.push({ $unwind: { path: '$user', preserveNullAndEmptyArrays: true } });
+    aggregationPipeline.push({ $lookup: { from: Activity.collection.name, localField: 'activityId', foreignField: '_id', as: 'activity' } });
+    aggregationPipeline.push({ $unwind: { path: '$activity', preserveNullAndEmptyArrays: true } });
+
+    // ... (مرحله $match مثل قبل)
+    const matchStage = {};
+    if (req.query.studentName) matchStage['user.fullName'] = { $regex: req.query.studentName, $options: 'i' };
+    if (req.query.category) matchStage['activity.parent'] = req.query.category;
+    if (Object.keys(matchStage).length > 0) aggregationPipeline.push({ $match: matchStage });
+
+    // ... (مرحله $sort مثل قبل)
+    aggregationPipeline.push({ $sort: { createdAt: -1 } });
+
+    // --- شروع تغییرات ---
+
+    // مرحله جدید: $project برای انتخاب و فرمت‌دهی فیلدهای خروجی
+    aggregationPipeline.push({
+        $project: {
+            _id: 1, // شناسه اصلی رکورد AdminActivity
+            createdAt: 1, // <<<< مهم: صراحتاً createdAt را انتخاب می‌کنیم
+            details: 1,
+            scoreAwarded: 1,
+            type: 1,
+            // حالا آبجکت‌های activityId و userId را خودمان می‌سازیم
+            activityId: { // قبلاً اسمش activity بود
+                _id: '$activity._id',
+                name: '$activity.name',
+                parent: '$activity.parent'
+            },
+            userId: { // قبلاً اسمش user بود
+                _id: '$user._id',
+                fullName: '$user.fullName'
+            }
+        }
+    });
+
+    // --- پایان تغییرات ---
+
+    // صفحه‌بندی (بدون تغییر)
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    const countPipeline = [...aggregationPipeline.slice(0, -1), { $count: 'totalCount' }]; // $project را از شمارش حذف می‌کنیم
+    const totalCountResult = await AdminActivity.aggregate(countPipeline);
+    const totalCount = totalCountResult.length > 0 ? totalCountResult[0].totalCount : 0;
+
+    aggregationPipeline.push({ $skip: skip }, { $limit: limit });
+
+    // حالا دیگر نیازی به map کردن در انتها نیست، چون $project کار را انجام داده
+    const adminActivities = await AdminActivity.aggregate(aggregationPipeline);
 
     return res.status(200).json({
-        success:true,
+        success: true,
         results: adminActivities.length,
         totalCount,
-        data:adminActivities
+        totalPages: Math.ceil(totalCount / limit),
+        currentPage: page,
+        data: adminActivities // <<<< داده‌ها حالا فرمت صحیحی دارند
     });
 });
 
@@ -264,6 +316,11 @@ export const getActivityParentCategories = catchAsync(async (req, res, next) => 
 // و مدل جدید Activity دارد. این تابع بسیار وابسته به جزئیات است.
 // در اینجا یک اسکلت کلی با فرض اینکه اکسل "لیبل گزینه" را برای select_from_enum دارد، ارائه می دهم.
 export const createBulkAdminActivitiesFromExcel = catchAsync(async (req, res, next) => {
+    const { parentCategory } = req.params; // <<<< از پارامتر URL خوانده می‌شود
+
+    if (!parentCategory) {
+        return next(new HandleERROR("دسته‌بندی والد فعالیت در URL مشخص نشده است.", 400));
+    }
     if (!req.file) {
         return next(new HandleERROR("لطفا فایل اکسل را ارسال کنید", 400));
     }
@@ -356,11 +413,11 @@ export const createBulkAdminActivitiesFromExcel = catchAsync(async (req, res, ne
                 case 'calculated_from_value':
                     const numDetails = parseFloat(detailsFromExcel);
                     if (isNaN(numDetails)) {
-                         if (valueInDef?.required || (detailsFromExcel && detailsFromExcel !== '')) {
+                        if (valueInDef?.required || (detailsFromExcel && detailsFromExcel !== '')) {
                             errors.push(`ردیف ${rowIndexInExcel}: مقدار '${detailsFromExcel}' برای '${activityNameInExcel}' باید عددی باشد.`);
                             continue;
-                         }
-                         finalScoreAwarded = scoreDef.min ?? 0;
+                        }
+                        finalScoreAwarded = scoreDef.min ?? 0;
                     } else {
                         if ((valueInDef.numberMin != null && numDetails < valueInDef.numberMin) || (valueInDef.numberMax != null && numDetails > valueInDef.numberMax)) {
                             errors.push(`ردیف ${rowIndexInExcel}: مقدار '${numDetails}' برای '${activityNameInExcel}' خارج از محدوده مجاز (${valueInDef.numberMin}-${valueInDef.numberMax}) است.`);
@@ -387,8 +444,8 @@ export const createBulkAdminActivitiesFromExcel = catchAsync(async (req, res, ne
                 case 'fixed_from_enum_single':
                     finalScoreAwarded = scoreDef.enumOptions?.[0]?.value;
                     if (finalScoreAwarded == null) {
-                         errors.push(`ردیف ${rowIndexInExcel}: امتیاز ثابت برای '${activityNameInExcel}' تعریف نشده.`);
-                         continue;
+                        errors.push(`ردیف ${rowIndexInExcel}: امتیاز ثابت برای '${activityNameInExcel}' تعریف نشده.`);
+                        continue;
                     }
                     if (valueInDef?.type === 'none') finalDetailsForDb = undefined;
                     break;
@@ -398,8 +455,8 @@ export const createBulkAdminActivitiesFromExcel = catchAsync(async (req, res, ne
             }
 
             if (finalScoreAwarded === undefined || finalScoreAwarded === null) {
-                 errors.push(`ردیف ${rowIndexInExcel}: امتیاز نهایی برای '${activityNameInExcel}' قابل محاسبه نیست.`);
-                 continue;
+                errors.push(`ردیف ${rowIndexInExcel}: امتیاز نهایی برای '${activityNameInExcel}' قابل محاسبه نیست.`);
+                continue;
             }
 
             adminActivitiesToCreate.push({
@@ -416,9 +473,27 @@ export const createBulkAdminActivitiesFromExcel = catchAsync(async (req, res, ne
         let successfulEntriesData = [];
         if (adminActivitiesToCreate.length > 0) {
             try {
-                const result = await AdminActivity.insertMany(adminActivitiesToCreate, { ordered: false, lean: true });
-                insertedCount = result.length; // result is an array of inserted docs
+                // ================== شروع تغییرات دقیق ==================
+                const result = await AdminActivity.insertMany(
+                    adminActivitiesToCreate,
+                    {
+                        ordered: false,    // به عملیات اجازه می‌دهد حتی در صورت بروز خطا برای یک سند، ادامه یابد
+                        lean: false,       // <<<< مهم: lean را false بگذارید تا اسناد کامل Mongoose با timestamps برگردانده شوند
+                        timestamps: true   // <<<< مهم: صراحتاً به Mongoose می‌گوید timestamps را اعمال کند
+                    }
+                );
+                // =================== پایان تغییرات دقیق ===================
+
+                insertedCount = result.length;
                 successfulEntriesData = result;
+
+                // <<<< لاگ برای دیباگ >>>>
+                console.log('--- INSERT MANY RESULT (First Item) ---');
+                if (result && result.length > 0) {
+                    console.log(result[0]); // اولین رکورد درج شده را با تمام فیلدها لاگ کن
+                } else {
+                    console.log('No items were inserted.');
+                }
             } catch (bulkError) {
                 insertedCount = bulkError.result ? bulkError.result.nInserted : 0;
                 if (bulkError.writeErrors) {
@@ -429,10 +504,10 @@ export const createBulkAdminActivitiesFromExcel = catchAsync(async (req, res, ne
                 // بازیابی موارد موفقیت آمیز بر اساس ID های insert شده (اگر لازم باشد)
                 // برای سادگی فعلا فرض می‌کنیم در صورت بروز خطا در bulk، successfulEntriesData خالی می‌ماند
                 // یا باید منطق پیچیده‌تری برای شناسایی موارد موفق پیاده شود.
-                 if (bulkError.result && bulkError.result.insertedIds && bulkError.result.insertedIds.length > 0 && adminActivitiesToCreate.length > 0) {
+                if (bulkError.result && bulkError.result.insertedIds && bulkError.result.insertedIds.length > 0 && adminActivitiesToCreate.length > 0) {
                     const insertedMap = new Map(bulkError.result.insertedIds.map(item => [item.index, item._id]));
                     successfulEntriesData = adminActivitiesToCreate.filter((originalItem, index) => insertedMap.has(index))
-                                                                 .map(item => ({...item, _id: insertedMap.get(adminActivitiesToCreate.indexOf(item))})); // اضافه کردن _id به موارد موفق
+                        .map(item => ({ ...item, _id: insertedMap.get(adminActivitiesToCreate.indexOf(item)) })); // اضافه کردن _id به موارد موفق
                 } else {
                     successfulEntriesData = [];
                 }
@@ -449,9 +524,9 @@ export const createBulkAdminActivitiesFromExcel = catchAsync(async (req, res, ne
 
         const finalMessage = `${insertedCount} رکورد با موفقیت از اکسل ثبت شد.`;
         let statusCode = insertedCount > 0 ? (errors.length > 0 ? 207 : 201) : (errors.length > 0 ? 400 : 200);
-        if(adminActivitiesToCreate.length === 0 && errors.length === 0 && dataRows.some(row => !row.every(cell => cell === undefined || String(cell).trim() === ''))) {
+        if (adminActivitiesToCreate.length === 0 && errors.length === 0 && dataRows.some(row => !row.every(cell => cell === undefined || String(cell).trim() === ''))) {
             // اگر ردیف داده وجود داشت ولی هیچکدام به adminActivitiesToCreate نرسید و خطایی هم نبود، یعنی احتمالا همه ردیف ها خالی بودند یا شرایط را نداشتند
-             statusCode = 200; // یا 400 با پیام مناسب تر
+            statusCode = 200; // یا 400 با پیام مناسب تر
         }
 
 

@@ -7,7 +7,7 @@ adminActivityRouter.route('').get(isAdmin,getAllAdminActivities)
 adminActivityRouter.route('/stats/count').get(isAdmin,getAdminActivitiesCount)
 adminActivityRouter.get('/distinct/parents', getActivityParentCategories);
 adminActivityRouter.post(
-    '/bulk-create-from-excel',
+    '/bulk-create-from-excel/:parentCategory',
     upload.single('file'), // نام فیلد فایل در FormData باید 'file' باشد
     createBulkAdminActivitiesFromExcel
 );

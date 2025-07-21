@@ -298,8 +298,61 @@ const handleSubmitIndividual = async (e) => {
     // توابع تب گروهی (handleTabChange, handleGroupFormChange, handleSubmitGroup) مثل قبل، فقط Bearer اصلاح شود
     const handleTabChange = (tab) => { setActiveTab(tab); setSubmitIndividualMessage({ type: '', text: '' }); setSubmitGroupMessage({ type: '', text: '', errors: [] }); if (tab === 'فردی') { setGroupFormData({ parentActivityForExcel: '', excelFile: null }); } else { setIndividualFormData(initialIndividualFormData); setSelectedActivityFullDetails(null); setAvailableActivityTitles([]); setErrorActivityTitles(null); setStudentsInClass([]); setErrorStudents(null); setSelectedParent(''); } };
     const handleGroupFormChange = (e) => { const { name, value, files } = e.target; if (name === "excelFile") { setGroupFormData(prev => ({ ...prev, excelFile: files ? files[0] : null })); } else { setGroupFormData(prev => ({ ...prev, [name]: value })); } };
-    const handleSubmitGroup = async (e) => { /* ... (کد مثل قبل با اصلاح Bearer) ... */ e.preventDefault(); const { parentActivityForExcel, excelFile } = groupFormData; if (!parentActivityForExcel || !excelFile) { setSubmitGroupMessage({ type: 'error', text: 'لطفاً دسته‌بندی والد و فایل اکسل را انتخاب کنید.', errors: [] }); return; } if (!token) { setSubmitGroupMessage({ type: 'error', text: 'توکن احراز هویت یافت نشد.', errors: [] }); return; } setSubmittingGroup(true); setSubmitGroupMessage({ type: '', text: '', errors: [] }); const formDataForExcel = new FormData(); formDataForExcel.append('parentActivity', parentActivityForExcel); formDataForExcel.append('file', excelFile); try { const response = await fetchData('admin-activity/bulk-create-from-excel', { method: 'POST', headers: { authorization: `Bearer ${token}` }, body: formDataForExcel }); if (response.success) { setSubmitGroupMessage({ type: 'success', text: response.message || `${response.insertedCount || 0} فعالیت گروهی پردازش شد.`, errors: response.errors || [] }); setGroupFormData({ parentActivityForExcel: '', excelFile: null }); const fileInput = document.getElementById('excelUpload'); if (fileInput) fileInput.value = ''; const adminCountRes = await fetchData('admin-activity/stats/count', { headers: { authorization: `Bearer ${token}` } }); if (adminCountRes.success) setTotalAdminActivitiesCount(adminCountRes.data.count); const userStatsRes = await fetchData('users/summary-stats', { headers: { authorization: `Bearer ${token}` } }); if (userStatsRes.success) setTotalUserScore(userStatsRes.data.totalScore); } else { let errorText = response.message || 'خطا در پردازش فایل اکسل.'; if (response.errors && response.errors.length > 0) { errorText += ` جزئیات: ${response.errors.slice(0, 5).join('; ')} ${response.errors.length > 5 ? 'و موارد دیگر...' : ''}`; } setSubmitGroupMessage({ type: 'error', text: errorText, errors: response.errors || [] }); } } catch (error) { setSubmitGroupMessage({ type: 'error', text: 'خطای شبکه یا سرور هنگام آپلود فایل.', errors: [error.message] }); } finally { setSubmittingGroup(false); } };
+// src/pages/admin/CreateNewData.jsx
 
+const handleSubmitGroup = async (e) => {
+    e.preventDefault();
+    const { parentActivityForExcel, excelFile } = groupFormData;
+    if (!parentActivityForExcel || !excelFile) {
+        setSubmitGroupMessage({ type: 'error', text: 'لطفاً دسته‌بندی والد و فایل اکسل را انتخاب کنید.', errors: [] });
+        return;
+    }
+    if (!token) {
+        setSubmitGroupMessage({ type: 'error', text: 'توکن احراز هویت یافت نشد.', errors: [] });
+        return;
+    }
+    
+    setSubmittingGroup(true);
+    setSubmitGroupMessage({ type: '', text: '', errors: [] });
+
+    // --- شروع تغییرات ---
+    const formDataForExcel = new FormData();
+    formDataForExcel.append('file', excelFile); // فقط فایل در FormData قرار می‌گیرد
+
+    // ساخت URL داینامیک با پارامتر
+    const url = `admin-activity/bulk-create-from-excel/${encodeURIComponent(parentActivityForExcel)}`;
+    // --- پایان تغییرات ---
+
+    try {
+        const response = await fetchData(url, { // <<<< استفاده از URL جدید
+            method: 'POST',
+            headers: { authorization: `Bearer ${token}` },
+            body: formDataForExcel
+        });
+
+        if (response.success) {
+            setSubmitGroupMessage({ type: 'success', text: response.message || `${response.insertedCount || 0} فعالیت گروهی پردازش شد.`, errors: response.errors || [] });
+            setGroupFormData({ parentActivityForExcel: '', excelFile: null });
+            const fileInput = document.getElementById('excelUpload');
+            if (fileInput) fileInput.value = '';
+            // آپدیت آمارها...
+            const adminCountRes = await fetchData('admin-activity/stats/count', { headers: { authorization: `Bearer ${token}` } });
+            if (adminCountRes.success) setTotalAdminActivitiesCount(adminCountRes.data.count);
+            const userStatsRes = await fetchData('users/summary-stats', { headers: { authorization: `Bearer ${token}` } });
+            if (userStatsRes.success) setTotalUserScore(userStatsRes.data.totalScore);
+        } else {
+            let errorText = response.message || 'خطا در پردازش فایل اکسل.';
+            if (response.errors && response.errors.length > 0) {
+                errorText += ` جزئیات: ${response.errors.slice(0, 5).join('; ')} ${response.errors.length > 5 ? 'و موارد دیگر...' : ''}`;
+            }
+            setSubmitGroupMessage({ type: 'error', text: errorText, errors: response.errors || [] });
+        }
+    } catch (error) {
+        setSubmitGroupMessage({ type: 'error', text: 'خطای شبکه یا سرور هنگام آپلود فایل.', errors: [error.message] });
+    } finally {
+        setSubmittingGroup(false);
+    }
+};
 
     // --- توابع رندرینگ فیلدهای داینامیک (مثل قبل با مدل جدید Activity) ---
     const renderValueInputField = () => { /* ... (کد از پاسخ قبلی، با استفاده از selectedActivityFullDetails.scoreDefinition.enumOptions[].label برای select) ... */  if (!selectedActivityFullDetails || !selectedActivityFullDetails.valueInput || activeTab !== 'فردی') return null; const { valueInput, scoreDefinition } = selectedActivityFullDetails; if (valueInput.type === 'none') return <div className="md:col-span-2 flex items-center justify-center bg-gray-50 p-3 rounded-md border border-gray-200 h-full"><p className="text-sm text-gray-500">برای این فعالیت نیاز به ورود {valueInput.label.toLowerCase()} نیست.</p></div>; if (valueInput.type === 'select' && scoreDefinition.inputType === 'select_from_enum') return <div className="flex items-center justify-between gap-x-3 bg-gray-50 p-3 rounded-md border border-gray-200 relative"><select id="details" name="details" value={individualFormData.details} onChange={handleIndividualFormChange} required={valueInput.required} className="flex-grow appearance-none bg-transparent border-0 focus:outline-none focus:ring-0 pr-8 pl-3 py-2 text-right text-sm cursor-pointer"><option value="">-- {valueInput.label || "یک گزینه انتخاب کنید"} --</option>{scoreDefinition.enumOptions?.map((opt, index) => <option key={opt.label + '-' + index} value={opt.label}>{opt.label}</option>)}</select><IoIosArrowDown className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" /><label htmlFor="details" className="flex-shrink-0 font-medium text-gray-700 text-sm whitespace-nowrap">{valueInput.label} {valueInput.required && <span className="text-red-500">*</span>}</label></div>; if (valueInput.type === 'number') return <div className="flex items-center justify-between gap-x-3 bg-gray-50 p-3 rounded-md border border-gray-200"><input type="number" id="details" name="details" value={individualFormData.details} onChange={handleIndividualFormChange} min={valueInput.numberMin} max={valueInput.numberMax} step={valueInput.label.toLowerCase().includes('معدل') ? "0.01" : "1"} required={valueInput.required} placeholder={valueInput.numberMin !== undefined && valueInput.numberMax !== undefined ? `${valueInput.numberMin}-${valueInput.numberMax}` : "مقدار عددی"} className="flex-grow bg-transparent border-0 focus:outline-none focus:ring-0 px-3 py-2 text-right text-sm" /><label htmlFor="details" className="flex-shrink-0 font-medium text-gray-700 text-sm whitespace-nowrap">{valueInput.label} {valueInput.required && <span className="text-red-500">*</span>}</label></div>; if (valueInput.type === 'text') return <div className="flex items-start justify-between gap-x-3 bg-gray-50 p-3 rounded-md border border-gray-200"><textarea id="details" name="details" rows="1" value={individualFormData.details} onChange={handleIndividualFormChange} required={valueInput.required} placeholder={valueInput.label || "جزئیات"} className="flex-grow resize-none bg-transparent border-0 focus:outline-none focus:ring-0 px-3 py-2 text-right text-sm" /><label htmlFor="details" className="flex-shrink-0 pt-2 font-medium text-gray-700 text-sm whitespace-nowrap">{valueInput.label} {valueInput.required && <span className="text-red-500">*</span>}</label></div>; return <div className="md:col-span-2">نوع ورودی جزئیات برای این فعالیت تعریف نشده است.</div>; };

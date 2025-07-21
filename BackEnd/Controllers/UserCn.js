@@ -390,7 +390,7 @@ export const getGradeRankingTable = catchAsync(async (req, res, next) => {
                       .sort({ rankInGrade: 1, score: -1 });
   const features = new ApiFeatures(userQuery, req.query).paginate();
   const usersInGrade = await features.query.lean();
-  const totalUsersInGrade = await User.countDocuments(features.getQueryFilters ? features.getQueryFilters() : { role: 'student', grade: targetGrade });
+  const totalUsersInGrade = await User.countDocuments({ role: 'student', grade: targetGrade });
 
 
 

@@ -27,7 +27,12 @@ export default function Rewards({ Open }) {
     const [rewardsList, setRewardsList] = useState([]);
     const [isMounted, setIsMounted] = useState(false);
     const [visibility, setVisibility] = useState(false);
-    
+    const [filters, setFilters] = useState({ status: '', rewardTitle: '' });
+    const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, totalCount: 0, limit: 10 });
+    const [openFilterDropdowns, setOpenFilterDropdowns] = useState({ status: false });
+    const [loadingList, setLoadingList] = useState(true); // یک لودینگ جدا برای لیست
+    const [loadingStats, setLoadingStats] = useState(true); // <<<< این state جا افتاده بود
+
     // State های جدید برای مودال جزئیات
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [selectedReward, setSelectedReward] = useState(null);
@@ -40,7 +45,6 @@ export default function Rewards({ Open }) {
         userUsedTokens: "۰",
         userOverallTotalTokens: "۰",
     });
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const token = localStorage.getItem("token");
 
@@ -60,27 +64,31 @@ export default function Rewards({ Open }) {
         }
     };
 
+    // ۱. این useEffect کامل رو حذف کن:
+    // useEffect(() => {
+    //     const loadRewardsData = async () => { ... };
+    //     loadRewardsData();
+    // }, [token]);
+
+
+    // ۲. این useEffect رو با کد زیر جایگزین کن:
+// ... (کدهای دیگر کامپوننت مثل state ها و توابع کمکی)
+
+    // useEffect جدید شماره ۱: فقط برای بارگذاری آمار کلی (یک بار در ابتدا اجرا می‌شود)
     useEffect(() => {
-        const loadRewardsData = async () => {
+        const loadStatsData = async () => {
             if (!token) {
-                setError("شما وارد سیستم نشده‌اید. لطفا ابتدا وارد شوید.");
-                setLoading(false);
+                setError("شما وارد سیستم نشده‌اید.");
+                setLoadingStats(false);
                 return;
             }
-            setLoading(true);
+            setLoadingStats(true); // فقط لودینگ آمار را فعال می‌کنیم
             setError(null);
 
             try {
-                const [rewardsResponse, statsResponse] = await Promise.all([
-                    fetchData('student-reward', { headers: { authorization: `Bearer ${token}` } }),
-                    fetchData('student-reward/my-stats', { headers: { authorization: `Bearer ${token}` } })
-                ]);
-
-                if (rewardsResponse && rewardsResponse.success) {
-                    setRewardsList(rewardsResponse.data || []); // نگه داشتن دیتای خام
-                } else {
-                    throw new Error(rewardsResponse?.message || "خطا در دریافت لیست پاداش‌ها");
-                }
+                const statsResponse = await fetchData('student-reward/my-stats', {
+                    headers: { authorization: `Bearer ${token}` }
+                });
 
                 if (statsResponse && statsResponse.success) {
                     const apiStats = statsResponse.data;
@@ -93,21 +101,67 @@ export default function Rewards({ Open }) {
                         userOverallTotalTokens: formatNumberToPersian(apiStats.userOverallTotalTokens),
                     });
                 } else {
-                    throw new Error(statsResponse?.message || "خطا در دریافت آمار پاداش‌ها");
+                    throw new Error(statsResponse?.message || "خطا در دریافت آمار");
                 }
-
             } catch (err) {
-                setError(err.message || "یک خطای ناشناخته رخ داد.");
+                setError(err.message || "یک خطای ناشناخته در دریافت آمار رخ داد.");
             } finally {
-                setLoading(false);
-                setTimeout(() => {
-                  setVisibility(true);
-                }, 200);
+                setLoadingStats(false); // لودینگ آمار تمام شد
             }
         };
-        
-        loadRewardsData();
-    }, [token]);
+
+        loadStatsData();
+    }, [token]); // <<<< فقط به توکن وابسته است
+
+
+    // useEffect جدید شماره ۲: برای بارگذاری لیست پاداش‌ها (با هر تغییر فیلتر یا صفحه اجرا می‌شود)
+    useEffect(() => {
+        // اگر هنوز در حال بارگذاری اولیه هستیم، لیست را نیاور تا آمار لود شود
+        if (loadingStats || !token) return;
+
+        const loadListData = async () => {
+            setLoadingList(true); // فقط لودینگ لیست را فعال می‌کنیم
+            setError(null);
+
+            try {
+                const queryParams = new URLSearchParams(Object.fromEntries(Object.entries(filters).filter(([_, v]) => v)));
+                queryParams.append('page', pagination.currentPage);
+                queryParams.append('limit', pagination.limit);
+
+                const listResponse = await fetchData(`student-reward/my-list?${queryParams.toString()}`, {
+                    headers: { authorization: `Bearer ${token}` }
+                });
+
+                if (listResponse && listResponse.success && Array.isArray(listResponse.data)) {
+                    setRewardsList(listResponse.data);
+                    setPagination(prev => ({
+                        ...prev,
+                        totalPages: listResponse.totalPages || 1,
+                        totalCount: listResponse.totalCount || 0,
+                        currentPage: listResponse.currentPage || 1
+                    }));
+                } else {
+                     // اگر لیست خالی بود خطا ندهیم، فقط لیست را خالی کنیم
+                    if (listResponse && listResponse.data && listResponse.data.length === 0) {
+                         setRewardsList([]);
+                         setPagination(prev => ({ ...prev, totalPages: 1, totalCount: 0, currentPage: 1 }));
+                    } else {
+                        throw new Error(listResponse?.message || "خطا در دریافت لیست پاداش‌ها");
+                    }
+                }
+            } catch (err) {
+                setError(err.message || "یک خطای ناشناخته در دریافت لیست رخ داد.");
+            } finally {
+                setLoadingList(false); // لودینگ لیست تمام شد
+                setTimeout(() => setVisibility(true), 50); // انیمیشن نمایش
+            }
+        };
+
+        loadListData();
+    }, [token, filters, pagination.currentPage, loadingStats]); // <<<< به فیلتر، صفحه و وضعیت لودینگ آمار وابسته است
+
+// ... (بقیه کدهای کامپوننت شما بدون تغییر باقی می‌ماند)
+
 
     // توابع جدید برای مدیریت مودال جزئیات
     const handleOpenDetailsModal = (reward) => {
@@ -128,7 +182,7 @@ export default function Rewards({ Open }) {
         week: new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(date),
     };
 
-    if (loading) {
+    if (loadingStats) {
         return (
             <div className="flex justify-center items-center h-screen w-full">
                 <p className="text-xl text-[#19A297]">در حال بارگذاری اطلاعات...</p>
@@ -154,10 +208,30 @@ export default function Rewards({ Open }) {
         { title: "کل پاداش‌های ثبت‌شده", value: statsData.rewardsTotalRegisteredValue, imageSrc: Frame25 },
     ];
 
+    const handleFilterChange = (name, value) => {
+        setFilters(prev => ({ ...prev, [name]: value }));
+        setPagination(prev => ({ ...prev, currentPage: 1 }));
+        if (openFilterDropdowns[name] !== undefined) {
+            setOpenFilterDropdowns(prev => ({ ...prev, [name]: false }));
+        }
+    };
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= pagination.totalPages) {
+            setPagination(prev => ({ ...prev, currentPage: newPage }));
+        }
+    };
+
+    const toggleFilterDropdown = (name) => {
+        setOpenFilterDropdowns(prev => ({ ...Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: false }), {}), [name]: !prev[name] }));
+    };
+
+    const statusOptions = [{ value: '', label: 'همه وضعیت‌ها' }, { value: 'pending', label: 'در انتظار' }, { value: 'approved', label: 'تایید شده' }, { value: 'rejected', label: 'رد شده' }];
+
     return (
         <>
             <div className={`p-6 md:p-8 flex-col h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 ${!visibility ? "hidden opacity-0" : ""} ${Open ? 'w-full md:w-[calc(100%-22%)]' : 'w-full md:w-[calc(100%-6%)]'} ${isMounted ? 'transition-all duration-500' : ''}`}>
-            
+
                 {/* هدر بالا */}
                 <div className="flex flex-col sm:flex-row justify-between items-center h-auto sm:h-[5vh] mb-6">
                     <div className="flex justify-center items-center gap-3 sm:gap-5 mb-2 sm:mb-0">
@@ -194,12 +268,31 @@ export default function Rewards({ Open }) {
                     </div>
                 </div>
 
-                {/* عنوان جدول */}
-                <div className="flex flex-row justify-end items-center mb-4">
-                    <div className="flex items-center gap-2">
-                        <p className="text-gray-500 text-xs sm:text-sm">در اینجا سوابق آخرین پاداش ها را مشاهده می کنید</p>
-                        <h2 className="text-lg font-semibold text-[#19A297]">آخرین پاداش ها</h2>
+                {/* فیلترها و عنوان جدول */}
+                <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
+                    <div className="flex flex-wrap gap-3 mb-4 sm:mb-0">
+                        <div className="relative">
+                            <button onClick={() => toggleFilterDropdown('status')} className="bg-white border border-gray-300 text-gray-700 px-4 py-2.5 rounded-lg text-sm flex items-center justify-between min-w-[150px] hover:border-gray-400">
+                                <span>وضعیت: {statusOptions.find(opt => opt.value === filters.status)?.label || "همه"}</span>
+                                <IoChevronDown className={`text-gray-500 transition-transform duration-200 ${openFilterDropdowns.status ? 'rotate-180' : ''}`} />
+                            </button>
+                            {openFilterDropdowns.status && (
+                                <div className="absolute z-20 top-full right-0 sm:left-0 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg py-1">
+                                    {statusOptions.map(opt => (
+                                        <button key={opt.value} onClick={() => handleFilterChange('status', opt.value)} className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">{opt.label}</button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="جستجو در عنوان پاداش..."
+                            value={filters.rewardTitle}
+                            onChange={(e) => handleFilterChange('rewardTitle', e.target.value)}
+                            className="bg-white border border-gray-300 text-gray-700 px-4 py-2.5 rounded-lg text-sm focus:border-[#19A297] focus:ring-1 focus:ring-[#19A297] outline-none"
+                        />
                     </div>
+                    <h2 className="text-lg font-semibold text-[#19A297]">آخرین پاداش ها</h2>
                 </div>
 
                 {/* جدول پاداش‌ها */}
@@ -216,34 +309,21 @@ export default function Rewards({ Open }) {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {rewardsList.length > 0 ? (
+                                {loadingList ? (
+                                    <tr><td colSpan="5" className="text-center py-10 text-gray-500">در حال بارگذاری لیست پاداش‌ها...</td></tr>
+                                ) : rewardsList.length > 0 ? (
                                     rewardsList.map((reward, idx) => {
                                         const statusDetails = getStatusDetails(reward.status);
                                         const formattedSubmissionDate = formatDateToPersian(reward.createdAt);
                                         const formattedPaymentDate = reward.status === 'approved' ? formatDateToPersian(reward.updatedAt) : "نامشخص";
-                                        
-                                        // دیتای کامل برای ارسال به مودال
-                                        const rewardDetailsForModal = {
-                                            ...reward,
-                                            title: reward.rewardId?.name || "بدون عنوان",
-                                            tokenCost: reward.token,
-                                            submissionDate: formattedSubmissionDate,
-                                            paymentDate: formattedPaymentDate,
-                                            status: statusDetails.text,
-                                            statusColor: statusDetails.color
-                                        };
-
+                                        const rewardDetailsForModal = { ...reward, title: reward.rewardId?.name || "بدون عنوان", tokenCost: reward.token, submissionDate: formattedSubmissionDate, paymentDate: formattedPaymentDate, status: statusDetails.text, statusColor: statusDetails.color };
                                         return (
-                                            <tr 
-                                                key={reward._id} 
-                                                className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-gray-100 transition-colors cursor-pointer`}
-                                                onClick={() => handleOpenDetailsModal(rewardDetailsForModal)}
-                                            >
-                                                <td className="px-4 py-3 text-center whitespace-nowrap text-gray-800 font-medium">{reward.userId?.fullName || "نامشخص"}</td>
-                                                <td className="px-4 py-3 text-center whitespace-nowrap text-gray-600">{reward.rewardId?.name || "بدون عنوان"}</td>
-                                                <td className="px-4 py-3 text-center whitespace-nowrap text-gray-600">{formattedSubmissionDate}</td>
-                                                <td className="px-4 py-3 text-center whitespace-nowrap text-gray-600">{formattedPaymentDate}</td>
-                                                <td className={`px-4 py-3 text-center whitespace-nowrap font-semibold ${statusDetails.color}`}>{statusDetails.text}</td>
+                                            <tr key={reward._id} onClick={() => handleOpenDetailsModal(rewardDetailsForModal)} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-gray-100 transition-colors cursor-pointer`}>
+                                                <td className="px-4 py-3 text-center ...">{reward.userId?.fullName || "نامشخص"}</td>
+                                                <td className="px-4 py-3 text-center ...">{reward.rewardId?.name || "بدون عنوان"}</td>
+                                                <td className="px-4 py-3 text-center ...">{formattedSubmissionDate}</td>
+                                                <td className="px-4 py-3 text-center ...">{formattedPaymentDate}</td>
+                                                <td className={`px-4 py-3 text-center ... ${statusDetails.color}`}>{statusDetails.text}</td>
                                             </tr>
                                         )
                                     })
@@ -255,6 +335,14 @@ export default function Rewards({ Open }) {
                     </div>
                 </div>
                 <div className="pb-10"></div>
+                {/* صفحه‌بندی */}
+                {pagination.totalPages > 1 && !loadingList && (
+                    <div className="flex justify-center items-center gap-2 mt-6">
+                        <button onClick={() => handlePageChange(pagination.currentPage - 1)} disabled={pagination.currentPage === 1} className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50">قبلی</button>
+                        <span className="text-sm text-gray-700">صفحه {pagination.currentPage.toLocaleString('fa-IR')} از {pagination.totalPages.toLocaleString('fa-IR')} (کل: {pagination.totalCount.toLocaleString('fa-IR')})</span>
+                        <button onClick={() => handlePageChange(pagination.currentPage + 1)} disabled={pagination.currentPage === pagination.totalPages} className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50">بعدی</button>
+                    </div>
+                )}
             </div>
 
             {/* رندر کردن مودال جزئیات */}

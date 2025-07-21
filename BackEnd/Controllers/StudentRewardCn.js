@@ -326,3 +326,230 @@ export const getAdminRewardStats = catchAsync(async (req, res, next) => {
         }
     });
 });
+
+// controllers/StudentRewardCn.js
+
+
+
+// ... (بقیه توابع شما مثل getMyRewardStats و ...)
+
+// =========================================================================
+// <<< این تابع جدید رو به کنترلر اضافه کن >>>
+// =========================================================================
+export const getMyRewardsListPaginated = catchAsync(async (req, res, next) => {
+    const userId = req.userId;
+    const { 
+        status, 
+        rewardTitle, 
+        sortBy = 'createdAt', // مرتب‌سازی پیش‌فرض
+        order = 'desc', 
+        page = 1, 
+        limit = 10 // تعداد آیتم در هر صفحه
+    } = req.query;
+
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // ۱. ساخت پایپ‌لاین aggregate
+    let pipeline = [];
+
+    // مرحله اول: فقط رکوردهای کاربر فعلی را پیدا کن
+    const matchStage = { userId: new mongoose.Types.ObjectId(userId) };
+    if (status) {
+        matchStage.status = status;
+    }
+    pipeline.push({ $match: matchStage });
+
+    // مرحله دوم: اطلاعات پاداش اصلی (از کالکشن rewards) را الحاق کن
+    pipeline.push({
+        $lookup: {
+            from: 'rewards', // نام دقیق کالکشن پاداش‌های شما
+            localField: 'rewardId',
+            foreignField: '_id',
+            as: 'rewardInfo'
+        }
+    });
+    // اگر رکوردی پیدا نشد، آن را حذف نکن
+    pipeline.push({ $unwind: { path: '$rewardInfo', preserveNullAndEmptyArrays: true } });
+
+    // مرحله سوم: اطلاعات کاربر را الحاق کن (اختیاری، برای نمایش نام)
+    pipeline.push({
+        $lookup: {
+            from: 'users',
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'userInfo'
+        }
+    });
+    pipeline.push({ $unwind: { path: '$userInfo', preserveNullAndEmptyArrays: true } });
+
+
+    // مرحله چهارم: فیلتر بر اساس عنوان پاداش (بعد از lookup)
+    if (rewardTitle) {
+        pipeline.push({
+            $match: { 'rewardInfo.name': { $regex: rewardTitle, $options: 'i' } }
+        });
+    }
+
+    // ۲. پایپ‌لاین برای شمارش کل نتایج (بدون صفحه‌بندی)
+    const countPipeline = [...pipeline, { $count: 'totalCount' }];
+
+    // ۳. اضافه کردن مرتب‌سازی و صفحه‌بندی به پایپ‌لاین اصلی
+    pipeline.push({ $sort: { [sortBy]: order === 'asc' ? 1 : -1 } });
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: limitNum });
+    
+    // ۴. انتخاب فیلدهای نهایی
+    pipeline.push({
+        $project: {
+            _id: 1,
+            status: 1,
+            createdAt: 1,
+            updatedAt: 1,
+            token: 1, // توکن کسر شده برای این درخواست
+            adminComment: 1,
+            description: 1, // توضیحات کاربر
+            userId: {
+                _id: '$userInfo._id',
+                fullName: '$userInfo.fullName'
+            },
+            rewardId: {
+                _id: '$rewardInfo._id',
+                name: '$rewardInfo.name',
+                tokenCost: '$rewardInfo.tokenCost' // توکن تعریف شده در پاداش
+            }
+        }
+    });
+    
+    // ۵. اجرای همزمان هر دو پایپ‌لاین
+    const [[countResult], rewards] = await Promise.all([
+        StudentReward.aggregate(countPipeline),
+        StudentReward.aggregate(pipeline)
+    ]);
+
+    const totalCount = countResult ? countResult.totalCount : 0;
+
+    res.status(200).json({
+        success: true,
+        totalCount: totalCount,
+        currentPage: pageNum,
+        totalPages: Math.ceil(totalCount / limitNum),
+        data: rewards
+    });
+});
+
+// =========================================================================
+// >>>>>  این کنترلر جدید را به فایل StudentRewardCn.js اضافه کنید  <<<<<
+// =========================================================================
+export const getStudentRewardsForAdminList = catchAsync(async (req, res, next) => {
+    // ۱. دریافت پارامترهای کوئری از فرانت‌اند
+    const {
+        status,
+        rewardName,  // فیلتر بر اساس نام پاداش
+        studentName, // فیلتر بر اساس نام دانش‌آموز
+        page = 1,
+        limit = 10,
+        sortBy = 'createdAt',
+        order = 'desc'
+    } = req.query;
+
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // ۲. ساخت پایپ‌لاین aggregate
+    let pipeline = [];
+
+    // مرحله اول: اطلاعات پاداش اصلی (از کالکشن rewards) را الحاق کن
+    pipeline.push({
+        $lookup: {
+            from: 'rewards', // نام دقیق کالکشن پاداش‌های شما
+            localField: 'rewardId',
+            foreignField: '_id',
+            as: 'rewardInfo'
+        }
+    });
+    // اگر رکوردی پیدا نشد، آن را حذف نکن
+    pipeline.push({ $unwind: { path: '$rewardInfo', preserveNullAndEmptyArrays: true } });
+
+    // مرحله دوم: اطلاعات کاربر (دانش‌آموز) را الحاق کن
+    pipeline.push({
+        $lookup: {
+            from: 'users', // نام دقیق کالکشن کاربران شما
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'userInfo'
+        }
+    });
+    pipeline.push({ $unwind: { path: '$userInfo', preserveNullAndEmptyArrays: true } });
+
+    // مرحله سوم: ساخت آبجکت فیلتر (Match Stage)
+    // این مرحله بعد از lookup ها می‌آید تا بتوانیم روی نام دانش‌آموز و پاداش فیلتر کنیم
+    const matchStage = {};
+    if (status) {
+        matchStage.status = status;
+    }
+    if (rewardName) {
+        // فیلتر case-insensitive با استفاده از regex
+        matchStage['rewardInfo.name'] = { $regex: rewardName, $options: 'i' };
+    }
+    if (studentName) {
+        matchStage['userInfo.fullName'] = { $regex: studentName, $options: 'i' };
+    }
+    // اگر آبجکت فیلتر خالی نبود، آن را به پایپ‌لاین اضافه کن
+    if (Object.keys(matchStage).length > 0) {
+        pipeline.push({ $match: matchStage });
+    }
+
+    // ۳. پایپ‌لاین برای شمارش کل نتایج (بدون صفحه‌بندی و مرتب‌سازی)
+    const countPipeline = [...pipeline, { $count: 'totalCount' }];
+
+    // ۴. اضافه کردن مرتب‌سازی، صفحه‌بندی و انتخاب فیلدهای نهایی به پایپ‌لاین اصلی
+    pipeline.push({ $sort: { [sortBy]: order === 'asc' ? 1 : -1 } });
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: limitNum });
+    
+    // مرحله نهایی: انتخاب و تغییر نام فیلدها برای مطابقت با فرانت‌اند
+    pipeline.push({
+        $project: {
+            _id: 1, // شناسه اصلی درخواست پاداش
+            status: 1,
+            tokenCost: '$token', // توکن کسر شده برای این درخواست
+            submissionDate: '$createdAt', // تاریخ ثبت
+            reviewDate: '$updatedAt', // تاریخ آخرین تغییر وضعیت (برای پرداخت)
+            studentName: '$userInfo.fullName',
+            studentGrade: '$userInfo.grade',
+            studentImage: '$userInfo.image',
+            rewardTitle: '$rewardInfo.name',
+            rewardDescription: '$rewardInfo.description',
+            // فیلدهای خام برای ارسال به مودال (اختیاری ولی مفید)
+            raw: {
+                student: '$userInfo',
+                reward: '$rewardInfo',
+                studentReward: {
+                    _id: '$_id',
+                    status: '$status',
+                    token: '$token',
+                    createdAt: '$createdAt'
+                }
+            }
+        }
+    });
+
+    // ۵. اجرای همزمان هر دو پایپ‌لاین (کوئری اصلی و کوئری شمارش)
+    const [[countResult], rewards] = await Promise.all([
+        StudentReward.aggregate(countPipeline).exec(),
+        StudentReward.aggregate(pipeline).exec()
+    ]);
+
+    const totalCount = countResult ? countResult.totalCount : 0;
+
+    res.status(200).json({
+        success: true,
+        totalCount: totalCount,
+        currentPage: pageNum,
+        totalPages: Math.ceil(totalCount / limitNum),
+        data: rewards
+    });
+});

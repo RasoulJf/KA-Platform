@@ -26,7 +26,7 @@ const adminActivitySchema = new mongoose.Schema(
     },
     type:{
       type:String,
-      enum:["گروهی","فردی"]
+      enum:["گروهی","فردی","گروهی-اکسل"]
     },
     description:{
       type:String

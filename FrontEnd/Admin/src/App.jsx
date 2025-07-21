@@ -22,10 +22,10 @@ import ExcelUpload from './Pages/ExelUploader';
 const AppContent = () => {
   const { token, user } = useContext(AuthContext);
   const [open, setOpen] = useState(true); // پیش‌فرض سایدبار باز است
-  
+
   // ۲. مسیر فعلی را از URL می‌گیریم
   const location = useLocation();
-  
+
   const getOpen = (isOpen) => {
     // مقدار جدید را از سایدبار دریافت کرده و state را آپدیت می‌کنیم
     setOpen(isOpen);
@@ -39,48 +39,48 @@ const AppContent = () => {
   const showSidebar = token && user?.role !== 'student' && location.pathname !== '/login';
 
   return (
-    <div className="overflow-hidden h-screen w-full relative flex">
+    <div className="w-full relative flex min-h-screen">
       <Toaster position='top-right' />
-      
+
       {/* سایدبار فقط در صورت برقرار بودن شرط نمایش داده می‌شود */}
 
       <Routes>
-        <Route 
-          path='/login' 
-          element={token && user?.role !== "student" ? <Navigate to="/" /> : <Login />} 
+        <Route
+          path='/login'
+          element={token && user?.role !== "student" ? <Navigate to="/" /> : <Login />}
         />
-        <Route 
-          path='/' 
-          element={!token || user?.role === "student" ? <Navigate to="/login" /> : <Home Open={open} />} 
+        <Route
+          path='/'
+          element={!token || user?.role === "student" ? <Navigate to="/login" /> : <Home Open={open} />}
         />
-        
+
         {/* روت‌های تودرتو برای AddData */}
         <Route path='/add-data'>
-          <Route 
-            index 
-            element={!token || user?.role === "student" ? <Navigate to="/login" /> : <AddData Open={open} />} 
+          <Route
+            index
+            element={!token || user?.role === "student" ? <Navigate to="/login" /> : <AddData Open={open} />}
           />
-          <Route 
-            path='create' 
-            element={!token || user?.role === "student" ? <Navigate to="/login" /> : <CreateNewData Open={open} />} 
+          <Route
+            path='create'
+            element={!token || user?.role === "student" ? <Navigate to="/login" /> : <CreateNewData Open={open} />}
           />
         </Route>
 
-        <Route 
-          path='/requests' 
-          element={!token || user?.role === "student" ? <Navigate to="/login" /> : <Requests Open={open} />} 
+        <Route
+          path='/requests'
+          element={!token || user?.role === "student" ? <Navigate to="/login" /> : <Requests Open={open} />}
         />
-        <Route 
-          path='/rewards' 
-          element={!token || user?.role === "student" ? <Navigate to="/login" /> : <Rewards Open={open} />} 
+        <Route
+          path='/rewards'
+          element={!token || user?.role === "student" ? <Navigate to="/login" /> : <Rewards Open={open} />}
         />
-        <Route 
-          path='/results' 
-          element={!token || user?.role === "student" ? <Navigate to="/login" /> : <Result Open={open} />} 
+        <Route
+          path='/results'
+          element={!token || user?.role === "student" ? <Navigate to="/login" /> : <Result Open={open} />}
         />
-        <Route 
+        <Route
           path='/exel' // املای صحیح: excel
-          element={!token || user?.role === "student" ? <Navigate to="/login" /> : <ExcelUpload Open={open} />} 
+          element={!token || user?.role === "student" ? <Navigate to="/login" /> : <ExcelUpload Open={open} />}
         />
       </Routes>
       {showSidebar && <Sidebar getOpen={getOpen} />}

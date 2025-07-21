@@ -129,7 +129,7 @@ export default function GradeTable({ grade, token, onDataLoad }) { // token و o
                 <div className="flex justify-center items-center space-x-1 sm:space-x-2 space-x-reverse py-4 border-t">
                     <button onClick={() => handlePageChangeTable(currentPageTable - 1)} disabled={currentPageTable === 1 || loadingTable} className="px-3 py-1.5 text-xs sm:text-sm bg-gray-200 hover:bg-gray-300 rounded-md disabled:opacity-50"> قبلی </button>
                     {/* ... منطق نمایش شماره صفحات ... */}
-                    <button onClick={() => handlePageChangeTable(currentPageTable + 1)} disabled={currentPageTable === totalPagesTable - 1 || loadingTable} className="px-3 py-1.5 text-xs sm:text-sm bg-gray-200 hover:bg-gray-300 rounded-md disabled:opacity-50"> بعدی </button>
+                    <button onClick={() => handlePageChangeTable(currentPageTable + 1)} disabled={currentPageTable === totalPagesTable  || loadingTable} className="px-3 py-1.5 text-xs sm:text-sm bg-gray-200 hover:bg-gray-300 rounded-md disabled:opacity-50"> بعدی </button>
                 </div>
             )}
         </div>
