@@ -11,6 +11,7 @@ import { IoDocumentTextOutline } from "react-icons/io5";
 import { BsGrid1X2 } from "react-icons/bs";
 import { IoIosArrowDown } from "react-icons/io";
 import { Link } from 'react-router-dom';
+import NotificationPanel from '../../Components/NotificationPanel';
 
 
 const formatDate = (dateString) => {
@@ -30,7 +31,7 @@ const formatNumber = (num) => (num !== undefined && num !== null) ? Number(num).
 export default function AddData({ Open }) {
   const token = localStorage.getItem("token");
 
-  
+
 
   // --- State های جدید برای فیلتر و صفحه‌بندی ---
   const [filters, setFilters] = useState({
@@ -51,6 +52,65 @@ export default function AddData({ Open }) {
   const [adminActivitiesList, setAdminActivitiesList] = useState([]);
   const [loading, setLoading] = useState({ stats: true, list: true });
   const [error, setError] = useState({ stats: null, list: null });
+  // ... بعد از تعریف token
+
+  // --- شروع بخش کد برای نوتیفیکیشن ---
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const notificationRefForThisPage = useRef(null); // << اسم متغیر رو عوض کردم تا با debounceTimer تداخل نکنه
+
+  const toggleNotificationPanel = () => setIsNotificationOpen((prev) => !prev);
+  const closeNotificationPanel = () => setIsNotificationOpen(false);
+  // --- پایان بخش کد برای نوتیفیکیشن ---
+
+  // ... بقیه state های شما مثل filters و pagination
+
+  // useEffect جداگانه برای آمارها
+  useEffect(() => {
+    const loadStatsAndNotifications = async () => { // اسم تابع رو عوض کردم
+      if (!token) return;
+      setLoading(prev => ({ ...prev, stats: true }));
+      setError(prev => ({ ...prev, stats: null }));
+      try {
+        // <<< تغییر: اندپوینت نوتیفیکیشن به Promise.all اضافه می‌شود >>>
+        const [userStats, activityCount, notificationCountResponse] = await Promise.all([
+          fetchData('users/summary-stats', { headers: { authorization: `Bearer ${token}` } }),
+          fetchData('admin-activity/stats/count', { headers: { authorization: `Bearer ${token}` } }),
+          fetchData('notifications?filter=unread', { headers: { authorization: `Bearer ${token}` } }) // <<<< این خط جدید است
+        ]);
+
+        const newStats = {};
+        if (userStats.success) newStats.totalUserScore = userStats.data.totalScore;
+        if (activityCount.success) newStats.totalAdminActivitiesCount = activityCount.data.count;
+        setStats(newStats);
+
+        // <<< تغییر: ذخیره کردن تعداد اعلان‌ها در state >>>
+        if (notificationCountResponse.success) {
+          setUnreadCount(notificationCountResponse.totalCount || 0);
+        }
+
+      } catch (err) {
+        setError(prev => ({ ...prev, stats: err.message || 'خطا در بارگذاری آمار' }));
+      } finally {
+        setLoading(prev => ({ ...prev, stats: false }));
+      }
+    };
+    loadStatsAndNotifications(); // << اسم تابع رو عوض کردم
+
+    // <<< تغییر: اضافه کردن منطق بستن پنل با کلیک بیرون >>>
+    function handleClickOutside(event) {
+      if (notificationRefForThisPage.current && !notificationRefForThisPage.current.contains(event.target)) {
+        const notificationIcon = document.getElementById("admin-adddata-notification-icon");
+        if (notificationIcon && notificationIcon.contains(event.target)) return;
+        closeNotificationPanel();
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+
+  }, [token]);
 
   // --- منطق تاریخ (بدون تغییر) ---
   const date = new Date();
@@ -58,7 +118,7 @@ export default function AddData({ Open }) {
   const day = new Intl.DateTimeFormat('fa-IR', { day: 'numeric' }).format(date);
   const year = new Intl.DateTimeFormat('fa-IR', { year: 'numeric' }).format(date);
   const week = new Intl.DateTimeFormat('fa-IR', { weekday: 'short' }).format(date);
-  
+
   // دسته‌بندی‌های ثابت برای فیلتر
   const categories = ['فعالیت‌های آموزشی', 'فعالیت‌های داوطلبانه و توسعه فردی', 'فعالیت‌های شغلی', 'موارد کسر امتیاز'];
 
@@ -92,10 +152,10 @@ export default function AddData({ Open }) {
       if (activitiesListResponse.success && activitiesListResponse.data) {
         setAdminActivitiesList(activitiesListResponse.data);
         setPagination(prev => ({
-            ...prev,
-            totalPages: activitiesListResponse.totalPages || 1,
-            totalCount: activitiesListResponse.totalCount || 0,
-            currentPage: activitiesListResponse.currentPage || 1
+          ...prev,
+          totalPages: activitiesListResponse.totalPages || 1,
+          totalCount: activitiesListResponse.totalCount || 0,
+          currentPage: activitiesListResponse.currentPage || 1
         }));
       } else {
         throw new Error(activitiesListResponse.message || 'خطا در دریافت لیست فعالیت‌ها');
@@ -116,25 +176,25 @@ export default function AddData({ Open }) {
   // useEffect جداگانه برای آمارها که فقط یکبار لود شوند
   useEffect(() => {
     const loadStats = async () => {
-        if (!token) return;
-        setLoading(prev => ({...prev, stats: true}));
-        setError(prev => ({...prev, stats: null}));
-        try {
-            const [userStats, activityCount] = await Promise.all([
-                fetchData('users/summary-stats', { headers: { authorization: `Bearer ${token}` } }),
-                fetchData('admin-activity/stats/count', { headers: { authorization: `Bearer ${token}` } })
-            ]);
-            
-            const newStats = {};
-            if(userStats.success) newStats.totalUserScore = userStats.data.totalScore;
-            if(activityCount.success) newStats.totalAdminActivitiesCount = activityCount.data.count;
-            setStats(newStats);
+      if (!token) return;
+      setLoading(prev => ({ ...prev, stats: true }));
+      setError(prev => ({ ...prev, stats: null }));
+      try {
+        const [userStats, activityCount] = await Promise.all([
+          fetchData('users/summary-stats', { headers: { authorization: `Bearer ${token}` } }),
+          fetchData('admin-activity/stats/count', { headers: { authorization: `Bearer ${token}` } })
+        ]);
 
-        } catch(err) {
-            setError(prev => ({...prev, stats: err.message || 'خطا در بارگذاری آمار'}));
-        } finally {
-            setLoading(prev => ({...prev, stats: false}));
-        }
+        const newStats = {};
+        if (userStats.success) newStats.totalUserScore = userStats.data.totalScore;
+        if (activityCount.success) newStats.totalAdminActivitiesCount = activityCount.data.count;
+        setStats(newStats);
+
+      } catch (err) {
+        setError(prev => ({ ...prev, stats: err.message || 'خطا در بارگذاری آمار' }));
+      } finally {
+        setLoading(prev => ({ ...prev, stats: false }));
+      }
     };
     loadStats();
   }, [token]);
@@ -166,12 +226,12 @@ export default function AddData({ Open }) {
     return <div className="flex justify-center items-center h-screen w-full"><p>در حال بارگذاری...</p></div>;
   }
   if ((error.stats || error.list) && adminActivitiesList.length === 0) {
-      return (
-        <div className="flex flex-col justify-center items-center h-screen w-full p-8">
-          <p className="text-xl text-red-500">خطا در بارگذاری صفحه</p>
-          <button onClick={() => window.location.reload()} className="mt-4 bg-[#19A297] text-white px-4 py-2 rounded">تلاش مجدد</button>
-        </div>
-      );
+    return (
+      <div className="flex flex-col justify-center items-center h-screen w-full p-8">
+        <p className="text-xl text-red-500">خطا در بارگذاری صفحه</p>
+        <button onClick={() => window.location.reload()} className="mt-4 bg-[#19A297] text-white px-4 py-2 rounded">تلاش مجدد</button>
+      </div>
+    );
   }
 
   return (
@@ -184,33 +244,53 @@ export default function AddData({ Open }) {
           <div className="flex justify-center items-center gap-5">
             <h3 className='text-[#19A297] text-xs'>هنرستان استارتاپی رکاد</h3>
             <BiSolidSchool className='text-[#19A297] ml-[-10px] scale-150' />
-            <div className='w-8 flex justify-center items-center border-gray-400 h-8 border rounded-full cursor-pointer'>
-              <IoNotificationsOutline className='text-gray-400 scale-100' />
+            {/* --- کد جدید برای آیکون و پنل نوتیفیکیشن --- */}
+            <div className="relative" ref={notificationRefForThisPage}>
+              <button
+                id="admin-adddata-notification-icon"
+                onClick={toggleNotificationPanel}
+                className="w-8 h-8 flex justify-center items-center border-gray-400 h-8 border rounded-full cursor-pointer relative group"
+                aria-label="اعلان‌ها"
+              >
+                <IoNotificationsOutline className="text-gray-400" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center border-2 border-white">
+                    {unreadCount > 9 ? '۹+' : unreadCount.toLocaleString('fa-IR')}
+                  </span>
+                )}
+              </button>
+              <NotificationPanel
+                isOpen={isNotificationOpen}
+                onClose={closeNotificationPanel}
+                token={token}
+                userType="admin" // <<<< این prop کامپوننت را برای ادمین تنظیم می‌کند
+              />
             </div>
+            {/* --- پایان کد جدید --- */}
           </div>
           <div className="flex justify-center items-center gap-5">
             <p className='text-gray-400 text-xs'> امروز {week} {day} {month} ماه، {year}</p>
             <h1 className='text-[#19A297] font-semibold text-lg'>ثبت اطلاعات توسط ادمین</h1>
           </div>
         </div>
-        
+
         {/* کارت‌های بالا (اصلاح شده برای خوانایی) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
-            {[
-                { title: 'جمع کل امتیازات کاربران', value: stats.totalUserScore, icon: <BsGrid1X2 className='scale-150 text-white' /> },
-                { title: 'کل فعالیت‌های ثبت‌شده (ادمین)', value: stats.totalAdminActivitiesCount, icon: <IoDocumentTextOutline className='scale-150 text-white' /> }
-            ].map((card, index) => (
-                <div key={index} className="relative bg-white rounded-lg overflow-hidden p-6 flex items-center justify-between shadow-sm border border-gray-100 min-h-[12vh]">
-                    <img src={frame7} className='absolute z-0 h-full w-full object-cover scale-110 top-0 left-0' alt="" />
-                    {loading.stats ? <p className="z-10 animate-pulse">...</p> : <p className='text-[#202A5A] font-semibold text-2xl z-10'>{formatNumber(card.value)}</p>}
-                    <div className='flex items-center gap-4 z-10'>
-                        <h2 className='text-[#202A5A] font-semibold text-lg'>{card.title}</h2>
-                        <div className="bg-[#202A5A] flex justify-center items-center w-12 h-12 rounded-full">{card.icon}</div>
-                    </div>
-                </div>
-            ))}
+          {[
+            { title: 'جمع کل امتیازات کاربران', value: stats.totalUserScore, icon: <BsGrid1X2 className='scale-150 text-white' /> },
+            { title: 'کل فعالیت‌های ثبت‌شده (ادمین)', value: stats.totalAdminActivitiesCount, icon: <IoDocumentTextOutline className='scale-150 text-white' /> }
+          ].map((card, index) => (
+            <div key={index} className="relative bg-white rounded-lg overflow-hidden p-6 flex items-center justify-between shadow-sm border border-gray-100 min-h-[12vh]">
+              <img src={frame7} className='absolute z-0 h-full w-full object-cover scale-110 top-0 left-0' alt="" />
+              {loading.stats ? <p className="z-10 animate-pulse">...</p> : <p className='text-[#202A5A] font-semibold text-2xl z-10'>{formatNumber(card.value)}</p>}
+              <div className='flex items-center gap-4 z-10'>
+                <h2 className='text-[#202A5A] font-semibold text-lg'>{card.title}</h2>
+                <div className="bg-[#202A5A] flex justify-center items-center w-12 h-12 rounded-full">{card.icon}</div>
+              </div>
+            </div>
+          ))}
         </div>
-        
+
         {/* بخش ثبت اطلاعات جدید (بدون تغییر) */}
         <div className="relative bg-white rounded-lg overflow-hidden mb-6 p-4 flex items-center justify-between shadow-sm border border-gray-100 h-auto md:h-[12vh]">
           <img src={frame72} className='absolute z-0 h-full w-full object-cover top-0 left-[-30px] opacity-100 scale-110' alt="" />
@@ -288,18 +368,18 @@ export default function AddData({ Open }) {
             </tbody>
           </table>
         </div>
-        
+
         {/* بخش صفحه‌بندی */}
         {pagination.totalPages > 1 && !loading.list && (
-            <div className="flex justify-between items-center w-full mt-4 px-2">
-                <p className="text-sm text-gray-600">
-                    نمایش صفحه <span className="font-semibold">{formatNumber(pagination.currentPage)}</span> از <span className="font-semibold">{formatNumber(pagination.totalPages)}</span> (کل: {formatNumber(pagination.totalCount)} مورد)
-                </p>
-                <div className="flex items-center gap-2">
-                    <button onClick={() => handlePageChange(pagination.currentPage - 1)} disabled={pagination.currentPage === 1} className="px-3 py-1 text-sm bg-white border rounded-md shadow-sm hover:bg-gray-50 disabled:opacity-50">قبلی</button>
-                    <button onClick={() => handlePageChange(pagination.currentPage + 1)} disabled={pagination.currentPage === pagination.totalPages} className="px-3 py-1 text-sm bg-white border rounded-md shadow-sm hover:bg-gray-50 disabled:opacity-50">بعدی</button>
-                </div>
+          <div className="flex justify-between items-center w-full mt-4 px-2">
+            <p className="text-sm text-gray-600">
+              نمایش صفحه <span className="font-semibold">{formatNumber(pagination.currentPage)}</span> از <span className="font-semibold">{formatNumber(pagination.totalPages)}</span> (کل: {formatNumber(pagination.totalCount)} مورد)
+            </p>
+            <div className="flex items-center gap-2">
+              <button onClick={() => handlePageChange(pagination.currentPage - 1)} disabled={pagination.currentPage === 1} className="px-3 py-1 text-sm bg-white border rounded-md shadow-sm hover:bg-gray-50 disabled:opacity-50">قبلی</button>
+              <button onClick={() => handlePageChange(pagination.currentPage + 1)} disabled={pagination.currentPage === pagination.totalPages} className="px-3 py-1 text-sm bg-white border rounded-md shadow-sm hover:bg-gray-50 disabled:opacity-50">بعدی</button>
             </div>
+          </div>
         )}
 
       </div>

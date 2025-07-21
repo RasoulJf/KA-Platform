@@ -9,6 +9,7 @@ import { IoNotificationsOutline } from "react-icons/io5";
 import { IoIosArrowDown } from "react-icons/io";
 import { BsChatLeftText, BsClipboardCheck, BsClipboardX, BsClipboardData } from "react-icons/bs";
 import RequestApprovalModal from './RequestApprovalModal';
+import NotificationPanel from '../../Components/NotificationPanel';
 
 export default function Requests({ Open }) {
     const token = localStorage.getItem("token");
@@ -36,6 +37,63 @@ export default function Requests({ Open }) {
     const [activityCategories, setActivityCategories] = useState([]); // <--- STATE اضافه شد
     const [loadingActivityCategories, setLoadingActivityCategories] = useState(true); // <--- STATE اضافه شد
 
+    // ... بعد از تعریف token
+
+    // --- شروع بخش کد برای نوتیفیکیشن ---
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const notificationRef = useRef(null); // اسم رفرنس رو ساده نگه می‌داریم
+
+    const toggleNotificationPanel = () => setIsNotificationPanelOpen((prev) => !prev);
+    const closeNotificationPanel = () => setIsNotificationPanelOpen(false);
+    // --- پایان بخش کد برای نوتیفیکیشن ---
+
+    // ... بقیه state های شما مثل isModalOpen و ...
+
+    useEffect(() => {
+        // واکشی آمار، دسته‌بندی‌ها و تعداد اعلان‌ها
+        const fetchInitialAdminData = async () => {
+            if (!token) { /* ... مدیریت خطا ... */ return; }
+            setLoadingStats(true);
+            // ... بقیه state های لودینگ
+
+            try {
+                // <<< تغییر: اندپوینت نوتیفیکیشن به Promise.all اضافه می‌شود >>>
+                const [statsResponse, categoriesResponse, notificationCountResponse] = await Promise.all([
+                    fetchData('admin-review/student-activity-stats', { headers: { authorization: `Bearer ${token}` } }),
+                    fetchData('admin-activity/distinct/parents', { headers: { authorization: `Bearer ${token}` } }),
+                    fetchData('notifications?filter=unread', { headers: { authorization: `Bearer ${token}` } }) // <<<< این خط جدید است
+                ]);
+
+                // ... (کد مربوط به statsResponse و categoriesResponse بدون تغییر)
+                if (statsResponse.success) { /* ... */ }
+                if (categoriesResponse.success) { /* ... */ }
+
+                // <<< تغییر: ذخیره کردن تعداد اعلان‌ها در state >>>
+                if (notificationCountResponse.success) {
+                    setUnreadCount(notificationCountResponse.totalCount || 0);
+                }
+
+            } catch (err) { /* ... مدیریت خطا ... */
+            } finally { /* ... ست کردن لودینگ به false ... */ }
+        };
+
+        fetchInitialAdminData();
+
+        // <<< تغییر: اضافه کردن منطق بستن پنل با کلیک بیرون >>>
+        function handleClickOutside(event) {
+            if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+                const notificationIcon = document.getElementById("admin-requests-notification-icon");
+                if (notificationIcon && notificationIcon.contains(event.target)) return;
+                closeNotificationPanel();
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+
+    }, [token]);
 
     const [filters, setFilters] = useState({
         status: '',
@@ -108,7 +166,7 @@ export default function Requests({ Open }) {
         queryParams.append('page', pagination.currentPage);
         queryParams.append('limit', pagination.limit);
         try {
-            const response = await fetchData(`admin-review/student-activities-list?${queryParams.toString()}`, { headers: { authorization: `Berear ${token}` }});
+            const response = await fetchData(`admin-review/student-activities-list?${queryParams.toString()}`, { headers: { authorization: `Berear ${token}` } });
             if (response.success && response.data) {
                 setRequestsList(response.data);
                 setPagination(prev => ({ ...prev, totalPages: response.totalPages || 1, totalCount: response.totalCount || 0, currentPage: response.currentPage || 1, }));
@@ -142,13 +200,13 @@ export default function Requests({ Open }) {
                 adminComment: adminComment,
                 details: details // <<< `details` به payload اضافه شد
             };
-    
+
             const response = await fetchData(`admin-review/student-activities/${studentActivityId}/approve`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json', authorization: `Berear ${token}` },
                 body: JSON.stringify(payload)
             });
-    
+
             if (response.success) {
                 await refreshDataAfterAction();
             } else {
@@ -222,6 +280,35 @@ export default function Requests({ Open }) {
                         <h3 className='text-[#19A297] text-xs sm:text-sm'>هنرستان استارتاپی رکاد</h3>
                         <BiSolidSchool className='text-[#19A297] ml-[-8px] sm:ml-[-10px] text-lg sm:text-xl' />
                     </div>
+                    {/* در داخل اولین div در هدر صفحه */}
+                    <div className="flex justify-center items-center gap-3 sm:gap-5 mb-2 sm:mb-0">
+                        <h3 className='text-[#19A297] text-xs sm:text-sm'>هنرستان استارتاپی رکاد</h3>
+                        <BiSolidSchool className='text-[#19A297] ml-[-8px] sm:ml-[-10px] text-lg sm:text-xl' />
+
+                        {/* --- کد جدید برای آیکون و پنل نوتیفیکیشن --- */}
+                        <div className="relative" ref={notificationRef}>
+                            <button
+                                id="admin-requests-notification-icon"
+                                onClick={toggleNotificationPanel}
+                                className="w-8 h-8 flex justify-center items-center border border-gray-300 rounded-full cursor-pointer relative group"
+                                aria-label="اعلان‌ها"
+                            >
+                                <IoNotificationsOutline className="text-gray-400" />
+                                {unreadCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center border-2 border-white">
+                                        {unreadCount > 9 ? '۹+' : unreadCount.toLocaleString('fa-IR')}
+                                    </span>
+                                )}
+                            </button>
+                            <NotificationPanel
+                                isOpen={isNotificationOpen}
+                                onClose={closeNotificationPanel}
+                                token={token}
+                                userType="admin" // <<<< این prop کامپوننت را برای ادمین تنظیم می‌کند
+                            />
+                        </div>
+                        {/* --- پایان کد جدید --- */}
+                    </div>
                     <div className="flex justify-center items-center gap-3 sm:gap-5">
                         <p className='text-gray-400 text-xs sm:text-sm'> امروز {week}، {day} {month} ماه {year}</p>
                         <h1 className='text-[#19A297] font-semibold text-base sm:text-lg'>بررسی درخواست ها</h1>
@@ -231,7 +318,7 @@ export default function Requests({ Open }) {
 
                 {/* ... (کارت‌های آماری با استفاده از statCardsDisplayData و statsData.totalRequests) ... */}
                 <div className="flex flex-col lg:flex-row gap-5 mb-6 min-h-[150px] lg:h-[25vh]">
-                    {loadingStats && Array(2).fill(0).map((_,i) => <div key={i} className="flex-1 bg-gray-200 animate-pulse rounded-lg"></div>)}
+                    {loadingStats && Array(2).fill(0).map((_, i) => <div key={i} className="flex-1 bg-gray-200 animate-pulse rounded-lg"></div>)}
                     {!loadingStats && errorStats && <p className="text-red-500 lg:col-span-2 text-center bg-red-100 p-3 rounded">{errorStats}</p>}
                     {!loadingStats && !errorStats &&
                         <>
@@ -263,7 +350,7 @@ export default function Requests({ Open }) {
 
 
                 {/* ... (بخش فیلترها با استفاده از activityCategories برای دراپ‌داون دسته‌بندی والد) ... */}
-                 <div className="flex flex-col sm:flex-row justify-between items-center w-full mb-3 mt-8">
+                <div className="flex flex-col sm:flex-row justify-between items-center w-full mb-3 mt-8">
                     <div className="flex flex-wrap gap-2 mb-4 sm:mb-0">
                         {/* Status Filter */}
                         <div className="relative">
@@ -279,10 +366,10 @@ export default function Requests({ Open }) {
                                 </div>
                             )}
                         </div>
-                         {/* Parent Category Filter */}
+                        {/* Parent Category Filter */}
                         <div className="relative">
                             <button onClick={() => toggleFilterDropdown('activityParent')} className="bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-xs flex items-center justify-between min-w-[150px] hover:border-gray-400"
-                                    disabled={loadingActivityCategories || activityCategories.length === 0}>
+                                disabled={loadingActivityCategories || activityCategories.length === 0}>
                                 <span>{parentCategoryFilterOptions.find(o => o.value === filters.activityParent)?.label || 'دسته بندی فعالیت'}</span>
                                 <IoIosArrowDown className={`ml-2 transition-transform ${openFilterDropdowns.activityParent ? 'rotate-180' : ''}`} />
                             </button>
@@ -308,7 +395,7 @@ export default function Requests({ Open }) {
 
                 {/* ... (جدول درخواست‌ها با استفاده از requestsList و کنترل‌های صفحه‌بندی - بدون تغییر زیاد از کد قبلی شما، فقط مطمئن شوید `key` برای `<tr>` از `request._id` باشد) ... */}
                 <div className="bg-white rounded-xl shadow-xl overflow-hidden">
-                {loadingRequests && <p className="text-center py-10 text-gray-600">در حال بارگذاری درخواست‌ها...</p>}
+                    {loadingRequests && <p className="text-center py-10 text-gray-600">در حال بارگذاری درخواست‌ها...</p>}
                     {errorRequests && <p className="text-center py-10 text-red-600 bg-red-100 p-4 rounded-md">{errorRequests}</p>}
                     {!loadingRequests && !errorRequests && requestsList.length === 0 && (
                         <p className="text-center py-10 text-gray-500">درخواستی برای نمایش یافت نشد.</p>
@@ -353,7 +440,7 @@ export default function Requests({ Open }) {
                         <button onClick={() => handlePageChange(pagination.currentPage + 1)} disabled={pagination.currentPage === pagination.totalPages} className="px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 transition-colors">بعدی</button>
                     </div>
                 )}
-                 <div className="h-16"></div> {/* Padding at bottom for scroll */}
+                <div className="h-16"></div> {/* Padding at bottom for scroll */}
             </div>
 
             <RequestApprovalModal

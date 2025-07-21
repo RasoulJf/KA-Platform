@@ -1,7 +1,7 @@
 // =========================================================================
 // RewardsAdminPage.jsx (کامل با اتصال به مودال و بک‌اند)
 // =========================================================================
-import React, { useState, useEffect,useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import union from '../../assets/images/Union4.png'; // مسیر صحیح
 import Frame20 from '../../assets/images/Frame20.png'; // مسیر صحیح
 
@@ -11,6 +11,7 @@ import { IoIosArrowDown } from 'react-icons/io';
 import RewardApprovalModal from './RewardApprovalModal'; // <<<< مسیر ایمپورت مودال (اگر در همین پوشه است)
 // یا مثلا: import RewardApprovalModal from '../../components/modals/RewardApprovalModal';
 import fetchData from '../../Utils/fetchData'; // <<<< مسیر صحیح به fetchData
+import NotificationPanel from '../../Components/NotificationPanel';
 // import { useNavigate } from 'react-router-dom'; // اگر برای هدایت در صورت خطا لازم است
 
 export default function RewardsAdminPage({ Open }) {
@@ -35,6 +36,8 @@ export default function RewardsAdminPage({ Open }) {
     const [error, setError] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const token = localStorage.getItem("token");
+
     const [totalResults, setTotalResults] = useState(0);
     // ... بعد از بقیه state ها
     const [filters, setFilters] = useState({
@@ -47,6 +50,63 @@ export default function RewardsAdminPage({ Open }) {
     });
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [selectedRewardForPayment, setSelectedRewardForPayment] = useState(null);
+
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const notificationRef = useRef(null);
+
+    const toggleNotificationPanel = () => setIsNotificationOpen((prev) => !prev);
+    const closeNotificationPanel = () => setIsNotificationOpen(false);
+
+    
+    useEffect(() => {
+        // این تابع آمار و اعلان‌ها را با هم می‌گیرد
+        const loadInitialData = async () => {
+            if (!token) return;
+            try {
+                const headers = { 'Authorization': `Bearer ${token}` };
+                const [statsResponse, notificationCountResponse] = await Promise.all([
+                    fetchData('student-reward/admin-stats', { headers }),
+                    fetchData('notifications?filter=unread', { headers })
+                ]);
+
+                if (statsResponse?.success) {
+                    const apiStats = statsResponse.data;
+                    setStatCardsDisplayData([
+                        { title: "پاداش‌های در انتظار پرداخت", value: formatNumberToPersian(apiStats.rewardsPendingValue) },
+                        { title: "پاداش‌های پرداخت‌شده", value: formatNumberToPersian(apiStats.rewardsPaidValue) },
+                        { title: "کل توکن‌های درخواستی", value: formatNumberToPersian(apiStats.rewardsTotalRegisteredValue), decorated: true },
+                        { title: "توکن‌های قابل استفاده (کل)", value: formatNumberToPersian(apiStats.systemTotalAvailableTokens) },
+                        { title: "توکن‌های پرداخت شده (کل)", value: formatNumberToPersian(apiStats.systemTotalUsedOrPaidTokens) },
+                        { title: "جمع کل توکن‌های کاربران", value: formatNumberToPersian(apiStats.systemOverallStudentTokens) },
+                    ]);
+                }
+
+                if (notificationCountResponse?.success) {
+                    setUnreadCount(notificationCountResponse.totalCount || 0);
+                }
+
+            } catch (err) {
+                console.warn("Could not fetch initial admin data:", err.message);
+            }
+        };
+
+        loadInitialData();
+        
+        // منطق بستن پنل با کلیک بیرون
+        function handleClickOutside(event) {
+            if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+                const notificationIcon = document.getElementById("admin-rewards-notification-icon");
+                if (notificationIcon && notificationIcon.contains(event.target)) return;
+                closeNotificationPanel();
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [token]); // وابستگی فقط به توکن
+
 
     const formatNumberToPersian = (num) => {
         if (num === undefined || num === null || isNaN(Number(num))) return "۰";
@@ -68,123 +128,123 @@ export default function RewardsAdminPage({ Open }) {
 
 
 
-// =====================================================================
-// >>>>> این قسمت را با کد فعلی خود جایگزین کنید <<<<<
-// =====================================================================
+    // =====================================================================
+    // >>>>> این قسمت را با کد فعلی خود جایگزین کنید <<<<<
+    // =====================================================================
 
-// تابع loadAdminData را با استفاده از useCallback در اینجا تعریف می‌کنیم
-const loadAdminData = useCallback(async () => {
-    // برای جلوگیری از درخواست‌های همزمان، اگر در حال لود شدن بود، کاری نکن
+    // تابع loadAdminData را با استفاده از useCallback در اینجا تعریف می‌کنیم
+    const loadAdminData = useCallback(async () => {
+        // برای جلوگیری از درخواست‌های همزمان، اگر در حال لود شدن بود، کاری نکن
 
-    setLoading(true);
-    setError(null);
-    const token = localStorage.getItem("token");
-    if (!token) {
-        setError("توکن یافت نشد.");
-        setLoading(false);
-        return;
-    }
-
-    try {
-        const headers = { 'Authorization': `Bearer ${token}` };
-
-        const queryParams = new URLSearchParams(Object.fromEntries(
-            Object.entries({
-                ...filters,
-                page: currentPage,
-                limit: 10,
-            }).filter(([_, v]) => v)
-        ));
-
-        // فقط درخواست لیست پاداش‌ها را دوباره ارسال می‌کنیم
-        // آمار معمولا نیازی به رفرش شدن با هر تغییر صفحه ندارد
-        // مگر اینکه بخواهید بعد از هر تایید، آمار هم رفرش شود
-        const rewardsResponse = await fetchData(`student-reward/rewards-list?${queryParams.toString()}`, { headers });
-
-        if (rewardsResponse?.success && Array.isArray(rewardsResponse.data)) {
-            const formattedRewards = rewardsResponse.data.map((reward, index) => {
-                const statusDetails = getStatusDetailsAdmin(reward.status);
-                return {
-                    id: reward._id,
-                    name: reward.studentName || "نامشخص",
-                    grade: reward.studentGrade || "نامشخص",
-                    image: reward.studentImage ? `${import.meta.env.VITE_BASE_FILE}${reward.studentImage}` : Frame20,
-                    title: reward.rewardTitle || "بدون عنوان",
-                    submissionDate: formatDateToPersian(reward.submissionDate),
-                    paymentDate: reward.status === 'approved' && reward.reviewDate ? formatDateToPersian(reward.reviewDate) : "نامشخص",
-                    status: statusDetails.text,
-                    statusClass: statusDetails.class,
-                    isPending: statusDetails.isPending,
-                    tokenAmount: reward.tokenCost,
-                    isOdd: index % 2 !== 0,
-                    raw: reward.raw || reward
-                };
-            });
-            setRewardsData(formattedRewards);
-            setCurrentPage(rewardsResponse.currentPage || 1);
-            setTotalResults(rewardsResponse.totalCount || 0);
-            setTotalPages(rewardsResponse.totalPages || 1);
-        } else {
-            setRewardsData([]);
-            throw new Error(rewardsResponse?.message || "خطا در دریافت لیست پاداش‌ها.");
+        setLoading(true);
+        setError(null);
+        const token = localStorage.getItem("token");
+        if (!token) {
+            setError("توکن یافت نشد.");
+            setLoading(false);
+            return;
         }
-    } catch (err) {
-        setError(err.message || "خطایی در بارگذاری رخ داد.");
-    } finally {
-        setLoading(false);
-    }
-}, [currentPage, filters]); // وابستگی‌های تابع
 
-// این تابع فقط برای بارگذاری آمار در ابتدای کار است
-const loadInitialStats = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    try {
-        const headers = { 'Authorization': `Bearer ${token}` };
-        const statsResponse = await fetchData('student-reward/admin-stats', { headers });
-        if (statsResponse?.success) {
-            const apiStats = statsResponse.data;
-            setStatCardsDisplayData([
-                { title: "پاداش‌های در انتظار پرداخت", value: formatNumberToPersian(apiStats.rewardsPendingValue) },
-                { title: "پاداش‌های پرداخت‌شده", value: formatNumberToPersian(apiStats.rewardsPaidValue) },
-                { title: "کل توکن‌های درخواستی", value: formatNumberToPersian(apiStats.rewardsTotalRegisteredValue), decorated: true },
-                { title: "توکن‌های قابل استفاده (کل)", value: formatNumberToPersian(apiStats.systemTotalAvailableTokens) },
-                { title: "توکن‌های پرداخت شده (کل)", value: formatNumberToPersian(apiStats.systemTotalUsedOrPaidTokens) },
-                { title: "جمع کل توکن‌های کاربران", value: formatNumberToPersian(apiStats.systemOverallStudentTokens) },
-            ]);
+        try {
+            const headers = { 'Authorization': `Bearer ${token}` };
+
+            const queryParams = new URLSearchParams(Object.fromEntries(
+                Object.entries({
+                    ...filters,
+                    page: currentPage,
+                    limit: 10,
+                }).filter(([_, v]) => v)
+            ));
+
+            // فقط درخواست لیست پاداش‌ها را دوباره ارسال می‌کنیم
+            // آمار معمولا نیازی به رفرش شدن با هر تغییر صفحه ندارد
+            // مگر اینکه بخواهید بعد از هر تایید، آمار هم رفرش شود
+            const rewardsResponse = await fetchData(`student-reward/rewards-list?${queryParams.toString()}`, { headers });
+
+            if (rewardsResponse?.success && Array.isArray(rewardsResponse.data)) {
+                const formattedRewards = rewardsResponse.data.map((reward, index) => {
+                    const statusDetails = getStatusDetailsAdmin(reward.status);
+                    return {
+                        id: reward._id,
+                        name: reward.studentName || "نامشخص",
+                        grade: reward.studentGrade || "نامشخص",
+                        image: reward.studentImage ? `${import.meta.env.VITE_BASE_FILE}${reward.studentImage}` : Frame20,
+                        title: reward.rewardTitle || "بدون عنوان",
+                        submissionDate: formatDateToPersian(reward.submissionDate),
+                        paymentDate: reward.status === 'approved' && reward.reviewDate ? formatDateToPersian(reward.reviewDate) : "نامشخص",
+                        status: statusDetails.text,
+                        statusClass: statusDetails.class,
+                        isPending: statusDetails.isPending,
+                        tokenAmount: reward.tokenCost,
+                        isOdd: index % 2 !== 0,
+                        raw: reward.raw || reward
+                    };
+                });
+                setRewardsData(formattedRewards);
+                setCurrentPage(rewardsResponse.currentPage || 1);
+                setTotalResults(rewardsResponse.totalCount || 0);
+                setTotalPages(rewardsResponse.totalPages || 1);
+            } else {
+                setRewardsData([]);
+                throw new Error(rewardsResponse?.message || "خطا در دریافت لیست پاداش‌ها.");
+            }
+        } catch (err) {
+            setError(err.message || "خطایی در بارگذاری رخ داد.");
+        } finally {
+            setLoading(false);
         }
-    } catch (err) {
-        console.warn("Could not fetch admin stats:", err.message);
-    }
-};
+    }, [currentPage, filters]); // وابستگی‌های تابع
 
-// useEffect اصلی برای بارگذاری داده‌های جدول
-useEffect(() => {
-    loadAdminData();
-}, [loadAdminData]); // فقط به loadAdminData وابسته است
+    // این تابع فقط برای بارگذاری آمار در ابتدای کار است
+    const loadInitialStats = async () => {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        try {
+            const headers = { 'Authorization': `Bearer ${token}` };
+            const statsResponse = await fetchData('student-reward/admin-stats', { headers });
+            if (statsResponse?.success) {
+                const apiStats = statsResponse.data;
+                setStatCardsDisplayData([
+                    { title: "پاداش‌های در انتظار پرداخت", value: formatNumberToPersian(apiStats.rewardsPendingValue) },
+                    { title: "پاداش‌های پرداخت‌شده", value: formatNumberToPersian(apiStats.rewardsPaidValue) },
+                    { title: "کل توکن‌های درخواستی", value: formatNumberToPersian(apiStats.rewardsTotalRegisteredValue), decorated: true },
+                    { title: "توکن‌های قابل استفاده (کل)", value: formatNumberToPersian(apiStats.systemTotalAvailableTokens) },
+                    { title: "توکن‌های پرداخت شده (کل)", value: formatNumberToPersian(apiStats.systemTotalUsedOrPaidTokens) },
+                    { title: "جمع کل توکن‌های کاربران", value: formatNumberToPersian(apiStats.systemOverallStudentTokens) },
+                ]);
+            }
+        } catch (err) {
+            console.warn("Could not fetch admin stats:", err.message);
+        }
+    };
 
-// useEffect برای بارگذاری اولیه آمار (فقط یک بار)
-useEffect(() => {
-    loadInitialStats();
-}, []); // وابستگی خالی یعنی فقط یک بار در زمان mount شدن اجرا شود
+    // useEffect اصلی برای بارگذاری داده‌های جدول
+    useEffect(() => {
+        loadAdminData();
+    }, [loadAdminData]); // فقط به loadAdminData وابسته است
+
+    // useEffect برای بارگذاری اولیه آمار (فقط یک بار)
+    useEffect(() => {
+        loadInitialStats();
+    }, []); // وابستگی خالی یعنی فقط یک بار در زمان mount شدن اجرا شود
 
 
-const handleFilterChange = (name, value) => {
-    // پاک کردن تایمر قبلی
-    if (filterDebounceTimer.current) {
-        clearTimeout(filterDebounceTimer.current);
-    }
+    const handleFilterChange = (name, value) => {
+        // پاک کردن تایمر قبلی
+        if (filterDebounceTimer.current) {
+            clearTimeout(filterDebounceTimer.current);
+        }
 
-    // تنظیم تایمر جدید
-    filterDebounceTimer.current = setTimeout(() => {
-        setFilters(prev => ({ ...prev, [name]: value }));
-        setCurrentPage(1); // ریست کردن صفحه هنگام اعمال فیلتر
-    }, 500); // بعد از 500 میلی‌ثانیه توقف، فیلتر اعمال شود
+        // تنظیم تایمر جدید
+        filterDebounceTimer.current = setTimeout(() => {
+            setFilters(prev => ({ ...prev, [name]: value }));
+            setCurrentPage(1); // ریست کردن صفحه هنگام اعمال فیلتر
+        }, 500); // بعد از 500 میلی‌ثانیه توقف، فیلتر اعمال شود
 
-    if (openFilterDropdowns[name] !== undefined) {
-        setOpenFilterDropdowns(prev => ({ ...prev, [name]: false }));
-    }
-};
+        if (openFilterDropdowns[name] !== undefined) {
+            setOpenFilterDropdowns(prev => ({ ...prev, [name]: false }));
+        }
+    };
 
     const toggleFilterDropdown = (name) => {
         setOpenFilterDropdowns(prev => ({ ...prev, [name]: !prev[name] }));
@@ -245,7 +305,8 @@ const handleFilterChange = (name, value) => {
                 await Promise.all([
                     loadAdminData(),
                     loadInitialStats()
-                ]);            } else {
+                ]);
+            } else {
                 throw new Error(response?.message || `خطا در تغییر وضعیت پاداش.`);
             }
         } catch (err) {
@@ -275,13 +336,36 @@ const handleFilterChange = (name, value) => {
             <img src={union} className='absolute scale-75 top-[-4rem] left-[-10rem] z-0 opacity-30' alt="" />
             <div className={`${!Open ? "w-[calc(100%-1rem)] md:w-[80%]" : "w-[calc(100%-1rem)] md:w-[94%]"} p-4 md:p-8 transition-all duration-500 flex flex-col relative z-10`}>                {/* هدر */}
                 <div className="flex flex-col sm:flex-row justify-between items-center h-auto sm:h-[5vh] mb-6">
-                    <div className="flex items-center gap-3 sm:gap-5 mb-2 sm:mb-0">
-                        <h3 className='text-[#19A297] text-xs sm:text-sm'>هنرستان استارتاپی رکاد</h3>
-                        <BiSolidSchool className='text-[#19A297] ml-[-8px] sm:ml-[-10px] text-lg sm:text-xl' />
-                        <div className='w-7 h-7 sm:w-8 sm:h-8 flex justify-center items-center border border-gray-300 rounded-full cursor-pointer'>
-                            <IoNotificationsOutline className='text-gray-400 text-sm sm:text-base' />
+                  
+                        {/* در داخل اولین div در هدر صفحه */}
+                        <div className="flex justify-center items-center gap-3 sm:gap-5 mb-2 sm:mb-0">
+                            <h3 className='text-[#19A297] text-xs sm:text-sm'>هنرستان استارتاپی رکاد</h3>
+                            <BiSolidSchool className='text-[#19A297] ml-[-8px] sm:ml-[-10px] text-lg sm:text-xl' />
+
+                            {/* --- کد جدید برای آیکون و پنل نوتیفیکیشن --- */}
+                            <div className="relative" ref={notificationRef}>
+                                <button
+                                    id="admin-requests-notification-icon"
+                                    onClick={toggleNotificationPanel}
+                                    className="w-8 h-8 flex justify-center items-center border border-gray-300 rounded-full cursor-pointer relative group"
+                                    aria-label="اعلان‌ها"
+                                >
+                                    <IoNotificationsOutline className="text-gray-400" />
+                                    {unreadCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center border-2 border-white">
+                                            {unreadCount > 9 ? '۹+' : unreadCount.toLocaleString('fa-IR')}
+                                        </span>
+                                    )}
+                                </button>
+                                <NotificationPanel
+                                    isOpen={isNotificationOpen}
+                                    onClose={closeNotificationPanel}
+                                    token={token}
+                                    userType="admin" // <<<< این prop کامپوننت را برای ادمین تنظیم می‌کند
+                                />
+                            </div>
+                            {/* --- پایان کد جدید --- */}
                         </div>
-                    </div>
                     <div className="flex items-center gap-3 sm:gap-5">
                         <p className='text-gray-400 text-xs sm:text-sm'> امروز {week} {day} {month}، {year}</p>
                         <h1 className='text-[#19A297] font-semibold text-base sm:text-lg'>مدیریت پاداش‌ها</h1>
@@ -353,7 +437,7 @@ const handleFilterChange = (name, value) => {
                 {error && rewardsData.length > 0 && !loading && <p className="text-center text-sm text-red-500 py-2">خطا در بارگذاری داده‌ها: {error}</p>}
 
                 <div className="overflow-x-auto bg-white rounded-xl shadow-xl border border-gray-200/80 mb-6">
-                <table className='w-full min-w-[850px] border-collapse'>
+                    <table className='w-full min-w-[850px] border-collapse'>
                         <thead className='bg-gray-100 text-xs text-gray-600 uppercase'>
                             <tr>
                                 <th className='font-medium text-center px-3 py-3 border-b border-gray-200'>وضعیت</th>

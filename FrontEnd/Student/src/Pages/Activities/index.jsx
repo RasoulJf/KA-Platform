@@ -10,6 +10,7 @@ import { BsChatDots, BsChatFill, BsChatText } from "react-icons/bs";
 import { IoChevronDown } from "react-icons/io5";
 import AddActivityModal from './AddActivityModal'; // مسیر صحیح به کامپوننت مودال
 import ActivityDetailsModal from './ActivityDetailsModal';
+import NotificationPanel from '../../Components/NotificationPanel';
 // NotificationPanel را هم اگر لازم دارید import کنید
 // import NotificationPanel from '../../Components/NotificationPanel';
 
@@ -38,6 +39,49 @@ export default function Activities({ Open }) { // نام کامپوننت را A
     const [activitiesList, setActivitiesList] = useState([]);
     const [loadingActivities, setLoadingActivities] = useState(true);
     const [errorActivities, setErrorActivities] = useState(null);
+
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0); // استیت برای نگهداری تعداد اعلان‌ها
+    const notificationRef = useRef(null);
+
+    const toggleNotificationPanel = () => setIsNotificationOpen(prev => !prev);
+    const closeNotificationPanel = () => setIsNotificationOpen(false);
+    
+    // ۲. دریافت اطلاعات هدر و تعداد اعلان‌ها
+    useEffect(() => {
+        const fetchHeaderData = async () => {
+            if (!token) return;
+            try {
+                // از همان اندپوینت داشبورد برای گرفتن اطلاعات هدر استفاده می‌کنیم
+                const response = await fetchData('student-dashboard', {
+                    headers: { authorization: `Bearer ${token}` } // نکته: اینجا باید Bearer باشد نه Berear
+                });
+                if (response.success && response.data?.headerInfo) {
+                    setUnreadCount(response.data.headerInfo.unreadNotificationsCount || 0);
+                }
+            } catch (err) {
+                console.error("Failed to fetch notification count:", err);
+                // اگر خطا داد، مهم نیست. فقط آیکون قرمز نمایش داده نمی‌شود
+            }
+        };
+
+        fetchHeaderData();
+    }, [token]);
+
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+                const notificationIcon = document.getElementById('notification-icon-button');
+                if (notificationIcon && notificationIcon.contains(event.target)) return;
+                setIsNotificationOpen(false);
+            }
+        }
+        if (isNotificationOpen) document.addEventListener("mousedown", handleClickOutside);
+        else document.removeEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [isNotificationOpen]);
+
 
     const [filters, setFilters] = useState({
         status: '',
@@ -247,10 +291,22 @@ export default function Activities({ Open }) { // نام کامپوننت را A
                     <div className="flex justify-center items-center gap-3 sm:gap-5 mb-2 sm:mb-0">
                         <h3 className="text-[#19A297] text-xs sm:text-sm">هنرستان استارتاپی رکاد</h3>
                         <BiSolidSchool className="text-[#19A297] ml-[-8px] sm:ml-[-10px] text-lg sm:text-xl" />
-                        {/* <div className="w-7 h-7 sm:w-8 sm:h-8 flex justify-center items-center border border-gray-300 rounded-full relative cursor-pointer group">
-                            <IoNotificationsOutline className="text-gray-400 text-sm sm:text-base" />
-                            <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-                        </div> */}
+                         {/* ۳. استفاده از استیت جدید در JSX */}
+                         <div className="relative" ref={notificationRef}>
+                            <button
+                                id="notification-icon-button"
+                                onClick={toggleNotificationPanel}
+                                className="w-7 h-7 sm:w-8 sm:h-8 flex justify-center items-center border border-gray-300 rounded-full cursor-pointer group relative"
+                                aria-label="اعلان‌ها"
+                            >
+                                <IoNotificationsOutline className="text-gray-400 text-sm sm:text-base" />
+                                {unreadCount > 0 && ( // <<<< اینجا از unreadCount استفاده می‌کنیم
+                                    <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                                )}
+                            </button>
+                            <NotificationPanel isOpen={isNotificationOpen} onClose={closeNotificationPanel} token={token} />
+                        </div>
+
                     </div>
                     <div className="flex justify-center items-center gap-3 sm:gap-5">
                         <p className="text-gray-400 text-xs sm:text-sm">امروز {week}، {day} {month} ماه {year}</p>

@@ -1,12 +1,13 @@
 // ResultsPageContainer.jsx (کامل و نهایی با گزارش‌های جدید)
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useRef } from 'react';
 import union from '../../assets/images/Union4.png';
 import { BiSolidSchool } from "react-icons/bi";
 import { IoMdNotificationsOutline, IoIosArrowDown } from "react-icons/io";
 import { BsClipboardData, BsTable, BsCalendarEvent } from "react-icons/bs";
 import GradeTable from './GradeTable';
 import fetchData from '../../Utils/fetchData';
+import NotificationPanel from '../../Components/NotificationPanel';
 
 // کامپوننت‌های Dropdown و DatePicker (بدون تغییر)
 const FilterDropdown = ({ label, name, value, onChange, options, placeholder, disabled = false }) => (
@@ -80,7 +81,16 @@ export default function ResultsPageContainer({ Open }) {
   const [reportError, setReportError] = useState(null);
   const [studentsForSelection, setStudentsForSelection] = useState([]);
   const [loadingStudents, setLoadingStudents] = useState(false);
+
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const notificationRef = useRef(null);
+
+  const toggleNotificationPanel = () => setIsNotificationOpen((prev) => !prev);
+  const closeNotificationPanel = () => setIsNotificationOpen(false);
+
   const token = localStorage.getItem("token");
+
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -114,6 +124,54 @@ export default function ResultsPageContainer({ Open }) {
       return newFilters;
     });
   };
+
+  useEffect(() => {
+    // این تابع آمار و اعلان‌ها را با هم می‌گیرد
+    const loadInitialData = async () => {
+      if (!token) return;
+      try {
+        const headers = { 'Authorization': `Bearer ${token}` };
+        const [statsResponse, notificationCountResponse] = await Promise.all([
+          fetchData('student-reward/admin-stats', { headers }),
+          fetchData('notifications?filter=unread', { headers })
+        ]);
+
+        if (statsResponse?.success) {
+          const apiStats = statsResponse.data;
+          setStatCardsDisplayData([
+            { title: "پاداش‌های در انتظار پرداخت", value: formatNumberToPersian(apiStats.rewardsPendingValue) },
+            { title: "پاداش‌های پرداخت‌شده", value: formatNumberToPersian(apiStats.rewardsPaidValue) },
+            { title: "کل توکن‌های درخواستی", value: formatNumberToPersian(apiStats.rewardsTotalRegisteredValue), decorated: true },
+            { title: "توکن‌های قابل استفاده (کل)", value: formatNumberToPersian(apiStats.systemTotalAvailableTokens) },
+            { title: "توکن‌های پرداخت شده (کل)", value: formatNumberToPersian(apiStats.systemTotalUsedOrPaidTokens) },
+            { title: "جمع کل توکن‌های کاربران", value: formatNumberToPersian(apiStats.systemOverallStudentTokens) },
+          ]);
+        }
+
+        if (notificationCountResponse?.success) {
+          setUnreadCount(notificationCountResponse.totalCount || 0);
+        }
+
+      } catch (err) {
+        console.warn("Could not fetch initial admin data:", err.message);
+      }
+    };
+
+    loadInitialData();
+
+    // منطق بستن پنل با کلیک بیرون
+    function handleClickOutside(event) {
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        const notificationIcon = document.getElementById("admin-rewards-notification-icon");
+        if (notificationIcon && notificationIcon.contains(event.target)) return;
+        closeNotificationPanel();
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [token]); // وابستگی فقط به توکن
 
   const handleGetReport = async (e) => {
     e.preventDefault();
@@ -207,8 +265,27 @@ export default function ResultsPageContainer({ Open }) {
           <div className="flex justify-center items-center gap-3 sm:gap-5 mb-3 sm:mb-0">
             <h3 className='text-[#19A297] text-xs sm:text-sm'>هنرستان استارتاپی رکاد</h3>
             <BiSolidSchool className='text-[#19A297] ml-[-8px] sm:ml-[-10px] text-lg sm:text-xl' />
-            <div className='w-7 h-7 sm:w-8 sm:h-8 flex justify-center items-center border border-gray-300 rounded-full cursor-pointer'>
-              <IoMdNotificationsOutline className='text-gray-400 text-sm sm:text-base' />
+            {/* --- کد اصلاح شده برای نوتیفیکیشن --- */}
+            <div className="relative" ref={notificationRef}>
+              <button
+                id="admin-rewards-notification-icon"
+                onClick={toggleNotificationPanel}
+                className="w-8 h-8 flex justify-center items-center border border-gray-300 rounded-full cursor-pointer relative group"
+                aria-label="اعلان‌ها"
+              >
+                <IoMdNotificationsOutline className="text-gray-400" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center border-2 border-white">
+                    {unreadCount > 9 ? '۹+' : unreadCount.toLocaleString('fa-IR')}
+                  </span>
+                )}
+              </button>
+              <NotificationPanel
+                isOpen={isNotificationOpen}
+                onClose={closeNotificationPanel}
+                token={token}
+                userType="admin"
+              />
             </div>
           </div>
           <div className="flex justify-center items-center gap-3 sm:gap-5">
@@ -236,7 +313,7 @@ export default function ResultsPageContainer({ Open }) {
             <h3 className="text-lg font-semibold text-rose-700 mb-6 text-center">تنظیمات گزارش فعالیت‌ها</h3>
             <form onSubmit={handleGetReport}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-5 mb-5">
-              <div></div>
+                <div></div>
 
                 <FilterDropdown
                   label="نوع گزارش (الزامی)" name="reportType" value={reportFilters.reportType} onChange={handleReportFilterChange}

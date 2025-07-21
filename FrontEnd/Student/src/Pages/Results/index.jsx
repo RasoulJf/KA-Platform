@@ -4,6 +4,8 @@ import { BiSolidSchool } from "react-icons/bi";
 import { IoNotificationsOutline } from "react-icons/io5";
 // import { useNavigate } from 'react-router-dom';
 import fetchData from "../../Utils/fetchData"; // مسیر صحیح
+import { useRef } from "react";
+import NotificationPanel from "../../Components/NotificationPanel";
 
 // headerConfig مثل قبل (ترتیب ستون‌ها را چک کنید)
 const headerConfig = [
@@ -70,6 +72,56 @@ export default function StudentResultsPage({ Open }) {
   const [totalResultsCount, setTotalResultsCount] = useState(0);
   const [currentUserInfo, setCurrentUserInfo] = useState(null); // برای نمایش اطلاعات کاربر فعلی
   const [visibility, setVisibility] = useState(false);
+
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const notificationRef = useRef(null);
+
+  const toggleNotificationPanel = () => setIsNotificationOpen((prev) => !prev);
+  const closeNotificationPanel = () => setIsNotificationOpen(false);
+
+  // <<< تغییر: ۲. دریافت اطلاعات هدر و تعداد اعلان‌ها
+  useEffect(() => {
+    const fetchHeaderData = async () => {
+      if (!token) return;
+      try {
+        const response = await fetchData("student-dashboard", {
+          headers: { authorization: `Bearer ${token}` },
+        });
+        if (response.success && response.data?.headerInfo) {
+          setUnreadCount(response.data.headerInfo.unreadNotificationsCount || 0);
+        }
+      } catch (err) {
+        console.error("Failed to fetch notification count:", err);
+      }
+    };
+
+    fetchHeaderData();
+  }, [token]);
+
+  // <<< تغییر: ۳. منطق بستن پنل با کلیک بیرون
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      ) {
+        const notificationIcon = document.getElementById("notification-icon-button-results"); // آیدی یکتا
+        if (notificationIcon && notificationIcon.contains(event.target)) return;
+        setIsNotificationOpen(false);
+      }
+    }
+    if (isNotificationOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isNotificationOpen]);
+
+
   const date = new Date();
   const year = new Intl.DateTimeFormat("fa-IR", { year: "numeric" }).format(
     date
@@ -198,9 +250,24 @@ export default function StudentResultsPage({ Open }) {
               هنرستان استارتاپی رکاد
             </h3>
             <BiSolidSchool className="text-[#19A297] ml-[-8px] sm:ml-[-10px] text-lg sm:text-xl" />
-            <div className="w-7 h-7 sm:w-8 sm:h-8 flex justify-center items-center border border-gray-300 rounded-full relative cursor-pointer group">
-              <IoNotificationsOutline className="text-gray-400 text-sm sm:text-base" />
-              {/* <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span> */}
+             {/* <<< تغییر: ۴. جایگزینی دکمه نوتیفیکیشن با کد جدید */}
+            <div className="relative" ref={notificationRef}>
+              <button
+                id="notification-icon-button-results" // آیدی یکتا برای این صفحه
+                onClick={toggleNotificationPanel}
+                className="w-7 h-7 sm:w-8 sm:h-8 flex justify-center items-center border border-gray-300 rounded-full cursor-pointer group relative"
+                aria-label="اعلان‌ها"
+              >
+                <IoNotificationsOutline className="text-gray-400 text-sm sm:text-base" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                )}
+              </button>
+              <NotificationPanel
+                isOpen={isNotificationOpen}
+                onClose={closeNotificationPanel}
+                token={token}
+              />
             </div>
           </div>
           <div className="flex justify-center items-center gap-3 sm:gap-5">

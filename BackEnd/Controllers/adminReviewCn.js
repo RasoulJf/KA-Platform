@@ -188,7 +188,7 @@ export const approveStudentActivity = catchAsync(async (req, res, next) => {
                 title: `فعالیت "${activityDef.name}" تایید شد`,
                 message: `درخواست شما با موفقیت تایید و ${Number(scoreAwarded).toLocaleString('fa-IR')} امتیاز به شما تعلق گرفت.`,
                 type: 'activity_status',
-                relatedLink: '/my-activities',
+                relatedLink: '/activities',
                 relatedDocId: studentActivity._id,
                 iconBgColor: 'bg-green-500',
             });

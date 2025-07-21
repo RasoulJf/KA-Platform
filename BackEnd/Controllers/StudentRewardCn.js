@@ -8,6 +8,9 @@ import User from "../Models/UserMd.js";
 import HandleERROR from "../Utils/handleError.js"; // اگر استفاده می‌کنید
 import mongoose from "mongoose";
 import { updateUserScore } from "../Utils/UpdateScore.js";
+import Notification from "../Models/NotificationMd.js";
+import Reward from "../Models/RewardMd.js";
+
 // import { updateUserScore } from "../Utils/UpdateScore.js"; // اگر برای changeStatusRe استفاده می‌کنید
 
 // --- کنترلر getMyRewardStats ---
@@ -50,62 +53,108 @@ export const getMyRewardStats = catchAsync(async (req, res, next) => {
 // --- کنترلر changeStatusRe (با اصلاح پیشنهادی برای کسر توکن) ---
 // در StudentRewardCn.js
 // در StudentRewardCn.js
+// Controllers/yourRewardController.js
+
 export const changeStatusRe = catchAsync(async (req, res, next) => {
     const { id } = req.params;
     const { status: newStatus } = req.body;
 
+    // 1. یافتن درخواست پاداش و کاربر مربوطه
     let studentReward = await StudentReward.findById(id);
-    if (!studentReward) { return next(new HandleERROR("درخواست پاداش یافت نشد.", 404)); }
-
-    const oldStatus = studentReward.status;
-    if (oldStatus === newStatus) {
-        return res.status(200).json({ success: true, message: `وضعیت پاداش از قبل ${newStatus} بود.`, data: studentReward });
+    if (!studentReward) {
+        return next(new HandleERROR("درخواست پاداش یافت نشد.", 404));
     }
 
     const user = await User.findById(studentReward.userId);
-    if (!user) { return next(new HandleERROR("کاربر مربوط به این پاداش یافت نشد.", 404)); }
-
-    let userTokenChanged = false; // فلگ برای اینکه بدونیم آیا توکن کاربر تغییر کرده
-
-    if (newStatus === "approved") {
-        if (oldStatus === "approved") { /* ... */ }
-        if (user.token < studentReward.token) { return next(new HandleERROR("کاربر توکن کافی ندارد.", 400)); }
-
-        // console.log(`CHANGE_STATUS_RE: User ${user.fullName} token BEFORE manual deduction: ${user.token} (for reward ${studentReward._id} with token ${studentReward.token})`);
-        user.token -= studentReward.token;
-        userTokenChanged = true;
-        // console.log(`CHANGE_STATUS_RE: User ${user.fullName} token AFTER manual deduction: ${user.token}`);
-
-        studentReward.status = "approved";
-    } else if (newStatus === "rejected" || newStatus === "pending") {
-        if (oldStatus === "approved") {
-            // console.log(`CHANGE_STATUS_RE: User ${user.fullName} token BEFORE manual refund: ${user.token} (for reward ${studentReward._id} with token ${studentReward.token})`);
-            user.token += studentReward.token;
-            userTokenChanged = true;
-            // console.log(`CHANGE_STATUS_RE: User ${user.fullName} token AFTER manual refund: ${user.token}`);
-        }
-        studentReward.status = newStatus;
-    } else { /* ... خطای وضعیت نامعتبر ... */ }
-
-    // ابتدا کاربر را ذخیره می‌کنیم (اگر توکنش تغییر کرده)
-    if (userTokenChanged) {
-        // console.log(`CHANGE_STATUS_RE: Saving user ${user.fullName} with new token: ${user.token}`);
-        await user.save({ validateBeforeSave: false }); // این save هوک pre('save') را اجرا می‌کند
-        const userAfterSave = await User.findById(user._id); // دوباره کاربر را بخوان تا مطمئن شویم توکن درست ذخیره شده
-        // console.log(`CHANGE_STATUS_RE: User ${user.fullName} token AFTER save (fetched again): ${userAfterSave.token}`);
+    if (!user) {
+        return next(new HandleERROR("کاربر مربوط به این پاداش یافت نشد.", 404));
     }
 
-    // سپس وضعیت پاداش را ذخیره می‌کنیم
+    // برای ایجاد اعلان بهتر، اطلاعات اصلی جایزه را می‌خوانیم
+    const rewardDef = await Reward.findById(studentReward.rewardId);
+
+    // 2. بررسی اینکه آیا وضعیت واقعاً تغییر می‌کند یا نه
+    const oldStatus = studentReward.status;
+    if (oldStatus === newStatus) {
+        return res.status(200).json({
+            success: true,
+            message: `وضعیت پاداش از قبل ${newStatus} بود.`,
+            data: studentReward
+        });
+    }
+
+    let userTokenChanged = false;
+
+    // 3. منطق تغییر وضعیت و توکن کاربر
+    if (newStatus === "approved") {
+        if (user.token < studentReward.token) {
+            return next(new HandleERROR("کاربر توکن کافی برای دریافت این جایزه را ندارد.", 400));
+        }
+        if (oldStatus !== "approved") {
+             user.token -= studentReward.token;
+             userTokenChanged = true;
+        }
+        studentReward.status = "approved";
+
+    } else if (newStatus === "rejected" || newStatus === "pending") {
+        if (oldStatus === "approved") {
+            user.token += studentReward.token;
+            userTokenChanged = true;
+        }
+        studentReward.status = newStatus;
+    } else {
+        return next(new HandleERROR(`وضعیت '${newStatus}' نامعتبر است.`, 400));
+    }
+
+    // 4. ذخیره تغییرات در دیتابیس
+    if (userTokenChanged) {
+        await user.save({ validateBeforeSave: false });
+    }
     const updatedStudentReward = await studentReward.save();
-    // console.log(`CHANGE_STATUS_RE: StudentReward ${updatedStudentReward._id} status saved as ${updatedStudentReward.status}`);
+    
+    // 5. **ایجاد اعلان (بخش جدید)**
+    // فقط در صورتی که وضعیت به تایید یا رد تغییر کرده باشد اعلان می‌فرستیم
+    if (newStatus === 'approved' || newStatus === 'rejected') {
+        try {
+            let notificationTitle = '';
+            let notificationMessage = '';
+            let iconBgColor = '';
+            const rewardName = rewardDef ? rewardDef.name : 'درخواستی شما';
 
-    // ***** حالا updateUserScore رو بعد از تمام تغییرات و save ها صدا بزن *****
-    // کاربر را دوباره از دیتابیس می‌خوانیم تا مطمئن شویم آخرین نسخه را دارد
-    const finalUserForUpdateScore = await User.findById(user._id);
-    await updateUserScore(finalUserForUpdateScore);
-    // console.log(`CHANGE_STATUS_RE: updateUserScore called for user ${finalUserForUpdateScore.fullName}`);
+            if (newStatus === 'approved') {
+                notificationTitle = `جایزه "${rewardName}" تایید شد`;
+                notificationMessage = `درخواست شما با موفقیت تایید شد و ${studentReward.token.toLocaleString('fa-IR')} توکن از حساب شما کسر گردید.`;
+                iconBgColor = 'bg-green-500';
+            } else { // newStatus === 'rejected'
+                notificationTitle = `جایزه "${rewardName}" رد شد`;
+                notificationMessage = 'متاسفانه درخواست شما برای دریافت جایزه رد شد.';
+                if (oldStatus === 'approved') {
+                    notificationMessage += ` مبلغ ${studentReward.token.toLocaleString('fa-IR')} توکن به حساب شما بازگردانده شد.`;
+                }
+            }
 
-    return res.status(200).json({
+            await Notification.create({
+                userId: studentReward.userId,
+                title: notificationTitle,
+                message: notificationMessage,
+                type: 'reward_status', // از enum مدل نوتیفیکیشن
+                relatedLink: '/my-rewards', // لینک صفحه جوایز من در فرانت‌اند
+                relatedDocId: studentReward._id,
+                iconBgColor: iconBgColor,
+            });
+
+        } catch (error) {
+            // اگر ساخت اعلان به مشکل خورد، نباید کل فرآیند متوقف شود
+            console.error('خطا در ایجاد اعلان برای تغییر وضعیت جایزه:', error);
+        }
+    }
+
+    // 6. آپدیت کلی امتیازات کاربر (این بخش را از قبل داشتید و عالی است)
+    const finalUser = await User.findById(user._id);
+    await updateUserScore(finalUser);
+
+    // 7. ارسال پاسخ موفقیت‌آمیز
+    res.status(200).json({
         success: true,
         message: `وضعیت پاداش با موفقیت به ${newStatus} تغییر کرد.`,
         data: updatedStudentReward
@@ -176,6 +225,30 @@ export const createStudentReward = catchAsync(async (req, res, next) => {
         return next(new HandleERROR("خطا در ایجاد رکورد درخواست پاداش.", 500));
     }
 
+    try {
+        const admins = await User.find({ role: { $in: ['admin', 'superAdmin'] } }).select('_id');
+        
+        const studentName = user ? user.fullName : 'یک دانش‌آموز';
+        const rewardName = rewardDefinition ? rewardDefinition.name : 'یک پاداش';
+
+        if (admins.length > 0) {
+            const notifications = admins.map(admin => ({
+                userId: admin._id,
+                title: `درخواست پاداش جدید از ${studentName}`,
+                message: `درخواست پاداش "${rewardName}" با هزینه ${requestedTokenNum} توکن ثبت شد.`,
+                type: 'new_reward_request',
+                relatedLink: `/admin/review/rewards/${studentReward._id}`, // << لینک به صفحه بررسی ادمین
+                relatedDocId: studentReward._id,
+                iconBgColor: 'bg-purple-500',
+            }));
+
+            await Notification.insertMany(notifications);
+        }
+    } catch (notificationError) {
+        console.error('خطا در ایجاد اعلان پاداش برای ادمین‌ها:', notificationError);
+    }
+    // --- پایان کد جدید ---
+    
     return res.status(201).json({
         success: true,
         message: "درخواست پاداش شما با موفقیت ثبت شد و در انتظار تایید می‌باشد.",

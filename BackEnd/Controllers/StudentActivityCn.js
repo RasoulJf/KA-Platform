@@ -14,6 +14,7 @@ import mongoose from 'mongoose';
 
 // ... (import های قبلی) ...
 import Activity from '../Models/ActivityMd.js'; // اطمینان از import
+import Notification from "../Models/NotificationMd.js";
 
 // controllers/studentActivityController.js (یا هر فایلی که این کنترلر در آن است)
 
@@ -208,14 +209,45 @@ export const changeStatusAc = catchAsync(async (req, res, next) => {
         message:"change status Successfully"
     })
 })
-export const createStudentActivity=catchAsync(async(req,res,next)=>{
-    const studentActivity=await StudentActivity.create({...req.body,userId:req.userId})
-    return res.status(201).json({
-        success:true,
-        message: "studentActivity created successfully",
-        data:studentActivity
-    })
-})
+export const createStudentActivity = catchAsync(async (req, res, next) => {
+    // ایجاد فعالیت
+    const newStudentActivity = await StudentActivity.create({ ...req.body, userId: req.userId });
+
+    // --- شروع کد جدید برای ارسال اعلان به ادمین‌ها ---
+    try {
+        const admins = await User.find({ role: { $in: ['admin', 'superAdmin'] } }).select('_id');
+        
+        // گرفتن اطلاعات برای پیام اعلان
+        const student = await User.findById(req.userId).select('fullName');
+        const activityDef = await Activity.findById(newStudentActivity.activityId).select('name');
+        
+        const studentName = student ? student.fullName : 'یک دانش‌آموز';
+        const activityName = activityDef ? activityDef.name : 'یک فعالیت';
+
+        if (admins.length > 0) {
+            const notifications = admins.map(admin => ({
+                userId: admin._id,
+                title: `درخواست فعالیت جدید از ${studentName}`,
+                message: `فعالیت "${activityName}" برای بررسی ثبت شده است.`,
+                type: 'new_activity_submission',
+                relatedLink: `/admin/review/activities/${newStudentActivity._id}`, // << لینک به صفحه بررسی ادمین
+                relatedDocId: newStudentActivity._id,
+                iconBgColor: 'bg-blue-500',
+            }));
+
+            await Notification.insertMany(notifications);
+        }
+    } catch (notificationError) {
+        console.error('خطا در ایجاد اعلان فعالیت برای ادمین‌ها:', notificationError);
+    }
+    // --- پایان کد جدید ---
+
+    res.status(201).json({
+        success: true,
+        message: "فعالیت شما با موفقیت ثبت و برای بررسی ارسال شد.",
+        data: newStudentActivity
+    });
+});
 export const getAllStudentActivities=catchAsync(async(req,res,next)=>{
     const features=new ApiFeatures(StudentActivity,req.query)
     .sort()

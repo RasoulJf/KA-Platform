@@ -12,6 +12,7 @@
   "dependencies": {
     "@paypal/react-paypal-js": "^8.8.2",
     "@tailwindcss/vite": "^4.0.7",
+    "date-fns-jalali": "^4.1.0-0",
     "moment-jalaali": "^0.10.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

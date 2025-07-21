@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import NotificationPanel from '../../Components/NotificationPanel'; // <<<< این رو هم اضافه کنید
 import { BiSolidSchool } from "react-icons/bi";
 import { FaPlus } from 'react-icons/fa';
 import { IoNotificationsOutline, IoChevronDown } from "react-icons/io5";
@@ -32,6 +33,12 @@ export default function Rewards({ Open }) {
     const [openFilterDropdowns, setOpenFilterDropdowns] = useState({ status: false });
     const [loadingList, setLoadingList] = useState(true); // یک لودینگ جدا برای لیست
     const [loadingStats, setLoadingStats] = useState(true); // <<<< این state جا افتاده بود
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const notificationRef = useRef(null);
+
+    const toggleNotificationPanel = () => setIsNotificationOpen((prev) => !prev);
+    const closeNotificationPanel = () => setIsNotificationOpen(false);
 
     // State های جدید برای مودال جزئیات
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -72,7 +79,7 @@ export default function Rewards({ Open }) {
 
 
     // ۲. این useEffect رو با کد زیر جایگزین کن:
-// ... (کدهای دیگر کامپوننت مثل state ها و توابع کمکی)
+    // ... (کدهای دیگر کامپوننت مثل state ها و توابع کمکی)
 
     // useEffect جدید شماره ۱: فقط برای بارگذاری آمار کلی (یک بار در ابتدا اجرا می‌شود)
     useEffect(() => {
@@ -141,10 +148,10 @@ export default function Rewards({ Open }) {
                         currentPage: listResponse.currentPage || 1
                     }));
                 } else {
-                     // اگر لیست خالی بود خطا ندهیم، فقط لیست را خالی کنیم
+                    // اگر لیست خالی بود خطا ندهیم، فقط لیست را خالی کنیم
                     if (listResponse && listResponse.data && listResponse.data.length === 0) {
-                         setRewardsList([]);
-                         setPagination(prev => ({ ...prev, totalPages: 1, totalCount: 0, currentPage: 1 }));
+                        setRewardsList([]);
+                        setPagination(prev => ({ ...prev, totalPages: 1, totalCount: 0, currentPage: 1 }));
                     } else {
                         throw new Error(listResponse?.message || "خطا در دریافت لیست پاداش‌ها");
                     }
@@ -160,7 +167,52 @@ export default function Rewards({ Open }) {
         loadListData();
     }, [token, filters, pagination.currentPage, loadingStats]); // <<<< به فیلتر، صفحه و وضعیت لودینگ آمار وابسته است
 
-// ... (بقیه کدهای کامپوننت شما بدون تغییر باقی می‌ماند)
+
+    // ... بعد از useEffect های دیگر
+
+    // --- useEffect برای دریافت تعداد اعلان‌ها ---
+    useEffect(() => {
+        const fetchHeaderData = async () => {
+            if (!token) return;
+            try {
+                const response = await fetchData("student-dashboard", {
+                    headers: { authorization: `Bearer ${token}` },
+                });
+                if (response.success && response.data?.headerInfo) {
+                    setUnreadCount(response.data.headerInfo.unreadNotificationsCount || 0);
+                }
+            } catch (err) {
+                console.error("Failed to fetch notification count:", err);
+            }
+        };
+
+        fetchHeaderData();
+    }, [token]);
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (
+                notificationRef.current &&
+                !notificationRef.current.contains(event.target)
+            ) {
+                const notificationIcon = document.getElementById("notification-icon-button-rewards");
+                if (notificationIcon && notificationIcon.contains(event.target)) return;
+                setIsNotificationOpen(false);
+            }
+        }
+        if (isNotificationOpen) {
+            document.addEventListener("mousedown", handleClickOutside);
+        } else {
+            document.removeEventListener("mousedown", handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [isNotificationOpen]);
+    // --- پایان useEffect برای نوتیفیکیشن ---
+
+    // ... بقیه توابع شما مثل handleOpenDetailsModal
+    // ... (بقیه کدهای کامپوننت شما بدون تغییر باقی می‌ماند)
 
 
     // توابع جدید برای مدیریت مودال جزئیات
@@ -237,6 +289,32 @@ export default function Rewards({ Open }) {
                     <div className="flex justify-center items-center gap-3 sm:gap-5 mb-2 sm:mb-0">
                         <h3 className="text-[#19A297] text-xs sm:text-sm">هنرستان استارتاپی رکاد</h3>
                         <BiSolidSchool className="text-[#19A297] ml-[-8px] sm:ml-[-10px] text-lg sm:text-xl" />
+                    </div>
+                    // در هدر بالا، کنار آیکون مدرسه
+                    <div className="flex justify-center items-center gap-3 sm:gap-5 mb-2 sm:mb-0">
+                        <h3 className="text-[#19A297] text-xs sm:text-sm">هنرستان استارتاپی رکاد</h3>
+                        <BiSolidSchool className="text-[#19A297] ml-[-8px] sm:ml-[-10px] text-lg sm:text-xl" />
+
+                        {/* --- کد جدید برای آیکون نوتیفیکیشن --- */}
+                        <div className="relative" ref={notificationRef}>
+                            <button
+                                id="notification-icon-button-rewards" // آیدی یکتا
+                                onClick={toggleNotificationPanel}
+                                className="w-7 h-7 sm:w-8 sm:h-8 flex justify-center items-center border border-gray-300 rounded-full cursor-pointer group relative"
+                                aria-label="اعلان‌ها"
+                            >
+                                <IoNotificationsOutline className="text-gray-400 text-sm sm:text-base" />
+                                {unreadCount > 0 && (
+                                    <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                                )}
+                            </button>
+                            <NotificationPanel
+                                isOpen={isNotificationOpen}
+                                onClose={closeNotificationPanel}
+                                token={token}
+                            />
+                        </div>
+                        {/* --- پایان کد جدید --- */}
                     </div>
                     <div className="flex justify-center items-center gap-3 sm:gap-5">
                         <p className="text-gray-400 text-xs sm:text-sm">امروز {dateInfo.week}، {dateInfo.day} {dateInfo.month}، {dateInfo.year}</p>

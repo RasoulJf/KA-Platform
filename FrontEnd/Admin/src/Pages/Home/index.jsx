@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState,useRef, useEffect } from 'react';
 import fetchData from '../../Utils/fetchData'; // مسیر صحیح به ابزار fetchData شما
 import union from '../../assets/images/Union4.png';
 import frame156 from '../../assets/images/Frame156.png';
@@ -7,6 +7,7 @@ import { BiSolidSchool } from "react-icons/bi";
 import { FaMedal } from "react-icons/fa";
 import { IoNotificationsOutline } from "react-icons/io5";
 import { Link } from 'react-router-dom';
+import NotificationPanel from '../../Components/NotificationPanel';
 
 export default function Home({ Open }) {
   const token = localStorage.getItem("token");
@@ -20,16 +21,31 @@ export default function Home({ Open }) {
     pendingRequestsCount: 0,
     totalStudents: 0,
   });
-  
+
   // ۱. State برای نگهداری تمام درخواست‌های جدید
   const [allNewRequests, setAllNewRequests] = useState([]);
 
   const [topStudentsByGrade, setTopStudentsByGrade] = useState({
     'دهم': [], 'یازدهم': [], 'دوازدهم': [],
   });
-  
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // ... بعد از تعریف token
+
+  // --- شروع بخش کد برای نوتیفیکیشن ---
+
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0); // این state تعداد اعلان‌ها رو نگه می‌داره
+  const notificationRef = useRef(null);
+
+  const toggleNotificationPanel = () => setIsNotificationOpen((prev) => !prev);
+  const closeNotificationPanel = () => setIsNotificationOpen(false);
+
+  // --- پایان بخش کد برای نوتیفیکیشن ---
+
+  // ... بقیه state های شما مثل dashboardSummary و ...
 
   const date = new Date();
   const dateInfo = {
@@ -60,10 +76,10 @@ export default function Home({ Open }) {
 
         if (summaryResponse.success) setDashboardSummary(summaryResponse.data || {});
         else throw new Error(summaryResponse.message || 'خطا در دریافت خلاصه داشبورد');
-        
+
         if (newRequestsResponse.success) setAllNewRequests(newRequestsResponse.data || []);
         else throw new Error(newRequestsResponse.message || 'خطا در دریافت درخواست‌های جدید');
-        
+
         if (topStudentsResponse.success) setTopStudentsByGrade(topStudentsResponse.data || {});
         else throw new Error(topStudentsResponse.message || 'خطا در دریافت دانش‌آموزان برتر');
 
@@ -75,6 +91,64 @@ export default function Home({ Open }) {
     };
     loadDashboardData();
   }, [token]);
+
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      if (!token) {
+        setError("توکن احراز هویت یافت نشد. لطفاً دوباره وارد شوید.");
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        setError(null);
+        const headers = { authorization: `Bearer ${token}` };
+
+        // <<< تغییر: اندپوینت نوتیفیکیشن به Promise.all اضافه می‌شود >>>
+        const [summaryResponse, newRequestsResponse, topStudentsResponse, notificationCountResponse] = await Promise.all([
+          fetchData('dashboard/summary', { headers }),
+          fetchData('dashboard/recent-pending-requests?limit=6', { headers }),
+          fetchData('users/top-students-by-all-grades?limit=4', { headers }),
+          fetchData('notifications?filter=unread', { headers }) // <<<< این خط جدید است
+        ]);
+
+        if (summaryResponse.success) setDashboardSummary(summaryResponse.data || {});
+        else throw new Error(summaryResponse.message || 'خطا در دریافت خلاصه داشبورد');
+
+        if (newRequestsResponse.success) setAllNewRequests(newRequestsResponse.data || []);
+        else throw new Error(newRequestsResponse.message || 'خطا در دریافت درخواست‌های جدید');
+
+        if (topStudentsResponse.success) setTopStudentsByGrade(topStudentsResponse.data || {});
+        else throw new Error(topStudentsResponse.message || 'خطا در دریافت دانش‌آموزان برتر');
+
+        // <<< تغییر: ذخیره کردن تعداد اعلان‌ها در state >>>
+        if (notificationCountResponse.success) {
+          setUnreadCount(notificationCountResponse.totalCount || 0);
+        }
+        // اگر هم خطا بدهد، مهم نیست. فقط عدد روی آیکون نمایش داده نمی‌شود.
+
+      } catch (err) {
+        setError(err.message || 'خطا در برقراری ارتباط با سرور');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadDashboardData();
+
+    // <<< تغییر: اضافه کردن منطق بستن پنل با کلیک بیرون >>>
+    function handleClickOutside(event) {
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        const notificationIcon = document.getElementById("admin-notification-icon");
+        if (notificationIcon && notificationIcon.contains(event.target)) return;
+        closeNotificationPanel();
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+
+  }, [token]); // <<<< وابستگی به isNotificationOpen لازم نیست
 
   // ۳. تقسیم کردن درخواست‌ها به دو لیست مجزا
   const newActivityRequests = allNewRequests.filter(req => req.requestType === 'activity');
@@ -109,7 +183,7 @@ export default function Home({ Open }) {
     { title: "پاداش‌ پرداخت‌شده", value: dashboardSummary.paidRewardsCount },
     { title: "درخواست‌ تأییدشده", value: dashboardSummary.approvedRequestsCount },
   ];
-  
+
   const grades = ['دوازدهم', 'یازدهم', 'دهم'];
   const gradeTablesData = grades.map(gradeName => {
     const gradeTitleMap = { 'دوازدهم': 'پایــه دوازدهــم', 'یازدهم': 'پایــه یازدهــم', 'دهم': 'پایــه دهــم' };
@@ -133,9 +207,29 @@ export default function Home({ Open }) {
           <div className="flex justify-center items-center gap-5">
             <h3 className="text-[#19A297] text-xs">هنرستان استارتاپی رکاد</h3>
             <BiSolidSchool className="text-[#19A297] ml-[-10px] scale-150" />
-            <div className="w-8 h-8 flex justify-center items-center border border-gray-400 rounded-full cursor-pointer">
-              <IoNotificationsOutline className="text-gray-400" />
+            {/* --- کد جدید برای آیکون و پنل نوتیفیکیشن --- */}
+            <div className="relative" ref={notificationRef}>
+              <button
+                id="admin-notification-icon"
+                onClick={toggleNotificationPanel}
+                className="w-8 h-8 flex justify-center items-center border border-gray-400 rounded-full cursor-pointer relative group"
+                aria-label="اعلان‌ها"
+              >
+                <IoNotificationsOutline className="text-gray-400" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center border-2 border-white">
+                    {unreadCount > 9 ? '۹+' : unreadCount.toLocaleString('fa-IR')}
+                  </span>
+                )}
+              </button>
+              <NotificationPanel
+                isOpen={isNotificationOpen}
+                onClose={closeNotificationPanel}
+                token={token}
+                userType="admin" // <<<< این prop کامپوننت را برای ادمین تنظیم می‌کند
+              />
             </div>
+            {/* --- پایان کد جدید --- */}
           </div>
           <div className="flex justify-center items-center gap-5">
             <p className="text-gray-400 text-xs">امروز {dateInfo.week} {dateInfo.day} {dateInfo.month} ماه، {dateInfo.year}</p>
@@ -240,7 +334,7 @@ export default function Home({ Open }) {
               </thead>
               <tbody>
                 {item.students && item.students.length > 0 ? (
-                  item.students.slice(0,4).map((student, i) => (
+                  item.students.slice(0, 4).map((student, i) => (
                     <tr key={student._id || i} className={`w-full h-[5vh] ${i % 2 !== 0 ? "bg-gray-50" : "bg-white"} border-b border-gray-200 text-right`}>
                       <td className="text-left w-1/5 pl-2 text-xs sm:text-sm py-2">
                         <Link to={`/admin/profile/${student._id}`} className="text-[#19A297] hover:underline">{student.score?.toLocaleString('fa-IR') || '0'}</Link>
@@ -250,7 +344,7 @@ export default function Home({ Open }) {
                     </tr>
                   ))
                 ) : (
-                   <tr><td colSpan="3" className="text-center py-4 text-gray-500 text-sm">موردی برای نمایش یافت نشد.</td></tr>
+                  <tr><td colSpan="3" className="text-center py-4 text-gray-500 text-sm">موردی برای نمایش یافت نشد.</td></tr>
                 )}
               </tbody>
             </table>
@@ -259,7 +353,7 @@ export default function Home({ Open }) {
 
         {/* میانگین امتیازات (بدون تغییر) */}
         <div className="w-full flex flex-col md:flex-row gap-[2vh] h-auto md:h-[10vh] items-start mb-8">
-          {["دوازدهم", "یازدهم","دهم"].map((grade, i) => (
+          {["دوازدهم", "یازدهم", "دهم"].map((grade, i) => (
             <div key={i} className="w-full md:w-1/3 h-[7vh] px-3 flex justify-between items-center border-2 border-[#202A5A] rounded-lg bg-white shadow-sm mb-2 md:mb-0">
               <p className="text-[#202A5A] font-semibold">
                 {(typeof dashboardSummary[`avgScore${grade}`] === 'number'

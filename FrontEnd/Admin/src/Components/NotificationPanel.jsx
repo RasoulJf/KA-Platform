@@ -31,7 +31,7 @@ const adminIconMap = {
 };
 
 // کامپوننت حالا یک prop به نام userType می‌پذیرد
-const NotificationPanel = ({ isOpen, onClose, token, userType = 'student' }) => {
+const NotificationPanel = ({ isOpen, onClose, token, userType = 'admin' }) => {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -53,6 +53,9 @@ const NotificationPanel = ({ isOpen, onClose, token, userType = 'student' }) => 
             const response = await fetchData('notifications?filter=unread&limit=10', {
                 headers: { authorization: `Bearer ${token}` }
             });
+            console.log("--- Notification Panel Response ---");
+            console.log(response); // <<<< پاسخ کامل رو لاگ بگیر
+    
             if (response.success && Array.isArray(response.data)) {
                 setNotifications(response.data);
             } else {
@@ -81,6 +84,7 @@ const NotificationPanel = ({ isOpen, onClose, token, userType = 'student' }) => 
                 method: 'PATCH',
                 headers: { authorization: `Bearer ${token}` },
             });
+            
         } catch (err) {
             console.error("Failed to mark notification as read", err);
             // Rollback on error
@@ -143,7 +147,7 @@ const NotificationPanel = ({ isOpen, onClose, token, userType = 'student' }) => 
                     </button>
                 </div>
             </div>
-            <div className="relative flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 max-h-[288px]">
+            <div className="relative flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300  scrollbar-track-gray-100 max-h-[288px]">
                 {loading && <p className="p-4 text-center text-gray-500">در حال بارگذاری...</p>}
                 {error && <p className="p-4 text-center text-red-600 bg-red-50">{error}</p>}
                 {!loading && notifications.length === 0 && <p className="p-4 text-center text-gray-500">هیچ اعلان جدیدی وجود ندارد.</p>}
