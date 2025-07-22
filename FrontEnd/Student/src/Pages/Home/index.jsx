@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import frame21 from '../../assets/images/Frame21.png'; // مسیر صحیح تصاویر
 import frame22 from '../../assets/images/Frame22.png'; // مسیر صحیح تصاویر
-
+import frame200 from '../../assets/images/frame200.png'
 import { BiSolidSchool } from "react-icons/bi";
 // آیکون FaVenus برای تطابق با نماد ♀ در تصویر جایگزین FaMedal شد
-import { FaVenus, FaPlus } from "react-icons/fa";
+import { FaVenus, FaPlus,FaMedal } from "react-icons/fa";
 import { IoNotificationsOutline } from "react-icons/io5";
 import { Link, useNavigate } from 'react-router-dom'; // اضافه کردن useNavigate
 import NotificationPanel from '../../Components/NotificationPanel'; // مسیر صحیح کامپوننت
@@ -144,7 +144,7 @@ export default function StudentDashboard({ Open }) {
             </div>
           </div>
           <div className="flex justify-center items-center gap-3 sm:gap-5">
-            <p className="text-gray-400 text-xs sm:text-sm">امروز {week}، {day} {month} ماه، {year}</p>
+            <p className="text-gray-400 text-xs sm:text-sm">امروز {week}، {day} {month} ماه {year}</p>
             <h1 className="text-[#19A297] font-semibold text-base sm:text-lg">
                 داشبورد
             </h1>
@@ -168,29 +168,21 @@ export default function StudentDashboard({ Open }) {
             {/* بخش بالایی: جمع کل امتیازات و فعالیت‌ها */}
             <div className="flex flex-col lg:flex-row gap-3 mb-3">
               {/* کارت جمع کل امتیازات */}
-              <div className="relative lg:w-1/3 bg-[#F8F7FF] rounded-lg p-4 flex flex-col justify-around items-center" style={{height: '250px'}}>
-                {/* Decorative dots from image */}
-                <span className="absolute top-[15%] right-[15%] w-2 h-2 bg-blue-300 rounded-full"></span>
-                <span className="absolute top-[20%] left-[10%] w-3 h-3 bg-purple-400 rounded-full"></span>
-                <span className="absolute top-[35%] right-[8%] w-2.5 h-2.5 bg-orange-300 rounded-full"></span>
-                <span className="absolute bottom-[15%] right-[20%] w-3 h-3 bg-purple-600 rounded-full"></span>
-                <span className="absolute bottom-[25%] left-[15%] w-2 h-2 bg-teal-300 rounded-full"></span>
-                <span className="absolute top-[60%] left-[8%] w-1.5 h-1.5 bg-orange-400 rounded-full"></span>
-                <span className="absolute bottom-[40%] right-[30%] w-1.5 h-1.5 bg-teal-400 rounded-full"></span>
-                <span className="absolute top-[70%] right-[10%] w-1.5 h-1.5 bg-red-400 rounded-full"></span>
+              <div className="relative lg:w-1/2 bg-[#E8ECFF] rounded-lg p-4 flex flex-col justify-around items-center" style={{height: '250px'}}>
+              <img src={frame200} className="absolute z-0 h-full w-full object-cover top-0 left-0" alt="" />
 
-                <div className="bg-[#202A5A] z-10 flex justify-center items-center w-16 h-16 rounded-full shadow-md">
+                <div className=" z-10 flex justify-center items-center w-16 h-16 rounded-full shadow-md">
                    {/* Icon changed to FaVenus to match the image */}
-                  <FaVenus className="text-3xl text-white" />
+                  <FaMedal className="text-4xl text-white mt-10" />
                 </div>
-                <p className="text-[#202A5A] font-bold text-4xl z-10">
+                <p className="text-[#202A5A] font-bold mt-10 text-[42px] z-10">
                   {formatNumberToPersian(dashboardData.totalUserScore)}
                 </p>
-                <h2 className="text-[#202A5A] text-xl z-10">جمع کل امتیازات</h2>
+                <h2 className="text-[#202A5A] text-[24px] font-bold z-10">جمع کل امتیازات</h2>
               </div>
 
               {/* بخش فعالیت‌ها */}
-              <div className="lg:w-2/3 bg-white p-6 rounded-lg shadow-sm flex flex-col justify-center" style={{height: '250px'}}>
+              <div className="lg:w-1/2 bg-white p-6 rounded-lg shadow-sm flex flex-col justify-center" style={{height: '250px'}}>
               {(dashboardData.activitySummary && dashboardData.activitySummary.length > 0) ? (
                   dashboardData.activitySummary.map((activity) => {
                       // ✅ FIX: یک متغیر برای تشخیص موارد کسر امتیاز
@@ -273,22 +265,22 @@ export default function StudentDashboard({ Open }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
               <div className="bg-[#F8F7FF] rounded-lg h-[110px] p-6 flex items-center relative">
                   <img src={frame22} className="absolute z-0 h-full w-full object-cover top-0 left-0" alt="" />
-                <div className='lg:w-3/4 text-center z-100'> 
+                <div className='lg:w-2/3 px-10 z-100'> 
                 <h2 className="text-[#202A5A] font-semibold text-[22px] z-10">توکن‌های استفاده‌شده</h2>
                 </div>
-                <div className='lg:w-1/4 text-center z-100'>
-                <p className="text-[#202A5A] font-bold text-2xl z-10">
+                <div className='lg:w-1/3 text-center z-100'>
+                <p className="text-[#202A5A] font-bold text-4xl z-10">
                 {formatNumberToPersian(dashboardData.paidRewardsTokenValue)}
                 </p>
                 </div>
               </div>
-              <div className="bg-[#F8F7FF] rounded-lg h-[110px] p-6 flex items-center justify-between relative">
+              <div className="bg-[#F8F7FF] rounded-lg h-[110px] p-6 flex items-center  relative">
               <img src={frame22} className="absolute z-0 h-full w-full object-cover top-0 left-0" alt="" />
-                <div className='lg:w-3/4 text-center z-100'> 
+                <div className='lg:w-2/3 px-10 z-100'> 
                 <h2 className="text-[#202A5A] font-semibold text-[22px] z-10">توکن‌های قابل‌استفاده</h2>
                 </div>
-                  <div className='lg:w-1/4 text-center z-100'>
-                  <p className="text-[#202A5A] font-bold text-2xl z-10">
+                  <div className='lg:w-1/3 text-center z-100'>
+                  <p className="text-[#202A5A] font-bold text-4xl z-10">
                   {formatNumberToPersian(dashboardData.availableTokens)}
                   </p>
                   </div>
@@ -300,13 +292,13 @@ export default function StudentDashboard({ Open }) {
               {/* جدول برترین های پایه */}
               <div className="lg:w-1/2 gap-3 flex flex-col">
                 {/* Header changed to match the image */}
-                <Link to="/rewards" className="w-full h-[60px] bg-[#F5E8FF] hover:bg-purple-200 transition-colors text-purple-700 py-3 rounded-lg font-semibold text-base flex items-center justify-center gap-2 no-underline">
-                  <FaPlus /> ثبت پاداش جدید
+                <Link to="/rewards" className="w-full h-[60px] bg-[#F5E8FF] hover:bg-purple-200 transition-colors text-purple-700 py-3 rounded-lg font-bold text-base flex items-center justify-center gap-2 no-underline">
+                   ثبت پاداش جدید <FaPlus />
                 </Link>
                 <div className="flex-grow overflow-hidden rounded-b-lg bg-white border border-gray-200 border-t-0">
                   <div className="bg-[#19A297] text-white h-12 flex items-center px-4">
                     <Link to="/results" className="text-gray-200 hover:text-white text-[10px]">مشاهدۀ همه</Link>
-                    <h3 className="flex-grow text-right font-semibold text-base">برترین‌های پایه</h3>
+                    <h3 className="flex-grow text-right font-bold text-base">برترین‌های پایه</h3>
                   </div>
                   <div className="overflow-x-auto">
                     {(dashboardData.topStudentsInMyGrade && dashboardData.topStudentsInMyGrade.length > 0) ? (
@@ -314,7 +306,7 @@ export default function StudentDashboard({ Open }) {
                         <tbody>
                           {dashboardData.topStudentsInMyGrade.slice(0, 5).map((student, i) => (
                             <tr key={student.userId || i} className={`h-12 bg-white border-b border-gray-200/80 last:border-b-0 text-right text-sm`}>
-                              <td className="px-4 py-2 text-left text-[#202A5A] font-semibold w-24">{formatNumberToPersian(student.score)}</td>
+                              <td className="px-4 py-2 text-left text-[#202A5A] w-24 ">{formatNumberToPersian(student.score)}</td>
                               <td className="px-4 py-2 text-[#202A5A] font-medium">
                                 {student.fullName} <span className="text-gray-400">({student.classNum || student.class || 'N/A'})</span>
                               </td>
@@ -332,13 +324,13 @@ export default function StudentDashboard({ Open }) {
 
               {/* جدول رتبه شما */}
               <div className="lg:w-1/2 gap-3 flex flex-col">
-                <Link to="/activities" className="w-full h-[60px] bg-[#FFE8F0] hover:bg-pink-200 transition-colors text-pink-600 py-3 rounded-lg font-semibold text-base flex items-center justify-center gap-2 no-underline">
-                  <FaPlus /> ثبت فعالیت جدید
+                <Link to="/activities" className="w-full h-[60px] bg-[#FFE8F0] hover:bg-pink-200 transition-colors text-pink-600 py-3 rounded-lg font-bold text-base flex items-center justify-center gap-2 no-underline">
+                  ثبت فعالیت جدید   <FaPlus />
                 </Link>
                 <div className="flex-grow overflow-hidden rounded-b-lg bg-white border border-gray-200 border-t-0">
                   <div className="bg-[#202A5A] text-white h-12 flex items-center px-4">
                     <Link to="/results" className="text-gray-300 hover:text-white text-[10px]">مشاهدۀ همه</Link>
-                    <h3 className="flex-grow text-right font-semibold text-base">رتبۀ شما در جدول امتیازات</h3>
+                    <h3 className="flex-grow text-right font-bold text-base">رتبۀ شما در جدول امتیازات</h3>
                   </div>
                   <div className="overflow-x-auto">
                     {(dashboardData.userRankingInfo?.rankingTableData && dashboardData.userRankingInfo.rankingTableData.length > 0) ? (
@@ -346,9 +338,9 @@ export default function StudentDashboard({ Open }) {
                         <tbody>
                           {dashboardData.userRankingInfo.rankingTableData.slice(0, 5).map((user, i) => (
                             <tr key={user.userId || i} className={`h-12 ${user.highlight ? "bg-[#D4F3F1]" : "bg-white"} border-b border-gray-200/80 last:border-b-0 text-right text-sm`}>
-                              <td className={`px-4 py-2 text-left font-semibold w-24 ${user.highlight ? "text-[#046A60]" : "text-[#202A5A]"}`}>{formatNumberToPersian(user.score)}</td>
-                              <td className={`px-4 py-2 font-medium ${user.highlight ? "text-[#046A60]" : "text-[#202A5A]"}`}>
-                                {user.name} <span className={`${user.highlight ? "text-[#046A60]/80" : "text-gray-400"}`}>({user.code || 'N/A'})</span>
+                              <td className={`px-4 py-2 text-left w-24 ${user.highlight ? "text-[#046A60] font-bold" : "text-[#202A5A]"}`}>{formatNumberToPersian(user.score)}</td>
+                              <td className={`px-4 py-2 ${user.highlight ? " text-[#046A60] " : "text-[#202A5A]"} ${user.highlight ? " font-bold " : "font-medium"}`}>
+                                {user.name} <span className={` font-medium ${user.highlight ? "text-[#046A60]/80" : "text-gray-400"}`}>({user.code || 'N/A'})</span>
                               </td>
                               <td className={`px-4 py-2 text-center font-medium w-12 ${user.highlight ? "text-[#046A60]" : "text-[#202A5A]"}`}>{user.rank}</td>
                             </tr>
