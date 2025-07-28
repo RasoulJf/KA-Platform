@@ -230,7 +230,7 @@ export const createStudentActivity = catchAsync(async (req, res, next) => {
                 title: `درخواست فعالیت جدید از ${studentName}`,
                 message: `فعالیت "${activityName}" برای بررسی ثبت شده است.`,
                 type: 'new_activity_submission',
-                relatedLink: `/admin/review/activities/${newStudentActivity._id}`, // << لینک به صفحه بررسی ادمین
+                relatedLink: `/activities`, // << لینک به صفحه بررسی ادمین
                 relatedDocId: newStudentActivity._id,
                 iconBgColor: 'bg-blue-500',
             }));

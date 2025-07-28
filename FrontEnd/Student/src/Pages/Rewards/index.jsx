@@ -37,9 +37,25 @@ export default function Rewards({ Open }) {
     const [unreadCount, setUnreadCount] = useState(0);
     const notificationRef = useRef(null);
 
-    const toggleNotificationPanel = () => setIsNotificationOpen((prev) => !prev);
-    const closeNotificationPanel = () => setIsNotificationOpen(false);
-
+    const refreshUnreadCount = async () => {
+        if (!token) return;
+        try {
+          const response = await fetchData('notifications?filter=unread', {
+            headers: { authorization: `Bearer ${token}` }
+          });
+          if (response.success) {
+            setUnreadCount(response.totalCount || 0);
+          }
+        } catch (error) {
+          console.error("Failed to refresh unread count:", error);
+        }
+      };
+    
+      const toggleNotificationPanel = () => setIsNotificationOpen(prev => !prev);
+      const closeNotificationPanel = () => {
+        setIsNotificationOpen(false);
+        refreshUnreadCount(); // این خط را برای اطمینان از به‌روز بودن عدد اضافه کنید
+      };
     // State های جدید برای مودال جزئیات
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [selectedReward, setSelectedReward] = useState(null);
@@ -83,6 +99,8 @@ export default function Rewards({ Open }) {
 
     // useEffect جدید شماره ۱: فقط برای بارگذاری آمار کلی (یک بار در ابتدا اجرا می‌شود)
     useEffect(() => {
+        refreshUnreadCount(); // این خط را برای اطمینان از به‌روز بودن عدد اضافه کنید
+
         const loadStatsData = async () => {
             if (!token) {
                 setError("شما وارد سیستم نشده‌اید.");
@@ -171,23 +189,6 @@ export default function Rewards({ Open }) {
     // ... بعد از useEffect های دیگر
 
     // --- useEffect برای دریافت تعداد اعلان‌ها ---
-    useEffect(() => {
-        const fetchHeaderData = async () => {
-            if (!token) return;
-            try {
-                const response = await fetchData("student-dashboard", {
-                    headers: { authorization: `Bearer ${token}` },
-                });
-                if (response.success && response.data?.headerInfo) {
-                    setUnreadCount(response.data.headerInfo.unreadNotificationsCount || 0);
-                }
-            } catch (err) {
-                console.error("Failed to fetch notification count:", err);
-            }
-        };
-
-        fetchHeaderData();
-    }, [token]);
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -286,11 +287,7 @@ export default function Rewards({ Open }) {
 
                 {/* هدر بالا */}
                 <div className="flex flex-col sm:flex-row justify-between items-center h-auto sm:h-[5vh] mb-6">
-                    <div className="flex justify-center items-center gap-3 sm:gap-5 mb-2 sm:mb-0">
-                        <h3 className="text-[#19A297] text-xs sm:text-sm">هنرستان استارتاپی رکاد</h3>
-                        <BiSolidSchool className="text-[#19A297] ml-[-8px] sm:ml-[-10px] text-lg sm:text-xl" />
-                    </div>
-                    // در هدر بالا، کنار آیکون مدرسه
+
                     <div className="flex justify-center items-center gap-3 sm:gap-5 mb-2 sm:mb-0">
                         <h3 className="text-[#19A297] text-xs sm:text-sm">هنرستان استارتاپی رکاد</h3>
                         <BiSolidSchool className="text-[#19A297] ml-[-8px] sm:ml-[-10px] text-lg sm:text-xl" />
@@ -298,13 +295,13 @@ export default function Rewards({ Open }) {
                         {/* --- کد جدید برای آیکون نوتیفیکیشن --- */}
                         <div className="relative" ref={notificationRef}>
                             <button
-                                id="notification-icon-button-rewards" // آیدی یکتا
+                                id="notification-icon-button"
                                 onClick={toggleNotificationPanel}
                                 className="w-7 h-7 sm:w-8 sm:h-8 flex justify-center items-center border border-gray-300 rounded-full cursor-pointer group relative"
                                 aria-label="اعلان‌ها"
                             >
                                 <IoNotificationsOutline className="text-gray-400 text-sm sm:text-base" />
-                                {unreadCount > 0 && (
+                                {unreadCount > 0 && ( // <<<< اینجا از unreadCount استفاده می‌کنیم
                                     <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
                                 )}
                             </button>

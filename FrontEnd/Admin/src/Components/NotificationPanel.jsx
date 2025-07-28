@@ -50,7 +50,7 @@ const NotificationPanel = ({ isOpen, onClose, token, userType = 'admin' }) => {
 
         try {
             // اندپوینت بک‌اند خودش تشخیص می‌دهد چه اعلان‌هایی را برگرداند
-            const response = await fetchData('notifications?filter=unread&limit=10', {
+            const response = await fetchData('notifications', {
                 headers: { authorization: `Bearer ${token}` }
             });
             console.log("--- Notification Panel Response ---");

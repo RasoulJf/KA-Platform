@@ -16,7 +16,7 @@ export default function Requests({ Open }) {
     const date = new Date();
     const month = new Intl.DateTimeFormat('fa-IR', { month: 'short' }).format(date);
     const day = new Intl.DateTimeFormat('fa-IR', { day: 'numeric' }).format(date);
-    const year = new Intl.DateTimeFormat('fa-IR', { year: 'numeric' }).format(date).replace(/[۰-۹]/g, d => String.fromCharCode(d.charCodeAt(0) - 1728 + 48));
+    const year = new Intl.DateTimeFormat('fa-IR', { year: 'numeric' }).format(date)
     const week = new Intl.DateTimeFormat('fa-IR', { weekday: 'short' }).format(date);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -276,10 +276,7 @@ export default function Requests({ Open }) {
             <div className={`${!Open ? "w-[80%]" : "w-[94%]"} p-6 md:p-8 transition-all duration-500 flex flex-col h-screen relative z-10 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 overflow-y-auto`}>
                 {/* ... (هدر صفحه) ... */}
                 <div className="flex flex-col sm:flex-row justify-between items-center h-auto sm:h-[5vh] mb-6">
-                    <div className="flex justify-center items-center gap-3 sm:gap-5 mb-2 sm:mb-0">
-                        <h3 className='text-[#19A297] text-xs sm:text-sm'>هنرستان استارتاپی رکاد</h3>
-                        <BiSolidSchool className='text-[#19A297] ml-[-8px] sm:ml-[-10px] text-lg sm:text-xl' />
-                    </div>
+                  
                     {/* در داخل اولین div در هدر صفحه */}
                     <div className="flex justify-center items-center gap-3 sm:gap-5 mb-2 sm:mb-0">
                         <h3 className='text-[#19A297] text-xs sm:text-sm'>هنرستان استارتاپی رکاد</h3>

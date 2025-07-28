@@ -73,30 +73,34 @@ export default function StudentResultsPage({ Open }) {
   const [currentUserInfo, setCurrentUserInfo] = useState(null); // برای نمایش اطلاعات کاربر فعلی
   const [visibility, setVisibility] = useState(false);
 
+
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const notificationRef = useRef(null);
 
-  const toggleNotificationPanel = () => setIsNotificationOpen((prev) => !prev);
-  const closeNotificationPanel = () => setIsNotificationOpen(false);
+   const refreshUnreadCount = async () => {
+    if (!token) return;
+    try {
+      const response = await fetchData('notifications?filter=unread', {
+        headers: { authorization: `Bearer ${token}` }
+      });
+      if (response.success) {
+        setUnreadCount(response.totalCount || 0);
+      }
+    } catch (error) {
+      console.error("Failed to refresh unread count:", error);
+    }
+  };
 
+  const toggleNotificationPanel = () => setIsNotificationOpen(prev => !prev);
+  const closeNotificationPanel = () => {
+    setIsNotificationOpen(false);
+    refreshUnreadCount(); // این خط را برای اطمینان از به‌روز بودن عدد اضافه کنید
+  };
   // <<< تغییر: ۲. دریافت اطلاعات هدر و تعداد اعلان‌ها
   useEffect(() => {
-    const fetchHeaderData = async () => {
-      if (!token) return;
-      try {
-        const response = await fetchData("student-dashboard", {
-          headers: { authorization: `Bearer ${token}` },
-        });
-        if (response.success && response.data?.headerInfo) {
-          setUnreadCount(response.data.headerInfo.unreadNotificationsCount || 0);
-        }
-      } catch (err) {
-        console.error("Failed to fetch notification count:", err);
-      }
-    };
+    refreshUnreadCount(); // این خط را برای اطمینان از به‌روز بودن عدد اضافه کنید
 
-    fetchHeaderData();
   }, [token]);
 
   // <<< تغییر: ۳. منطق بستن پنل با کلیک بیرون
@@ -251,15 +255,15 @@ export default function StudentResultsPage({ Open }) {
             </h3>
             <BiSolidSchool className="text-[#19A297] ml-[-8px] sm:ml-[-10px] text-lg sm:text-xl" />
              {/* <<< تغییر: ۴. جایگزینی دکمه نوتیفیکیشن با کد جدید */}
-            <div className="relative" ref={notificationRef}>
+             <div className="relative" ref={notificationRef}>
               <button
-                id="notification-icon-button-results" // آیدی یکتا برای این صفحه
+                id="notification-icon-button"
                 onClick={toggleNotificationPanel}
                 className="w-7 h-7 sm:w-8 sm:h-8 flex justify-center items-center border border-gray-300 rounded-full cursor-pointer group relative"
                 aria-label="اعلان‌ها"
               >
                 <IoNotificationsOutline className="text-gray-400 text-sm sm:text-base" />
-                {unreadCount > 0 && (
+                {unreadCount > 0 && ( // <<<< اینجا از unreadCount استفاده می‌کنیم
                   <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
                 )}
               </button>

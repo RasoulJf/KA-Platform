@@ -358,7 +358,7 @@ export default function AddData({ Open }) {
                     <td className='px-3 py-3 text-center text-green-600 font-semibold'>{formatNumber(row.scoreAwarded)}</td>
                     <td className='px-3 py-3 text-center text-gray-600'>{row.activityId?.parent || 'نامشخص'}</td>
                     <td className='px-3 py-3 text-center text-gray-600 max-w-xs truncate' title={row.activityId?.name || row.details}>{row.activityId?.name || row.details}</td>
-                    <td className='px-3 py-3 text-center text-gray-500'>{formatDate(row.createdAt)}</td>
+                    <td className='px-3 py-3 text-center text-gray-500 rtl'>{formatDate(row.createdAt)}</td>
                     <td className='px-3 py-3 text-center text-[#19A297] font-medium'>{row?.type || 'نامشخص'}</td>
                   </tr>
                 ))

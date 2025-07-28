@@ -1,6 +1,6 @@
 // ResultsPageContainer.jsx (کامل و نهایی با گزارش‌های جدید)
 
-import React, { useState, useEffect,useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import union from '../../assets/images/Union4.png';
 import { BiSolidSchool } from "react-icons/bi";
 import { IoMdNotificationsOutline, IoIosArrowDown } from "react-icons/io";
@@ -86,13 +86,31 @@ export default function ResultsPageContainer({ Open }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const notificationRef = useRef(null);
 
-  const toggleNotificationPanel = () => setIsNotificationOpen((prev) => !prev);
-  const closeNotificationPanel = () => setIsNotificationOpen(false);
 
   const token = localStorage.getItem("token");
 
+  const refreshUnreadCount = async () => {
+    if (!token) return;
+    try {
+      const response = await fetchData('notifications?filter=unread', {
+        headers: { authorization: `Bearer ${token}` }
+      });
+      if (response.success) {
+        setUnreadCount(response.totalCount || 0);
+      }
+    } catch (error) {
+      console.error("Failed to refresh unread count:", error);
+    }
+  };
+  const toggleNotificationPanel = () => setIsNotificationOpen((prev) => !prev);
+  const closeNotificationPanel = () => {
+    setIsNotificationOpen(false);
+    refreshUnreadCount(); // این خط را برای اطمینان از به‌روز بودن عدد اضافه کنید
+  };
+
 
   useEffect(() => {
+    refreshUnreadCount();
     const fetchStudents = async () => {
       setLoadingStudents(true);
       let url = 'users/students-selection';
@@ -280,13 +298,17 @@ export default function ResultsPageContainer({ Open }) {
                   </span>
                 )}
               </button>
+
+              {/* <<< ۳. پراپ onUpdate را اینجا اضافه کنید >>> */}
               <NotificationPanel
                 isOpen={isNotificationOpen}
                 onClose={closeNotificationPanel}
                 token={token}
                 userType="admin"
+                onUpdate={refreshUnreadCount} // این خط جدید است
               />
             </div>
+
           </div>
           <div className="flex justify-center items-center gap-3 sm:gap-5">
             <p className='text-gray-400 text-xs sm:text-sm'> امروز {dateInfo.week}، {dateInfo.day} {dateInfo.month}، {dateInfo.year}</p>

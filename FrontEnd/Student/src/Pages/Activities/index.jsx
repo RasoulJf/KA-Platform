@@ -55,30 +55,30 @@ export default function Activities({ Open }) {
   const [unreadCount, setUnreadCount] = useState(0); // استیت برای نگهداری تعداد اعلان‌ها
   const notificationRef = useRef(null);
 
-  const toggleNotificationPanel = () => setIsNotificationOpen((prev) => !prev);
-  const closeNotificationPanel = () => setIsNotificationOpen(false);
-
-  // ۲. دریافت اطلاعات هدر و تعداد اعلان‌ها
-  useEffect(() => {
-    const fetchHeaderData = async () => {
+   const refreshUnreadCount = async () => {
       if (!token) return;
       try {
-        // از همان اندپوینت داشبورد برای گرفتن اطلاعات هدر استفاده می‌کنیم
-        const response = await fetchData("student-dashboard", {
-          headers: { authorization: `Bearer ${token}` }, // نکته: اینجا باید Bearer باشد نه Berear
+        const response = await fetchData('notifications?filter=unread', {
+          headers: { authorization: `Bearer ${token}` }
         });
-        if (response.success && response.data?.headerInfo) {
-          setUnreadCount(
-            response.data.headerInfo.unreadNotificationsCount || 0
-          );
+        if (response.success) {
+          setUnreadCount(response.totalCount || 0);
         }
-      } catch (err) {
-        console.error("Failed to fetch notification count:", err);
-        // اگر خطا داد، مهم نیست. فقط آیکون قرمز نمایش داده نمی‌شود
+      } catch (error) {
+        console.error("Failed to refresh unread count:", error);
       }
     };
 
-    fetchHeaderData();
+  const toggleNotificationPanel = () => setIsNotificationOpen((prev) => !prev);
+  const closeNotificationPanel = () => {
+    setIsNotificationOpen(false);
+    refreshUnreadCount(); // این خط را برای اطمینان از به‌روز بودن عدد اضافه کنید
+  };
+  // ۲. دریافت اطلاعات هدر و تعداد اعلان‌ها
+  useEffect(() => {
+    refreshUnreadCount(); // این خط را برای اطمینان از به‌روز بودن عدد اضافه کنید
+
+    
   }, [token]);
 
   useEffect(() => {
@@ -342,9 +342,8 @@ export default function Activities({ Open }) {
   return (
     <>
       <div
-        className={`${
-          !Open ? "w-[calc(100%-6%)]" : "w-[calc(100%-23%)]"
-        } p-6 md:p-8 transition-all duration-500 flex-col h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100`}
+        className={`${!Open ? "w-[calc(100%-6%)]" : "w-[calc(100%-23%)]"
+          } p-6 md:p-8 transition-all duration-500 flex-col h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100`}
       >
         {/* هدر بالا */}
         <div className="flex flex-col sm:flex-row justify-between items-center h-auto sm:h-[5vh] mb-6">
@@ -476,9 +475,8 @@ export default function Activities({ Open }) {
                     ?.label || "همه"}
                 </span>
                 <IoChevronDown
-                  className={`text-gray-500 transition-transform duration-200 ${
-                    openFilterDropdowns.status ? "rotate-180" : ""
-                  }`}
+                  className={`text-gray-500 transition-transform duration-200 ${openFilterDropdowns.status ? "rotate-180" : ""
+                    }`}
                 />
               </button>
               {openFilterDropdowns.status && (
@@ -508,9 +506,8 @@ export default function Activities({ Open }) {
                   )?.label || "همه"}
                 </span>
                 <IoChevronDown
-                  className={`text-gray-500 transition-transform duration-200 ${
-                    openFilterDropdowns.entryType ? "rotate-180" : ""
-                  }`}
+                  className={`text-gray-500 transition-transform duration-200 ${openFilterDropdowns.entryType ? "rotate-180" : ""
+                    }`}
                 />
               </button>
               {openFilterDropdowns.entryType && (
@@ -633,9 +630,8 @@ export default function Activities({ Open }) {
                         <tr
                           key={activity._id || idx}
                           onClick={() => handleOpenDetailsModal(activity)}
-                          className={`${
-                            idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"
-                          } hover:bg-gray-100 transition-colors`}
+                          className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                            } hover:bg-gray-100 transition-colors`}
                         >
                           <td
                             className={`px-4 text-center py-3 whitespace-nowrap font-semibold ${statusColor}`}
@@ -645,19 +641,19 @@ export default function Activities({ Open }) {
                           <td className="px-4 text-center py-3 whitespace-nowrap text-gray-600">
                             {activity.reviewDate
                               ? new Intl.DateTimeFormat("fa-IR", {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                }).format(new Date(activity.reviewDate))
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              }).format(new Date(activity.reviewDate))
                               : "-"}
                           </td>
                           <td className="px-4 text-center py-3 whitespace-nowrap text-gray-600">
                             {activity.submissionDate
                               ? new Intl.DateTimeFormat("fa-IR", {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                }).format(new Date(activity.submissionDate))
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              }).format(new Date(activity.submissionDate))
                               : "-"}
                           </td>
                           <td
@@ -719,9 +715,9 @@ export default function Activities({ Open }) {
         onClose={handleCloseModal}
         onSubmit={handleActivitySubmit} // این تابع باید لیست را رفرش کند
         token={token}
-        // پاس دادن activityCategories به مودال اگر لازم است
-        // activityCategories={activityCategories}
-        // loadingActivityCategories={loadingStats && activityCategories.length === 0}
+      // پاس دادن activityCategories به مودال اگر لازم است
+      // activityCategories={activityCategories}
+      // loadingActivityCategories={loadingStats && activityCategories.length === 0}
       />
       {/* <<< ۵. رندر کردن مودال جدید >>> */}
       <ActivityDetailsModal

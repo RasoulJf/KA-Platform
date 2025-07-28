@@ -237,7 +237,7 @@ export const createStudentReward = catchAsync(async (req, res, next) => {
                 title: `درخواست پاداش جدید از ${studentName}`,
                 message: `درخواست پاداش "${rewardName}" با هزینه ${requestedTokenNum} توکن ثبت شد.`,
                 type: 'new_reward_request',
-                relatedLink: `/admin/review/rewards/${studentReward._id}`, // << لینک به صفحه بررسی ادمین
+                relatedLink: `/rewards`, // << لینک به صفحه بررسی ادمین
                 relatedDocId: studentReward._id,
                 iconBgColor: 'bg-purple-500',
             }));
