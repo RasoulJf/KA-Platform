@@ -8,54 +8,58 @@ import { useRef } from "react";
 import NotificationPanel from "../../Components/NotificationPanel";
 
 // headerConfig مثل قبل (ترتیب ستون‌ها را چک کنید)
+const userString = localStorage.getItem("user");
+          console.log(userString)
+          const user = userString ? JSON.parse(userString) : null;
+
 const headerConfig = [
   {
     title: "نام و نام‌خانوادگی",
     key: "name",
-    headerClass: "bg-gray-100 text-gray-700",
-    cellClass: "text-gray-800 font-medium",
+    headerClass: "bg-gray-100 w-40 text-[#202A5A]",
+    cellClass: "text-[#202A5A] whitespace-nowrap border-2 border-solid border-[#F2F2F2] text-[16px]",
   },
   {
     title: "کلاس",
     key: "class",
-    headerClass: "bg-gray-100 text-gray-700",
-    cellClass: "text-indigo-700",
+    headerClass: "bg-gray-100 w-15  text-[#202A5A]",
+    cellClass: "text-[#202A5A] w-15 border-2 border-solid border-[#F2F2F2] text-[16px]",
   },
   {
     title: "فعالیت‌های آموزشی",
     key: "educationalActivities",
-    headerClass: "bg-purple-600 text-white",
-    cellClass: "text-purple-700 font-semibold",
+    headerClass: "bg-[#652D90] w-20 text-white",
+    cellClass: "text-[#652D90] w-20 border-2 border-solid border-[#F2F2F2]  text-[16px]",
   },
   {
-    title: "ف. داوطلبانه و ت. فردی",
+    title: "فعالیت‌های داوطلبانه و توسعۀ فردی",
     key: "voluntaryActivities",
-    headerClass: "bg-pink-500 text-white",
-    cellClass: "text-pink-700 font-semibold",
+    headerClass: "bg-[#E0195B] w-35 text-white",
+    cellClass: "text-[#E0195B] w-35 border-2 border-solid border-[#F2F2F2] text-[16px]",
   }, // عنوان کوتاه شد
   {
     title: "فعالیت‌های شغلی",
     key: "jobActivities",
-    headerClass: "bg-yellow-400 text-yellow-800",
-    cellClass: "text-yellow-700 font-semibold",
+    headerClass: "bg-[#F8A41D] w-20 text-white",
+    cellClass: "text-[#F8A41D] w-20 text-[16px] border-2 border-solid border-[#F2F2F2]",
   }, // رنگ هدر اصلاح شد
   {
     title: "کسر امتیازات",
     key: "deductions",
-    headerClass: "bg-gray-600 text-white",
-    cellClass: "text-gray-700 font-semibold",
+    headerClass: "bg-[#787674] w-15 text-white",
+    cellClass: "text-[#787674] w-15 text-[16px] border-2 border-solid border-[#F2F2F2]",
   },
   {
     title: "امتیاز کل",
     key: "score",
-    headerClass: "bg-gray-100 text-gray-700",
-    cellClass: "text-indigo-700 font-bold",
+    headerClass: "bg-gray-100 w-20 text-[#202A5A]",
+    cellClass: "text-[#202A5A] w-20 font-bold text-[16px] border-2 border-solid border-[#F2F2F2]",
   },
   {
     title: "رتبه در پایه",
     key: "rank",
-    headerClass: "bg-gray-100 text-gray-700",
-    cellClass: "text-indigo-700 font-bold",
+    headerClass: "bg-gray-100 w-20 text-[#202A5A]",
+    cellClass: "text-[#202A5A] w-20 font-bold text-[16px] border-2 border-solid border-[#F2F2F2]",
   }, // عنوان به "رتبه در پایه" تغییر کرد
 ].reverse();
 
@@ -78,7 +82,7 @@ export default function StudentResultsPage({ Open }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const notificationRef = useRef(null);
 
-   const refreshUnreadCount = async () => {
+  const refreshUnreadCount = async () => {
     if (!token) return;
     try {
       const response = await fetchData('notifications?filter=unread', {
@@ -156,7 +160,7 @@ export default function StudentResultsPage({ Open }) {
       try {
         // درخواست به اندپوینت جدید که فقط هم‌پایه‌ای‌ها را برمی‌گرداند
         const response = await fetchData(
-          `users/my-grade-rankings?page=${page}&limit=15`,
+          `users/my-grade-rankings?page=${page}&limit=10`,
           {
             headers: { authorization: `Bearer ${token}` },
           }
@@ -180,21 +184,28 @@ export default function StudentResultsPage({ Open }) {
               item.voluntaryActivities
             ),
             jobActivities: formatNumberToPersian(item.jobActivities),
-            deductions: formatNumberToPersian(item.deductions), // کسر امتیاز نمایش داده می‌شود
+            deductions: (item.deductions), // کسر امتیاز نمایش داده می‌شود
             score: formatNumberToPersian(item.score),
             rank: formatNumberToPersian(item.rank),
           }));
+          console.log(formatNumberToPersian(formattedData))
+
           setResultsTableData(formattedData);
+          console.log(formattedData)
           setCurrentPage(page);
           setTotalResultsCount(response.totalCount || 0);
           setTotalPages(Math.ceil((response.totalCount || 0) / 15));
 
           // پیدا کردن و ذخیره اطلاعات کاربر فعلی از لیست (اگر وجود دارد)
-          const loggedInUserId = localStorage.getItem("userId_from_login"); // فرض می‌کنیم userId در localStorage ذخیره شده
+          const userString = localStorage.getItem("user");
+          console.log(userString)
+          const user = userString ? JSON.parse(userString) : null; // فرض می‌کنیم userId در localStorage ذخیره شده
+          console.log(user.id)
           const foundUser = response.data.find(
-            (user) => user.id === loggedInUserId
+            (user) => user.id === user.id
           );
           if (foundUser) setCurrentUserInfo(foundUser);
+          console.log(currentUserInfo)
         } else {
           setError(response.message || "خطا در دریافت نتایج هم‌پایه‌ای‌ها.");
           setResultsTableData([]);
@@ -243,9 +254,8 @@ export default function StudentResultsPage({ Open }) {
   return (
     <>
       <div
-        className={`${!visibility ? "hidden opacity-0": ""} p-6 md:p-8 transition-all duration-500 flex-col h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 ${
-          !Open ? "w-[calc(100%-6%)]" : "w-[calc(100%-22%)]"
-        }`}
+        className={`${!visibility ? "hidden opacity-0" : ""} p-6 md:p-8 transition-all duration-500 flex-col h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 ${!Open ? "w-[calc(100%-6%)]" : "w-[calc(100%-22%)]"
+          }`}
       >
         {/* هدر بالا */}
         <div className="flex flex-col sm:flex-row justify-between items-center h-auto sm:h-[5vh] mb-6">
@@ -254,8 +264,8 @@ export default function StudentResultsPage({ Open }) {
               هنرستان استارتاپی رکاد
             </h3>
             <BiSolidSchool className="text-[#19A297] ml-[-8px] sm:ml-[-10px] text-lg sm:text-xl" />
-             {/* <<< تغییر: ۴. جایگزینی دکمه نوتیفیکیشن با کد جدید */}
-             <div className="relative" ref={notificationRef}>
+            {/* <<< تغییر: ۴. جایگزینی دکمه نوتیفیکیشن با کد جدید */}
+            <div className="relative" ref={notificationRef}>
               <button
                 id="notification-icon-button"
                 onClick={toggleNotificationPanel}
@@ -278,8 +288,8 @@ export default function StudentResultsPage({ Open }) {
             <p className="text-gray-400 text-xs sm:text-sm">
               امروز {week}، {day} {month} {year}
             </p>
-            <h1 className="text-[#19A297] font-semibold text-base sm:text-lg">
-              جدول امتیازات هم‌پایه‌ای‌ها
+            <h1 className="text-[#59BBAF] font-semibold text-[22px] mr-1">
+              جدول امتیازات
             </h1>
           </div>
         </div>
@@ -295,7 +305,7 @@ export default function StudentResultsPage({ Open }) {
         )}
 
         {/* (اختیاری) نمایش رتبه و امتیاز خود کاربر در بالا */}
-        {currentUserInfo && (
+        {/* {currentUserInfo && (
           <div className="mb-6 p-4 bg-indigo-50 rounded-lg shadow text-center">
             <p className="text-indigo-700">
               شما، <span className="font-semibold">{currentUserInfo.name}</span>
@@ -310,20 +320,20 @@ export default function StudentResultsPage({ Open }) {
               را در پایه خود دارید.
             </p>
           </div>
-        )}
+        )} */}
 
         <div className="bg-white rounded-xl shadow-xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1000px] text-sm">
+            <table className="w-full min-w-[100%] text-sm">
               <thead className="text-xs uppercase sticky top-0 z-10">
                 {" "}
                 {/* هدر چسبان */}
-                <tr>
+                <tr className="h-15">
                   {headerConfig.map((header) => (
                     <th
                       key={header.key}
                       scope="col"
-                      className={`px-3 py-3 font-semibold text-center ${header.headerClass}`}
+                      className={`py-3 font-semibold text-center ${header.headerClass}`}
                     >
                       {" "}
                       {/* کاهش padding */}
@@ -335,36 +345,35 @@ export default function StudentResultsPage({ Open }) {
               <tbody className="divide-y divide-gray-200">
                 {resultsTableData.length > 0
                   ? resultsTableData.map((row, idx) => (
-                      <tr
-                        key={row.id || idx}
-                        className={`${
-                          idx % 2 === 0 ? "bg-white" : "bg-gray-50/60"
+                    <tr
+                      key={row.id || idx}
+                      className={`${ row.id==user.id ? "bg-[#D4F3F1] " : ""}${idx % 2 === 0 && !row.id==user.id ? "bg-white" : !row.id==user.id ? "bg-gray-50/60 " :""
                         } hover:bg-indigo-50/50 transition-colors text-xs`}
-                      >
-                        {" "}
-                        {/* کاهش سایز فونت */}
-                        {headerConfig.map((header) => (
-                          <td
-                            key={`${row.id || idx}-${header.key}`}
-                            className={`px-3 py-2.5 whitespace-nowrap text-center ${header.cellClass}`}
-                          >
-                            {" "}
-                            {/* کاهش padding */}
-                            {row[header.key]}
-                          </td>
-                        ))}
-                      </tr>
-                    ))
-                  : !loading && (
-                      <tr>
+                    >
+                      {" "}
+                      {/* کاهش سایز فونت */}
+                      {headerConfig.map((header) => (
                         <td
-                          colSpan={headerConfig.length}
-                          className="text-center py-10 text-gray-500"
+                          key={`${row.id || idx}-${header.key}`}
+                          className={`h-15 py-2.5 font-[600] text-center ${header.cellClass}`}
                         >
-                          دانش‌آموزی در این پایه برای نمایش وجود ندارد.
+                          {" "}
+                          {/* کاهش padding */}
+                          {row[header.key]}
                         </td>
-                      </tr>
-                    )}
+                      ))}
+                    </tr>
+                  ))
+                  : !loading && (
+                    <tr>
+                      <td
+                        colSpan={headerConfig.length}
+                        className="text-center py-10 text-gray-500"
+                      >
+                        دانش‌آموزی در این پایه برای نمایش وجود ندارد.
+                      </td>
+                    </tr>
+                  )}
               </tbody>
             </table>
           </div>
@@ -399,11 +408,10 @@ export default function StudentResultsPage({ Open }) {
                     key={pageNum}
                     onClick={() => handlePageChange(pageNum)}
                     disabled={loading}
-                    className={`px-3 py-1.5 text-xs sm:text-sm rounded-md ${
-                      currentPage === pageNum
-                        ? "bg-[#19A297] text-white"
-                        : "bg-white hover:bg-gray-100 border"
-                    }`}
+                    className={`px-3 py-1.5 text-xs sm:text-sm rounded-md ${currentPage === pageNum
+                      ? "bg-[#19A297] text-white"
+                      : "bg-white hover:bg-gray-100 border"
+                      }`}
                   >
                     {" "}
                     {pageNum.toLocaleString("fa-IR")}{" "}

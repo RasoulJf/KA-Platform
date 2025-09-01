@@ -5,7 +5,10 @@ import Frame24 from "../../assets/images/Frame24.png"; // برای بنر فعا
 import Message from "../../assets/images/message.png";
 import MessageTick from "../../assets/images/messageTick.png";
 import MessageTime from "../../assets/images/messageTime.png";
-import Frame400 from "../../assets/images/Frame400.png"; // برای بنر فعالیت جدید
+import Group14 from "../../assets/images/Group14.png"; // برای بنر فعالیت جدید
+import Group15 from "../../assets/images/Group15.png"; // برای بنر فعالیت جدید
+import Group16 from "../../assets/images/Group16.png"; // برای بنر فعالیت جدید
+
 
 import { BiSolidSchool } from "react-icons/bi";
 import { IoNotificationsOutline } from "react-icons/io5";
@@ -55,19 +58,19 @@ export default function Activities({ Open }) {
   const [unreadCount, setUnreadCount] = useState(0); // استیت برای نگهداری تعداد اعلان‌ها
   const notificationRef = useRef(null);
 
-   const refreshUnreadCount = async () => {
-      if (!token) return;
-      try {
-        const response = await fetchData('notifications?filter=unread', {
-          headers: { authorization: `Bearer ${token}` }
-        });
-        if (response.success) {
-          setUnreadCount(response.totalCount || 0);
-        }
-      } catch (error) {
-        console.error("Failed to refresh unread count:", error);
+  const refreshUnreadCount = async () => {
+    if (!token) return;
+    try {
+      const response = await fetchData('notifications?filter=unread', {
+        headers: { authorization: `Bearer ${token}` }
+      });
+      if (response.success) {
+        setUnreadCount(response.totalCount || 0);
       }
-    };
+    } catch (error) {
+      console.error("Failed to refresh unread count:", error);
+    }
+  };
 
   const toggleNotificationPanel = () => setIsNotificationOpen((prev) => !prev);
   const closeNotificationPanel = () => {
@@ -78,7 +81,7 @@ export default function Activities({ Open }) {
   useEffect(() => {
     refreshUnreadCount(); // این خط را برای اطمینان از به‌روز بودن عدد اضافه کنید
 
-    
+
   }, [token]);
 
   useEffect(() => {
@@ -112,7 +115,7 @@ export default function Activities({ Open }) {
     currentPage: 1,
     totalPages: 1,
     totalCount: 0,
-    limit: 7, // تعداد آیتم در هر صفحه
+    limit: 5, // تعداد آیتم در هر صفحه
   });
 
   const [openFilterDropdowns, setOpenFilterDropdowns] = useState({
@@ -376,13 +379,13 @@ export default function Activities({ Open }) {
             <p className="text-gray-400 text-xs sm:text-sm">
               امروز {week}، {day} {month} ماه {year}
             </p>
-            <h1 className="text-[#19A297] font-semibold text-base sm:text-lg">
+            <h1 className="text-[#59BBAF] font-semibold text-[22px]">
               فعالیت‌های من
             </h1>
           </div>
         </div>
         {/* کارت‌های آماری بالا */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-22 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 mb-6">
           {loadingStats &&
             Array(3)
               .fill(0)
@@ -407,11 +410,11 @@ export default function Activities({ Open }) {
             statCardsDisplayData.map((card, idx) => (
               <div
                 key={idx}
-                className={`relative p-6 rounded-xl shadow-lg flex flex-col items-center justify-center text-center min-h-[180px] overflow-hidden `}
+                className={`relative p-6 rounded-xl shadow-lg w-85 flex flex-col items-center justify-center text-center min-h-[180px] overflow-hidden `}
               >
                 <img
-                  src={Frame400}
-                  className="absolute z-0 h-full w-full object-contain scale-110 top-[10px]"
+                  src={idx == 0 ? Group16 : idx == 1 ? Group15 : idx == 2 ? Group14 : null}
+                  className="absolute z-0 h-full w-full object-cover scale-110 top-[10px]"
                   alt=""
                 />
                 <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/30 rounded-full opacity-50"></div>
@@ -419,21 +422,21 @@ export default function Activities({ Open }) {
                 <div
                   className={`w-16 h-16 rounded-full  flex items-center justify-center mb-3 z-10`}
                 >
-                  <img src={card.iconSrc} className="text-white text-3xl" />
+                  {/* <img src={card.iconSrc} className="text-white text-3xl" /> */}
                 </div>
                 <h2
-                  className={`text-md font-semibold mb-1 z-10`}
+                  className={`text-xl font-semibold mb-3 z-10 text-[#D41A54] mt-10`}
                 >
                   {card.title}
                 </h2>
-                <p className={`text-3xl font-bold z-10`}>
+                <p className={`text-3xl font-bold z-10 text-[#D41A54]`}>
                   {card.count?.toLocaleString("fa-IR") || "۰"}
                 </p>
               </div>
             ))}
         </div>
         {/* بنر ثبت فعالیت جدید */}
-        <div className="bg-pink-50 p-4 sm:p-6 rounded-xl shadow-lg flex flex-col sm:flex-row items-center justify-between mb-8 relative overflow-hidden">
+        <div className="bg-pink-50 h-30 p-4 sm:p-6 rounded-xl shadow-lg flex flex-col sm:flex-row items-center justify-between mb-8 relative overflow-hidden">
           <img
             src={Frame24}
             className="absolute z-0 h-full w-full object-cover scale-105 top-0 left-0"
@@ -452,16 +455,18 @@ export default function Activities({ Open }) {
             </p>
           </div>
           <div className="flex items-center gap-3 z-10">
-            <h2 className="text-[#D41A54] font-semibold text-lg sm:text-xl">
+            <h2 className="text-[#D41A54] font-semibold text-lg sm:text-xl mr-2">
               فعالیت جدید
             </h2>
             <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#D41A54] flex items-center justify-center">
-              <BsChatText className="text-white text-2xl sm:text-3xl" />
+              {/* <BsChatText className="text-white text-2xl sm:text-3xl" /> */}
+              <img src={Message} className="scale-60" alt="" />
+
             </div>
           </div>
         </div>
         {/* فیلترها و عنوان جدول */}
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
+        <div className="flex mt-10 flex-col sm:flex-row justify-between items-center mb-5">
           <div className="flex flex-wrap gap-3 mb-4 sm:mb-0">
             {/* فیلتر وضعیت */}
             <div className="relative">
@@ -535,8 +540,8 @@ export default function Activities({ Open }) {
               className="bg-white border border-gray-300 text-gray-700 px-4 py-2.5 rounded-lg text-sm focus:border-[#19A297] focus:ring-1 focus:ring-[#19A297] outline-none"
             />
           </div>
-          <h2 className="text-lg font-semibold text-[#19A297]">
-            آخرین فعالیت ها
+          <h2 className="text-[22px] font-semibold text-[#59BBAF]">
+            آخرین فعالیت‌ها
           </h2>
         </div>
         {/* جدول فعالیت‌ها */}
@@ -564,11 +569,11 @@ export default function Activities({ Open }) {
               activitiesList.length > 0 && (
                 <table className="w-full min-w-[700px] text-sm">
                   <thead className="bg-gray-50">
-                    <tr>
+                    <tr className="h-15">
                       {/* برای ستون‌های قابل مرتب‌سازی، onClick اضافه کنید */}
                       <th
                         onClick={() => handleSortChange("status")}
-                        className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer"
+                        className="px-4 border-left-none border-2 border-solid border-[#F2F2F2] border-top-none py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer"
                       >
                         وضعیت{" "}
                         {sort.sortBy === "status" &&
@@ -576,7 +581,7 @@ export default function Activities({ Open }) {
                       </th>
                       <th
                         onClick={() => handleSortChange("reviewDate")}
-                        className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer"
+                        className="px-4 border-2 border-solid border-[#F2F2F2] border-top-none py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer"
                       >
                         تاریخ بررسی{" "}
                         {sort.sortBy === "reviewDate" &&
@@ -584,27 +589,27 @@ export default function Activities({ Open }) {
                       </th>
                       <th
                         onClick={() => handleSortChange("submissionDate")}
-                        className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer"
+                        className="px-4 border-2 border-solid border-[#F2F2F2] border-top-none py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer"
                       >
                         تاریخ ثبت{" "}
                         {sort.sortBy === "submissionDate" &&
                           (sort.order === "asc" ? "↑" : "↓")}
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 border-2 border-solid border-[#F2F2F2] border-top-none py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         شرح
                       </th>
                       <th
                         onClick={() => handleSortChange("activityName")}
-                        className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer"
+                        className="px-4 border-2 border-solid border-[#F2F2F2] border-top-none py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer"
                       >
                         عنوان{" "}
                         {sort.sortBy === "activityName" &&
                           (sort.order === "asc" ? "↑" : "↓")}
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 border-2 border-solid  border-[#F2F2F2] border-top-none py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         امتیاز
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 border-2 border-top-none border-right-none border-solid border-[#F2F2F2] py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         نوع ثبت
                       </th>
                     </tr>
@@ -634,11 +639,11 @@ export default function Activities({ Open }) {
                             } hover:bg-gray-100 transition-colors`}
                         >
                           <td
-                            className={`px-4 text-center py-3 whitespace-nowrap font-semibold ${statusColor}`}
+                            className={`px-4 border-left-none border-2 border-solid border-[#F2F2F2] text-center py-3 h-15 whitespace-nowrap font-semibold ${statusColor}`}
                           >
                             {statusText}
                           </td>
-                          <td className="px-4 text-center py-3 whitespace-nowrap text-gray-600">
+                          <td className="px-4 border-2 border-solid border-[#F2F2F2] text-center py-3 whitespace-nowrap text-gray-600">
                             {activity.reviewDate
                               ? new Intl.DateTimeFormat("fa-IR", {
                                 year: "numeric",
@@ -647,7 +652,7 @@ export default function Activities({ Open }) {
                               }).format(new Date(activity.reviewDate))
                               : "-"}
                           </td>
-                          <td className="px-4 text-center py-3 whitespace-nowrap text-gray-600">
+                          <td className="px-4 border-2 border-solid border-[#F2F2F2] text-center py-3 whitespace-nowrap text-gray-600">
                             {activity.submissionDate
                               ? new Intl.DateTimeFormat("fa-IR", {
                                 year: "numeric",
@@ -657,19 +662,19 @@ export default function Activities({ Open }) {
                               : "-"}
                           </td>
                           <td
-                            className="px-4 text-center py-3 whitespace-nowrap text-gray-600 max-w-[200px] truncate"
+                            className="px-4 border-2 border-solid border-[#F2F2F2] text-center py-3 whitespace-nowrap text-gray-600 max-w-[200px] truncate"
                             title={activity.descriptionFromEntry}
                           >
                             {activity.descriptionFromEntry || "-"}
                           </td>
-                          <td className="px-4 text-center py-3 whitespace-nowrap text-gray-800 font-medium">
+                          <td className="px-4 border-2 border-solid border-[#F2F2F2] text-center py-3 whitespace-nowrap text-gray-800 font-medium">
                             {activity.activityName || "نامشخص"}
                           </td>
-                          <td className="px-4 text-center py-3 whitespace-nowrap text-gray-600 font-semibold">
+                          <td className="px-4 border-2 border-solid border-[#F2F2F2] text-center py-3 whitespace-nowrap text-gray-600 font-semibold">
                             {activity.scoreAwarded?.toLocaleString("fa-IR") ??
                               "-"}
                           </td>
-                          <td className="px-4 text-center py-3 whitespace-nowrap text-gray-500">
+                          <td className="px-4 border-2 border-solid border-[#F2F2F2] border-right-none text-center py-3 whitespace-nowrap text-gray-500">
                             {activity.type || "-"}
                           </td>
                         </tr>
@@ -684,7 +689,7 @@ export default function Activities({ Open }) {
             !errorActivities &&
             activitiesList.length > 0 &&
             pagination.totalPages > 1 && (
-              <div className="flex justify-center items-center gap-2 mt-6 p-4 bg-gray-50 rounded-b-xl border-t border-gray-200">
+              <div className="flex justify-center items-center gap-2 p-4 bg-gray-50 rounded-b-xl border-t border-gray-200">
                 <button
                   onClick={() => handlePageChange(pagination.currentPage - 1)}
                   disabled={pagination.currentPage === 1}

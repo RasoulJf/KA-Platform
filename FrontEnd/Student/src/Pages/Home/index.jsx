@@ -171,7 +171,7 @@ export default function StudentDashboard({ Open }) {
           </div>
           <div className="flex justify-center items-center gap-3 sm:gap-5">
             <p className="text-gray-400 text-xs sm:text-sm">امروز {week}، {day} {month} ماه {year}</p>
-            <h1 className="text-[#19A297] font-semibold text-base sm:text-lg">
+            <h1 className="text-[#59BBAF] font-semibold text-[22px] ">
               داشبورد
             </h1>
           </div>

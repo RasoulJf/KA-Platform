@@ -8,6 +8,8 @@ import { Link } from 'react-router-dom';
 
 import Frame25 from '../../assets/images/Frame25.png';
 import Frame26 from '../../assets/images/Frame26.png';
+import ticket from '../../assets/images/ticket.png';
+
 import fetchData from '../../Utils/fetchData';
 
 // مودال جدید برای نمایش جزئیات را ایمپورت می‌کنیم
@@ -19,7 +21,7 @@ const StatCard = React.memo(({ title, value, imageSrc }) => (
         <img src={imageSrc} className="absolute z-0 h-full w-full object-cover scale-110 top-0" alt="" />
         <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/20 rounded-full opacity-50"></div>
         <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-white/10 rounded-full opacity-50"></div>
-        <h2 className="text-md font-semibold text-[#652D90] mb-2 z-10">{title}</h2>
+        <h2 className="text-xl font-semibold text-[#652D90] mb-4 z-10">{title}</h2>
         <p className="text-3xl font-bold text-[#652D90] z-10">{value}</p>
     </div>
 ));
@@ -29,7 +31,7 @@ export default function Rewards({ Open }) {
     const [isMounted, setIsMounted] = useState(false);
     const [visibility, setVisibility] = useState(false);
     const [filters, setFilters] = useState({ status: '', rewardTitle: '' });
-    const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, totalCount: 0, limit: 10 });
+    const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, totalCount: 0, limit: 5 });
     const [openFilterDropdowns, setOpenFilterDropdowns] = useState({ status: false });
     const [loadingList, setLoadingList] = useState(true); // یک لودینگ جدا برای لیست
     const [loadingStats, setLoadingStats] = useState(true); // <<<< این state جا افتاده بود
@@ -40,22 +42,22 @@ export default function Rewards({ Open }) {
     const refreshUnreadCount = async () => {
         if (!token) return;
         try {
-          const response = await fetchData('notifications?filter=unread', {
-            headers: { authorization: `Bearer ${token}` }
-          });
-          if (response.success) {
-            setUnreadCount(response.totalCount || 0);
-          }
+            const response = await fetchData('notifications?filter=unread', {
+                headers: { authorization: `Bearer ${token}` }
+            });
+            if (response.success) {
+                setUnreadCount(response.totalCount || 0);
+            }
         } catch (error) {
-          console.error("Failed to refresh unread count:", error);
+            console.error("Failed to refresh unread count:", error);
         }
-      };
-    
-      const toggleNotificationPanel = () => setIsNotificationOpen(prev => !prev);
-      const closeNotificationPanel = () => {
+    };
+
+    const toggleNotificationPanel = () => setIsNotificationOpen(prev => !prev);
+    const closeNotificationPanel = () => {
         setIsNotificationOpen(false);
         refreshUnreadCount(); // این خط را برای اطمینان از به‌روز بودن عدد اضافه کنید
-      };
+    };
     // State های جدید برای مودال جزئیات
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [selectedReward, setSelectedReward] = useState(null);
@@ -315,7 +317,7 @@ export default function Rewards({ Open }) {
                     </div>
                     <div className="flex justify-center items-center gap-3 sm:gap-5">
                         <p className="text-gray-400 text-xs sm:text-sm">امروز {dateInfo.week}، {dateInfo.day} {dateInfo.month}، {dateInfo.year}</p>
-                        <h1 className="text-[#19A297] font-semibold text-base sm:text-lg">پاداش ها</h1>
+                        <h1 className="text-[#59BBAF] font-semibold text-[22px]">پاداش‌های من</h1>
                     </div>
                 </div>
 
@@ -325,7 +327,7 @@ export default function Rewards({ Open }) {
                 </div>
 
                 {/* بنر ثبت پاداش جدید */}
-                <div className="bg-indigo-50 p-4 sm:p-6 rounded-xl shadow-lg flex flex-col sm:flex-row items-center justify-between mb-8 relative overflow-hidden">
+                <div className="bg-indigo-50 p-4 sm:p-6 h-30 rounded-xl shadow-lg flex flex-col sm:flex-row items-center justify-between mb-8 relative overflow-hidden">
                     <img src={Frame26} className="absolute z-0 h-full w-full object-cover scale-110 top-0" alt="" />
                     <div className="flex items-center gap-4 z-10 mb-3 sm:mb-0">
                         <Link to="/request-reward" className='z-10'>
@@ -333,18 +335,19 @@ export default function Rewards({ Open }) {
                                 <FaPlus /> اضافه کردن
                             </button>
                         </Link>
-                        <p className="text-[#652D90] text-xs sm:text-sm font-medium z-10">برای ثبت پاداش جدید کلیک کنید</p>
+                        <p className="text-[#D399FF] text-xs sm:text-sm font-medium z-10">برای ثبت درخواست جدید بر روی اضافه کردن ضربه بزنید</p>
                     </div>
                     <div className="flex items-center gap-3 z-10">
-                        <h2 className="text-[#652D90] font-semibold text-lg sm:text-xl">ثبت پاداش جدید</h2>
+                        <h2 className="text-[#652D90] font-semibold text-lg sm:text-xl mr-2">ثبت پاداش جدید</h2>
                         <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#652D90] flex items-center justify-center">
-                            <SiBasicattentiontoken className="text-white text-2xl sm:text-3xl" />
+                            {/* <SiBasicattentiontoken className="text-white text-2xl sm:text-3xl" /> */}
+                            <img src={ticket} className='scale-60' alt="" />
                         </div>
                     </div>
                 </div>
 
                 {/* فیلترها و عنوان جدول */}
-                <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
+                <div className="flex mb-5 flex-col sm:flex-row justify-between items-center mt-10">
                     <div className="flex flex-wrap gap-3 mb-4 sm:mb-0">
                         <div className="relative">
                             <button onClick={() => toggleFilterDropdown('status')} className="bg-white border border-gray-300 text-gray-700 px-4 py-2.5 rounded-lg text-sm flex items-center justify-between min-w-[150px] hover:border-gray-400">
@@ -367,20 +370,20 @@ export default function Rewards({ Open }) {
                             className="bg-white border border-gray-300 text-gray-700 px-4 py-2.5 rounded-lg text-sm focus:border-[#19A297] focus:ring-1 focus:ring-[#19A297] outline-none"
                         />
                     </div>
-                    <h2 className="text-lg font-semibold text-[#19A297]">آخرین پاداش ها</h2>
+                    <h2 className="text-[22px] font-semibold text-[#59BBAF]">آخرین پاداش‌ها</h2>
                 </div>
 
                 {/* جدول پاداش‌ها */}
                 <div className="bg-white rounded-xl shadow-xl overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[700px] text-sm">
+                        <table className="w-full min-w-[700px] rtl text-sm">
                             <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">نام</th>
-                                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">عنوان</th>
-                                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">تاریخ ثبت</th>
-                                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">تاریخ پرداخت</th>
-                                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">وضعیت</th>
+                                <tr className='h-15'>
+                                    <th className="px-4 py-3 border-top-none border-right-none border-2 border-solid border-[#F2F2F2] text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">نام دانش‌آموز</th>
+                                    <th className="px-4 py-3 border-top-none border-2 border-solid border-[#F2F2F2] text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">عنوان</th>
+                                    <th className="px-4 py-3 border-top-none border-2 border-solid border-[#F2F2F2] text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">تاریخ ثبت</th>
+                                    <th className="px-4 py-3 border-top-none border-2 border-solid border-[#F2F2F2] text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">تاریخ پرداخت</th>
+                                    <th className="px-4 py-3 border-top-none border-left-none border-2 border-solid border-[#F2F2F2] text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">وضعیت</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
@@ -394,11 +397,11 @@ export default function Rewards({ Open }) {
                                         const rewardDetailsForModal = { ...reward, title: reward.rewardId?.name || "بدون عنوان", tokenCost: reward.token, submissionDate: formattedSubmissionDate, paymentDate: formattedPaymentDate, status: statusDetails.text, statusColor: statusDetails.color };
                                         return (
                                             <tr key={reward._id} onClick={() => handleOpenDetailsModal(rewardDetailsForModal)} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-gray-100 transition-colors cursor-pointer`}>
-                                                <td className="px-4 py-3 text-center ...">{reward.userId?.fullName || "نامشخص"}</td>
-                                                <td className="px-4 py-3 text-center ...">{reward.rewardId?.name || "بدون عنوان"}</td>
-                                                <td className="px-4 py-3 text-center ...">{formattedSubmissionDate}</td>
-                                                <td className="px-4 py-3 text-center ...">{formattedPaymentDate}</td>
-                                                <td className={`px-4 py-3 text-center ... ${statusDetails.color}`}>{statusDetails.text}</td>
+                                                <td className="px-4 py-3  border-right-none border-2 border-solid border-[#F2F2F2] h-15 text-center ...">{reward.userId?.fullName || "نامشخص"}</td>
+                                                <td className="px-4 py-3  border-2 border-solid border-[#F2F2F2] h-15 text-center ...">{reward.rewardId?.name || "بدون عنوان"}</td>
+                                                <td className="px-4 py-3  border-2 border-solid border-[#F2F2F2] h-15 text-center rtl ...">{formattedSubmissionDate}</td>
+                                                <td className="px-4 py-3  border-2 border-solid border-[#F2F2F2] h-15 text-center rtl ...">{formattedPaymentDate}</td>
+                                                <td className={`px-4 py-3 border-left-none h-15 border-2 border-solid border-[#F2F2F2] text-center ... ${statusDetails.color}`}>{statusDetails.text}</td>
                                             </tr>
                                         )
                                     })
@@ -407,17 +410,18 @@ export default function Rewards({ Open }) {
                                 )}
                             </tbody>
                         </table>
+                        {/* صفحه‌بندی */}
+
+                        {pagination.totalPages > 1 && !loadingList && (
+                            <div className="flex justify-center items-center gap-2 p-4 bg-gray-50 rounded-b-xl border-t border-gray-200">
+                                <button onClick={() => handlePageChange(pagination.currentPage - 1)} disabled={pagination.currentPage === 1} className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50">قبلی</button>
+                                <span className="text-sm text-gray-700">صفحه {pagination.currentPage.toLocaleString('fa-IR')} از {pagination.totalPages.toLocaleString('fa-IR')} (کل: {pagination.totalCount.toLocaleString('fa-IR')})</span>
+                                <button onClick={() => handlePageChange(pagination.currentPage + 1)} disabled={pagination.currentPage === pagination.totalPages} className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50">بعدی</button>
+                            </div>
+                        )}
                     </div>
                 </div>
-                <div className="pb-10"></div>
-                {/* صفحه‌بندی */}
-                {pagination.totalPages > 1 && !loadingList && (
-                    <div className="flex justify-center items-center gap-2 mt-6">
-                        <button onClick={() => handlePageChange(pagination.currentPage - 1)} disabled={pagination.currentPage === 1} className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50">قبلی</button>
-                        <span className="text-sm text-gray-700">صفحه {pagination.currentPage.toLocaleString('fa-IR')} از {pagination.totalPages.toLocaleString('fa-IR')} (کل: {pagination.totalCount.toLocaleString('fa-IR')})</span>
-                        <button onClick={() => handlePageChange(pagination.currentPage + 1)} disabled={pagination.currentPage === pagination.totalPages} className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50">بعدی</button>
-                    </div>
-                )}
+
             </div>
 
             {/* رندر کردن مودال جزئیات */}
