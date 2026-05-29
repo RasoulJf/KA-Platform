@@ -28,7 +28,6 @@ export const getAllRewards = catchAsync(async (req, res, next) => {
     //     const countFeatures = new ApiFeatures(Reward.find(), req.query).filter();
     //     totalCount = await Reward.countDocuments(countFeatures.getQueryFilters());
     // }
-
     return res.status(200).json({
         success: true,
         // results: rewards.length, // اگر صفحه‌بندی دارید
