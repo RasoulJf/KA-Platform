@@ -5,6 +5,7 @@ import HandleERROR from '../Utils/handleError.js';
 import AdminActivity from '../Models/AdminActivityMd.js';
 import StudentActivity from '../Models/StudentActivityMd.js';
 import Activity from '../Models/ActivityMd.js';
+import mongoose from 'mongoose';
 
 
 
@@ -453,6 +454,182 @@ export const getGradeRankingTable = catchAsync(async (req, res, next) => {
       totalCount: totalUsersInGrade,
       data: resultsTableData
   });
+});
+
+
+export const getStudentById = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  
+  const student = await User.findById(id)
+    
+  
+  if (!student) {
+    return next(new HandleERROR('دانش‌آموز یافت نشد', 404));
+  }
+  
+  res.status(200).json({
+    success: true,
+    data: student
+  });
+});
+
+export const getStudentActivitiesByParent = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  // بررسی وجود دانش‌آموز
+  const student = await User.findById(id);
+  if (!student) {
+    return next(new HandleERROR('دانش‌آموز یافت نشد', 404));
+  }
+
+  // گروه‌بندی فعالیت‌های دانش‌آموز بر اساس parent
+  const activitiesByParent = await StudentActivity.aggregate([
+    {
+      $match: { userId: mongoose.Types.ObjectId(id), status: 'approved' }
+    },
+    {
+      $lookup: {
+        from: Activity.collection.name,
+        localField: 'activityId',
+        foreignField: '_id',
+        as: 'activityDetails'
+      }
+    },
+    { $unwind: '$activityDetails' },
+    {
+      $group: {
+        _id: '$activityDetails.parent',
+        activities: {
+          $push: {
+            name: '$activityDetails.name',
+            scoreAwarded: '$scoreAwarded',
+            createdAt: '$createdAt'
+          }
+        },
+        totalScore: { $sum: '$scoreAwarded' }
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        parent: '$_id',
+        activities: 1,
+        totalScore: 1
+      }
+    }
+  ]);
+
+  res.status(200).json({
+    success: true,
+    data: activitiesByParent
+  });
+});
+
+// در controllers/UserCn.js
+export const getStudentActivitiesByCategory = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({
+      success: false,
+      message: 'شناسه کاربر نامعتبر است'
+    });
+  }
+
+  const student = await User.findById(id);
+  if (!student) {
+    return next(new HandleERROR('دانش‌آموز یافت نشد', 404));
+  }
+
+  try {
+    // 1. فعالیت‌های تأیید شده دانش‌آموز
+    const studentActivities = await StudentActivity.find({
+      userId: id,
+      status: 'approved'
+    }).populate('activityId');
+
+    // 2. فعالیت‌هایی که ادمین برای دانش‌آموز ثبت کرده
+    const adminActivities = await AdminActivity.find({
+      userId: id
+    }).populate('activityId');
+
+   
+
+    // 3. ترکیب هر دو نوع فعالیت
+    const allActivities = [...studentActivities, ...adminActivities];
+
+    if (allActivities.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: [],
+        message: 'هیچ فعالیتی برای این دانش‌آموز وجود ندارد'
+      });
+    }
+
+    // 4. تعریف ترتیب دسته‌بندی‌ها بر اساس مدل Activity
+    const categoryOrder = {
+      'موارد کسر امتیاز': 1,
+      'فعالیت‌های آموزشی': 2,
+      'فعالیت‌های شغلی': 3,
+      'فعالیت‌های داوطلبانه و توسعه فردی': 4
+    };
+
+    // 5. گروه‌بندی دستی فعالیت‌ها بر اساس دسته‌بندی
+    const categoriesMap = new Map();
+
+    for (const activity of allActivities) {
+      const activityData = activity.activityId;
+      
+      if (!activityData) continue;
+
+      const categoryName = activityData.parent;
+
+      if (!categoryName || typeof categoryName !== 'string') {
+        // اگر فعالیت parent ندارد، از آن صرف نظر کنید
+        continue;
+      }
+
+      if (!categoriesMap.has(categoryName)) {
+        categoriesMap.set(categoryName, {
+          categoryName,
+          activities: [],
+          totalScore: 0,
+          order: categoryOrder[categoryName] || 99 // ترتیب بر اساس تعریف
+        });
+      }
+
+      const category = categoriesMap.get(categoryName);
+      
+      const activityInfo = {
+        _id: activity._id,
+        activityId: activityData._id,
+        activityName: activityData.name,
+        scoreAwarded: activity.scoreAwarded,
+        description: activityData.description || activity.details,
+        createdAt: activity.createdAt,
+        type: activity.type || 'فردی'
+      };
+
+      category.activities.push(activityInfo);
+      category.totalScore += activity.scoreAwarded || 0;
+    }
+
+    // 6. تبدیل Map به آرایه و مرتب‌سازی بر اساس order
+    const result = Array.from(categoriesMap.values()).sort((a, b) => a.order - b.order);
+
+
+    res.status(200).json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    console.error('❌ خطا در پردازش فعالیت‌ها:', error);
+    return next(new HandleERROR(
+      `خطا در دریافت فعالیت‌ها: ${error.message}`,
+      500
+    ));
+  }
 });
 
 // ... (بقیه کنترلرهای UserCn.js مثل قبل) ...
