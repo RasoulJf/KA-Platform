@@ -33,6 +33,7 @@ const app = express();
 const corsOptions = {
   // آدرس دقیق فرانت‌اند شما. اگر روی پورت دیگه‌ای اجرا می‌شه، تغییرش بده.
   // پورت پیش‌فرض Vite معمولاً 5173 است.
+  origin:"*",
   methods: "GET,POST,PUT,DELETE,PATCH,HEAD",
   // هدرهایی که فرانت اجازه داره ارسال کنه رو مشخص می‌کنیم
   allowedHeaders: "Content-Type,Authorization",
