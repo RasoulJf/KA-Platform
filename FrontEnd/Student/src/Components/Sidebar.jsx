@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import KAlogo from "../assets/images/K-LogoGreen.png";
 import profile from "../assets/images/profile.png";
 import frame1 from "../assets/images/Frame1.png";
@@ -7,17 +7,53 @@ import { BsFillGridFill } from "react-icons/bs";
 import { LuMails } from "react-icons/lu";
 import { FaMedal } from "react-icons/fa";
 import { MdBackupTable } from "react-icons/md";
-import { IoIosArrowForward, IoIosArrowBack } from "react-icons/io";
+import { IoIosArrowBack } from "react-icons/io";
+import { IoIosArrowForward } from "react-icons/io";
+
 import { SlArrowDown, SlArrowUp } from "react-icons/sl";
 import { Link, useLocation } from "react-router-dom";
+import fetchData from "../Utils/fetchData";
 
-export default function Sidebar({ getOpen }) {
+export default function Sidebar({ getOpen, refresh }) {
   const userString = localStorage.getItem("user");
-  console.log(userString)
   const user = userString ? JSON.parse(userString) : null;
+  const token = localStorage.getItem("token");
+  const location = useLocation();
+
+
 
   const [open, setOpen] = useState(true);
   const [openProfile, setOpenProfile] = useState(false);
+
+  const [activityCount, setActivityCount] = useState(0);
+  const [rewardCount, setRewardCount] = useState(0);
+
+
+
+  const fetchNotificationsList = async () => {
+
+
+    try {
+      // اندپوینت بک‌اند خودش تشخیص می‌دهد چه اعلان‌هایی را برگرداند
+      const response = await fetchData('notifications', {
+        headers: { authorization: `Bearer ${token}` }
+      });
+
+      if (response.success && Array.isArray(response.data)) {
+        setActivityCount(response.totalCountActivity);
+        setRewardCount(response.totalCountReward);
+
+      } else {
+        setError(response.message || 'خطا در دریافت اطلاعات.');
+      }
+    } catch (err) {
+      console.log(err.message || 'خطای شبکه.');
+    }
+  };
+  useEffect(() => {
+    fetchNotificationsList()
+
+  }, [refresh, location.pathname])
 
   const handleOpen = () => {
     const newOpenState = !open;
@@ -41,24 +77,33 @@ export default function Sidebar({ getOpen }) {
     { num: 1, to: "/", text: "داشبورد", icon: <BsFillGridFill /> },
     { num: 2, to: "/activities", text: "فعالیت‌ها", icon: <LuMails /> },
     { num: 3, to: "/rewards", text: "پاداش‌ها", icon: <FaMedal /> },
-    { num: 4, to: "/results", text: "جداول امتیازات", icon: <MdBackupTable /> },
-  ];
+    {
+      num: 4,
+      to: "/results",
+      text: "جدول امتیازات",
+      icon: <MdBackupTable />
+    },]
 
-  const location = useLocation();
 
   // ====================== ۱. محاسبه موقعیت نشانگر ======================
   // ارتفاع هر آیتم منو (h-14 در Tailwind برابر با 3.5rem یا 56px است)
   const ITEM_HEIGHT = 56;
   // پیدا کردن اندیس آیتم فعال در آرایه
-  const activeIndex = menuItems.findIndex(item => location.pathname === item.to);
-  // محاسبه موقعیت Y برای transform
+  const activeIndex = location.pathname === '/request-reward'
+  ? 2 // اندیس آیتم "پاداش‌ها" در آرایه menuItems
+  : menuItems.findIndex(item => {
+      if (Array.isArray(item.to)) {
+        return item.to.some(path => location.pathname.startsWith(path));
+      } else {
+        return location.pathname === item.to;
+      }
+    });
   const indicatorY = activeIndex !== -1 ? activeIndex * ITEM_HEIGHT : -ITEM_HEIGHT; // اگر آیتمی فعال نبود، نشانگر را مخفی کن
 
   return (
     <div
-      className={`absolute flex-col right-0 h-screen transition-all duration-500 ease-in-out bg-[#F9F9F9] ${
-        open ? "w-[22%]" : "w-[6.5%]"
-      }`}
+      className={`absolute flex-col right-0 h-screen transition-all duration-500 ease-in-out bg-[#F9F9F9] ${open ? "w-[22%]" : "w-[6.5%]"
+        }`}
     >
       <div className="w-full h-[21vh] flex justify-center relative items-center bg-gradient-to-r from-[#19A297] to-[#59BBAF]">
         <img
@@ -80,9 +125,8 @@ export default function Sidebar({ getOpen }) {
 
         {/* کارت پروفایل کاربر */}
         <div
-          className={`absolute z-20 top-[130px] 2xl:top-[16vh] items-center justify-center ${
-            !open ? "hidden" : ""
-          } rounded-lg bg-white shadow-sm transition-all duration-500 w-[85%] overflow-hidden flex flex-col`}
+          className={`absolute z-20 top-[150px] 2xl:top-[16vh] items-center justify-center ${!open ? "hidden" : ""
+            } rounded-lg bg-white shadow-sm transition-all duration-500 w-[85%] overflow-hidden flex flex-col`}
         >
           <div className="flex justify-between items-center w-full py-3 px-3 gap-2">
             {openProfile ? (
@@ -118,9 +162,8 @@ export default function Sidebar({ getOpen }) {
 
         {/* آیکون پروفایل در حالت بسته */}
         <div
-          className={`absolute z-20 top-[130px] left-0 right-0 mx-auto items-center justify-center flex ${
-            open ? "hidden" : ""
-          } rounded-lg bg-white shadow-sm transition-all duration-500 p-2 w-max`}
+          className={`absolute z-20 top-[130px] left-0 right-0 mx-auto items-center justify-center flex ${open ? "hidden" : ""
+            } rounded-lg bg-white shadow-sm transition-all duration-500 p-2 w-max`}
         >
           <div className="w-11 h-11 bg-[#19A297] rounded-full flex items-center justify-center">
             <img src={profile} className={`w-7 h-7`} alt="" />
@@ -129,9 +172,8 @@ export default function Sidebar({ getOpen }) {
 
         {/* لوگو و عنوان */}
         <div
-          className={`flex z-10 gap-2 justify-center items-center mb-12 ${
-            !open ? "hidden" : ""
-          }`}
+          className={`flex z-10 gap-2 justify-center items-center mb-12 ${!open ? "hidden" : ""
+            }`}
         >
           <div className="flex flex-col justify-center items-end">
             <h3 className="text-white text-xl font-bold">پلتفرم کا</h3>
@@ -147,7 +189,11 @@ export default function Sidebar({ getOpen }) {
 
       <div className="flex flex-col flex-grow w-full">
         <div className="relative w-full mt-24">
-        
+
+          {activityCount ? <div className="absolute left-1/12 top-4/12 w-5 h-5 bg-[#19A297] z-21 rounded-xl flex justify-center items-center"><p className="text-white text-xs">{activityCount}</p></div> : ""}
+          {rewardCount ? <div className="absolute left-1/12 top-7/12 w-5 h-5 bg-[#19A297] z-21 rounded-xl flex justify-center items-center"><p className="text-white text-xs">{rewardCount}</p></div> : ""}
+
+
           {/* ====================== ۲. رندر کردن نشانگر متحرک ====================== */}
           <div
             className="absolute right-0 h-14 w-1.5 bg-[#19A297] z-10 transition-transform duration-300 ease-in-out"
@@ -156,30 +202,31 @@ export default function Sidebar({ getOpen }) {
           {/* ==================================================================== */}
 
           {menuItems.map((item) => {
-            const isActive = location.pathname === item.to;
-            return (
-              <Link
-                key={item.num}
-                to={item.to}
-                className={`relative flex items-center h-14 transition-colors duration-200
+            const isActive = Array.isArray(item.to)
+              ? item.to.some(path => location.pathname.startsWith(path))
+              : location.pathname === item.to; return (
+                <Link
+                  key={item.num}
+                  to={item.to}
+                  className={`relative flex items-center h-14 transition-colors duration-200
                   ${open ? "justify-end pr-8" : "justify-center"}
                   ${isActive ? "text-[#19A297] font-semibold" : "text-gray-400 hover:bg-gray-200/50"}
                   ${isActive && !open ? "bg-teal-500/10" : ""}
                 `}
-              >
-                {isActive && open && (
-                  <div className="absolute inset-0 bg-gradient-to-l from-white to-[#F9F9F9]"></div>
-                )}
-                <div className={`relative z-10 flex items-center ${open ? "gap-3" : "gap-0"}`}>
-                  <h4 className={`text-base whitespace-nowrap transition-all duration-200 ${open ? "opacity-100" : "w-0 opacity-0"}`}>
-                    {item.text}
-                  </h4>
-                  <div className="text-xl">{item.icon}</div>
-                </div>
+                >
+                  {isActive && open && (
+                    <div className="absolute inset-0 bg-gradient-to-l from-white to-[#F9F9F9]"></div>
+                  )}
+                  <div className={`relative z-10 flex items-center ${open ? "gap-3" : "gap-0"}`}>
+                    <h4 className={`text-base whitespace-nowrap transition-all duration-200 ${open ? "opacity-100" : "w-0 opacity-0"}`}>
+                      {item.text}
+                    </h4>
+                    <div className="text-xl">{item.icon}</div>
+                  </div>
 
-                {/* ============= ۳. نشانگر ثابت و قدیمی حذف شد ============= */}
-              </Link>
-            );
+                  {/* ============= ۳. نشانگر ثابت و قدیمی حذف شد ============= */}
+                </Link>
+              );
           })}
         </div>
 
