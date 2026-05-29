@@ -227,6 +227,7 @@ export const createStudentActivity = catchAsync(async (req, res, next) => {
         if (admins.length > 0) {
             const notifications = admins.map(admin => ({
                 userId: admin._id,
+                activityId:newStudentActivity._id,
                 title: `درخواست فعالیت جدید از ${studentName}`,
                 message: `فعالیت "${activityName}" برای بررسی ثبت شده است.`,
                 type: 'new_activity_submission',
