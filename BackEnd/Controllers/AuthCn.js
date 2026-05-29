@@ -11,8 +11,11 @@ export const register=catchAsync(async(req,res,next)=>{
     let pass 
      if(role === 'student'){
         pass = `s${idCode}`
-    }else {
+    }else if(role === 'admin') {
         pass = `a${idCode}`
+    }else{
+        pass = `sa${idCode}`
+
     }
     const hashPass=bcryptjs.hashSync(pass,10)
     await User.create({...others,idCode:idCode,password:hashPass,role:role})
