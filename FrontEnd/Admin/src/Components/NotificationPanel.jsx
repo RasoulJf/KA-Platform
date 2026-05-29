@@ -53,8 +53,6 @@ const NotificationPanel = ({ isOpen, onClose, token, userType = 'admin' }) => {
             const response = await fetchData('notifications', {
                 headers: { authorization: `Bearer ${token}` }
             });
-            console.log("--- Notification Panel Response ---");
-            console.log(response); // <<<< پاسخ کامل رو لاگ بگیر
     
             if (response.success && Array.isArray(response.data)) {
                 setNotifications(response.data);
