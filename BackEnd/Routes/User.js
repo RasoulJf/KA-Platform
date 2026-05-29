@@ -1,5 +1,5 @@
 import express from 'express';
-import { findStudentByDetails, getAllStudentsForSelection, getGradeRankingTable, getOverallRankingTable, getSameGradeRankingTable, getStudentsByGradeAndClass, getTopStudentsByAllGrades, getUserSummaryStats } from '../Controllers/UserCn.js';
+import { findStudentByDetails, getAllStudentsForSelection, getGradeRankingTable, getOverallRankingTable, getSameGradeRankingTable, getStudentActivitiesByCategory, getStudentActivitiesByParent, getStudentById, getStudentsByGradeAndClass, getTopStudentsByAllGrades, getUserSummaryStats } from '../Controllers/UserCn.js';
 import upload from '../Utils/uploadFile.js';
 import isLogin from '../Middlewares/isLogin.js';
 import isAdmin from '../Middlewares/isAdmin.js';
@@ -15,6 +15,10 @@ userRouter.get('/by-grade-class', getStudentsByGradeAndClass); // <--- روت ج
 userRouter.get('/overall-table', getOverallRankingTable);
 userRouter.get('/my-grade-rankings', isLogin, getSameGradeRankingTable);
 userRouter.get('/grade-rankings', isAdmin, getGradeRankingTable); // میدل‌ور isAdmin اگر فقط ادمین باید دسترسی داشته باشه
+userRouter.route('/:id').get(isLogin, getStudentById);
+userRouter.route('/:id/activities-by-parent').get(isLogin, getStudentActivitiesByParent);
+userRouter.route('/:id/activities-by-category').get(isLogin, getStudentActivitiesByCategory);
+
 
 
 
