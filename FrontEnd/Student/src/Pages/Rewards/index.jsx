@@ -26,7 +26,9 @@ const StatCard = React.memo(({ title, value, imageSrc }) => (
     </div>
 ));
 
-export default function Rewards({ Open }) {
+export default function Rewards({ Open, handleRefresh }) {
+    const token = localStorage.getItem("token");
+
     const [rewardsList, setRewardsList] = useState([]);
     const [isMounted, setIsMounted] = useState(false);
     const [visibility, setVisibility] = useState(false);
@@ -36,8 +38,13 @@ export default function Rewards({ Open }) {
     const [loadingList, setLoadingList] = useState(true); // یک لودینگ جدا برای لیست
     const [loadingStats, setLoadingStats] = useState(true); // <<<< این state جا افتاده بود
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+    const [rewards, setRewards] = useState(0);
+    const [notifications, setNotifications] = useState([]);
+
     const [unreadCount, setUnreadCount] = useState(0);
     const notificationRef = useRef(null);
+
+
 
     const refreshUnreadCount = async () => {
         if (!token) return;
@@ -46,10 +53,40 @@ export default function Rewards({ Open }) {
                 headers: { authorization: `Bearer ${token}` }
             });
             if (response.success) {
+                setRewards(response.data)
+
                 setUnreadCount(response.totalCount || 0);
             }
         } catch (error) {
             console.error("Failed to refresh unread count:", error);
+        }
+    };
+
+    const isRewardNew = (reward) => {
+        if (rewards) {
+
+            const notificationRewards = rewards.filter((e, i) => e.type === "reward_status").filter((e, i) => e.isRead === false)
+            const check = notificationRewards.filter((e, i) => e.rewardId == reward?._id)
+            // console.log(notificationActivities, check)
+            if (check.length > 0) {
+                return { status: true, Id: check[0]._id }
+            }
+            return false;
+        }
+    }
+    const handleMarkAsRead = async (id) => {
+        // Optimistic UI update
+        setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+        try {
+            // بک‌اند برای خوانده‌شدن یک اعلان خاص
+            await fetchData(`notifications/mark-as-read/${id}`, {
+                method: 'PATCH',
+                headers: { authorization: `Bearer ${token}` },
+            });
+        } catch (err) {
+            console.error("Failed to mark notification as read", err);
+            // Rollback on error
+            setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: false } : n));
         }
     };
 
@@ -58,6 +95,14 @@ export default function Rewards({ Open }) {
         setIsNotificationOpen(false);
         refreshUnreadCount(); // این خط را برای اطمینان از به‌روز بودن عدد اضافه کنید
     };
+    useEffect(() => {
+      refreshUnreadCount(); // این خط را برای اطمینان از به‌روز بودن عدد اضافه کنید
+  
+      handleRefresh(notifications)
+  
+  
+    }, [token,notifications]);
+
     // State های جدید برای مودال جزئیات
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [selectedReward, setSelectedReward] = useState(null);
@@ -71,7 +116,6 @@ export default function Rewards({ Open }) {
         userOverallTotalTokens: "۰",
     });
     const [error, setError] = useState(null);
-    const token = localStorage.getItem("token");
 
     useEffect(() => {
         setIsMounted(true); // برای اعمال انیمیشن
@@ -222,6 +266,9 @@ export default function Rewards({ Open }) {
     const handleOpenDetailsModal = (reward) => {
         setSelectedReward(reward);
         setIsDetailsModalOpen(true);
+        const notifId = isRewardNew(reward)
+
+        handleMarkAsRead(notifId.Id)
     };
 
     const handleCloseDetailsModal = () => {
@@ -396,7 +443,9 @@ export default function Rewards({ Open }) {
                                         const formattedPaymentDate = reward.status === 'approved' ? formatDateToPersian(reward.updatedAt) : "نامشخص";
                                         const rewardDetailsForModal = { ...reward, title: reward.rewardId?.name || "بدون عنوان", tokenCost: reward.token, submissionDate: formattedSubmissionDate, paymentDate: formattedPaymentDate, status: statusDetails.text, statusColor: statusDetails.color };
                                         return (
-                                            <tr key={reward._id} onClick={() => handleOpenDetailsModal(rewardDetailsForModal)} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-gray-100 transition-colors cursor-pointer`}>
+                                            <tr key={reward._id} onClick={() => handleOpenDetailsModal(rewardDetailsForModal)}
+                                                className={`${isRewardNew(reward) ? "bg-[#D4F3F1]" : ""} ${idx % 2 === 0 && !isRewardNew(reward) ? "bg-white" : !isRewardNew(reward) ? "bg-gray-50/50" : ""
+                                                    }  hover:bg-gray-100 transition-colors`}                                             >
                                                 <td className="px-4 py-3  border-right-none border-2 border-solid border-[#F2F2F2] h-15 text-center ...">{reward.userId?.fullName || "نامشخص"}</td>
                                                 <td className="px-4 py-3  border-2 border-solid border-[#F2F2F2] h-15 text-center ...">{reward.rewardId?.name || "بدون عنوان"}</td>
                                                 <td className="px-4 py-3  border-2 border-solid border-[#F2F2F2] h-15 text-center rtl ...">{formattedSubmissionDate}</td>

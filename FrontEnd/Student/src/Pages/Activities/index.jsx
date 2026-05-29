@@ -21,7 +21,7 @@ import NotificationPanel from "../../Components/NotificationPanel";
 // NotificationPanel را هم اگر لازم دارید import کنید
 // import NotificationPanel from '../../Components/NotificationPanel';
 
-export default function Activities({ Open }) {
+export default function Activities({ Open , handleRefresh}) {
   // نام کامپوننت را Activities نگه می‌داریم
   const token = localStorage.getItem("token");
   const date = new Date();
@@ -53,10 +53,43 @@ export default function Activities({ Open }) {
   const [activitiesList, setActivitiesList] = useState([]);
   const [loadingActivities, setLoadingActivities] = useState(true);
   const [errorActivities, setErrorActivities] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+
+
+  const [activityCount, setActivityCount] = useState(0);
+  const [activities, setActivities] = useState(0);
+
+
 
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0); // استیت برای نگهداری تعداد اعلان‌ها
   const notificationRef = useRef(null);
+
+
+
+  const fetchNotificationsList = async () => {
+
+
+    try {
+      // اندپوینت بک‌اند خودش تشخیص می‌دهد چه اعلان‌هایی را برگرداند
+      const response = await fetchData('notifications', {
+        headers: { authorization: `Bearer ${token}` }
+      });
+
+      if (response.success && Array.isArray(response.data)) {
+        setActivityCount(response.totalCountActivity);
+
+      } else {
+        setError(response.message || 'خطا در دریافت اطلاعات.');
+      }
+    } catch (err) {
+      console.log(err.message || 'خطای شبکه.');
+    }
+  };
+  useEffect(() => {
+    fetchNotificationsList()
+
+  }, [])
 
   const refreshUnreadCount = async () => {
     if (!token) return;
@@ -65,6 +98,7 @@ export default function Activities({ Open }) {
         headers: { authorization: `Bearer ${token}` }
       });
       if (response.success) {
+        setActivities(response.data)
         setUnreadCount(response.totalCount || 0);
       }
     } catch (error) {
@@ -81,8 +115,25 @@ export default function Activities({ Open }) {
   useEffect(() => {
     refreshUnreadCount(); // این خط را برای اطمینان از به‌روز بودن عدد اضافه کنید
 
+    handleRefresh(notifications)
 
-  }, [token]);
+
+  }, [token,notifications]);
+
+  const isActivityNew = (activity) => {
+    if (activities) {
+
+
+      const notificationActivities = activities.filter((e, i) => e.type === "activity_status").filter((e, i) => e.isRead === false)
+      // console.log(activity)
+      const check = notificationActivities.filter((e, i) => e.activityId == activity?._id)
+      // console.log(notificationActivities, check)
+      if (check.length > 0) {
+        return {status:true,Id:check[0]._id}
+      }
+      return false;
+    }
+  }
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -225,6 +276,9 @@ export default function Activities({ Open }) {
   const handleOpenDetailsModal = (activity) => {
     setSelectedActivity(activity);
     setIsDetailsModalOpen(true);
+    const notifId=isActivityNew(activity)
+
+    handleMarkAsRead(notifId.Id)
   };
 
   const handleCloseDetailsModal = () => {
@@ -283,6 +337,22 @@ export default function Activities({ Open }) {
           : "desc",
     }));
     setPagination((prev) => ({ ...prev, currentPage: 1 }));
+  };
+
+  const handleMarkAsRead = async (id) => {
+    // Optimistic UI update
+    setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+    try {
+      // بک‌اند برای خوانده‌شدن یک اعلان خاص
+      await fetchData(`notifications/mark-as-read/${id}`, {
+        method: 'PATCH',
+        headers: { authorization: `Bearer ${token}` },
+      });
+    } catch (err) {
+      console.error("Failed to mark notification as read", err);
+      // Rollback on error
+      setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: false } : n));
+    }
   };
 
   const handlePageChange = (newPage) => {
@@ -635,8 +705,8 @@ export default function Activities({ Open }) {
                         <tr
                           key={activity._id || idx}
                           onClick={() => handleOpenDetailsModal(activity)}
-                          className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"
-                            } hover:bg-gray-100 transition-colors`}
+                          className={`${isActivityNew(activity) ? "bg-[#D4F3F1]" : ""} ${idx % 2 === 0 && !isActivityNew(activity) ? "bg-white" : !isActivityNew(activity) ? "bg-gray-50/50" : ""
+                            }  hover:bg-gray-100 transition-colors`}
                         >
                           <td
                             className={`px-4 border-left-none border-2 border-solid border-[#F2F2F2] text-center py-3 h-15 whitespace-nowrap font-semibold ${statusColor}`}

@@ -35,7 +35,6 @@ export default function Requests({ Open }) {
     };
 
     const handleApprove = (requestId, points) => {
-        console.log(`Approving request ${requestId} with ${points} points`);
         // اینجا منطق API برای تایید درخواست و تخصیص امتیاز را اضافه کنید
         // ... پس از موفقیت:
         // داده‌های جدول را به‌روز کنید (مثلا با fetch مجدد یا آپدیت local state)
@@ -43,7 +42,6 @@ export default function Requests({ Open }) {
     };
 
     const handleReject = (requestId) => {
-        console.log(`Rejecting request ${requestId}`);
         // اینجا منطق API برای رد درخواست را اضافه کنید
         // ... پس از موفقیت:
         // داده‌های جدول را به‌روز کنید

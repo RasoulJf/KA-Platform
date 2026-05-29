@@ -6,11 +6,11 @@ import { IoNotificationsOutline } from "react-icons/io5";
 import fetchData from "../../Utils/fetchData"; // مسیر صحیح
 import { useRef } from "react";
 import NotificationPanel from "../../Components/NotificationPanel";
+import StudentProfileModal from "./StudentProfileModal/StudentProfileModal";
 
 // headerConfig مثل قبل (ترتیب ستون‌ها را چک کنید)
 const userString = localStorage.getItem("user");
-          console.log(userString)
-          const user = userString ? JSON.parse(userString) : null;
+const user = userString ? JSON.parse(userString) : null;
 
 const headerConfig = [
   {
@@ -26,25 +26,25 @@ const headerConfig = [
     cellClass: "text-[#202A5A] w-15 border-2 border-solid border-[#F2F2F2] text-[16px]",
   },
   {
-    title: "فعالیت‌های آموزشی",
+    title: "آموزشی",
     key: "educationalActivities",
     headerClass: "bg-[#652D90] w-20 text-white",
     cellClass: "text-[#652D90] w-20 border-2 border-solid border-[#F2F2F2]  text-[16px]",
   },
   {
-    title: "فعالیت‌های داوطلبانه و توسعۀ فردی",
+    title: "داوطلبانه و توسعۀ فردی",
     key: "voluntaryActivities",
     headerClass: "bg-[#E0195B] w-35 text-white",
     cellClass: "text-[#E0195B] w-35 border-2 border-solid border-[#F2F2F2] text-[16px]",
   }, // عنوان کوتاه شد
   {
-    title: "فعالیت‌های شغلی",
+    title: "شغلی",
     key: "jobActivities",
     headerClass: "bg-[#F8A41D] w-20 text-white",
     cellClass: "text-[#F8A41D] w-20 text-[16px] border-2 border-solid border-[#F2F2F2]",
   }, // رنگ هدر اصلاح شد
   {
-    title: "کسر امتیازات",
+    title: "کسر امتیاز",
     key: "deductions",
     headerClass: "bg-[#787674] w-15 text-white",
     cellClass: "text-[#787674] w-15 text-[16px] border-2 border-solid border-[#F2F2F2]",
@@ -76,6 +76,19 @@ export default function StudentResultsPage({ Open }) {
   const [totalResultsCount, setTotalResultsCount] = useState(0);
   const [currentUserInfo, setCurrentUserInfo] = useState(null); // برای نمایش اطلاعات کاربر فعلی
   const [visibility, setVisibility] = useState(false);
+
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openStudentModal = (student) => {
+    setSelectedStudent(student);
+    setIsModalOpen(true);
+  };
+
+  const closeStudentModal = () => {
+    setIsModalOpen(false);
+    setSelectedStudent(null);
+  };
 
 
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -158,20 +171,11 @@ export default function StudentResultsPage({ Open }) {
       setLoading(true);
       setError(null);
       try {
-        // درخواست به اندپوینت جدید که فقط هم‌پایه‌ای‌ها را برمی‌گرداند
         const response = await fetchData(
           `users/my-grade-rankings?page=${page}&limit=10`,
           {
             headers: { authorization: `Bearer ${token}` },
           }
-        );
-
-        console.log(
-          "--- StudentResultsPage - Data from API (my-grade-rankings) ---"
-        );
-        console.log(
-          "Raw response from backend:",
-          JSON.stringify(response, null, 2)
         );
 
         if (response.success && Array.isArray(response.data)) {
@@ -184,28 +188,26 @@ export default function StudentResultsPage({ Open }) {
               item.voluntaryActivities
             ),
             jobActivities: formatNumberToPersian(item.jobActivities),
-            deductions: (item.deductions), // کسر امتیاز نمایش داده می‌شود
+            deductions: (item.deductions),
             score: formatNumberToPersian(item.score),
             rank: formatNumberToPersian(item.rank),
           }));
-          console.log(formatNumberToPersian(formattedData))
 
           setResultsTableData(formattedData);
-          console.log(formattedData)
           setCurrentPage(page);
           setTotalResultsCount(response.totalCount || 0);
           setTotalPages(Math.ceil((response.totalCount || 0) / 15));
 
-          // پیدا کردن و ذخیره اطلاعات کاربر فعلی از لیست (اگر وجود دارد)
+          // پیدا کردن و ذخیره اطلاعات کاربر فعلی از لیست
           const userString = localStorage.getItem("user");
-          console.log(userString)
-          const user = userString ? JSON.parse(userString) : null; // فرض می‌کنیم userId در localStorage ذخیره شده
-          console.log(user.id)
+          const currentUser = userString ? JSON.parse(userString) : null;
+
+          // تصحیح شرط مقایسه - استفاده از == به جای =
           const foundUser = response.data.find(
-            (user) => user.id === user.id
+            (item) => item.id === currentUser.id // تصحیح این خط
           );
+
           if (foundUser) setCurrentUserInfo(foundUser);
-          console.log(currentUserInfo)
         } else {
           setError(response.message || "خطا در دریافت نتایج هم‌پایه‌ای‌ها.");
           setResultsTableData([]);
@@ -223,6 +225,7 @@ export default function StudentResultsPage({ Open }) {
 
     fetchMyGradeResults(currentPage);
   }, [currentPage, token]);
+
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages && !loading) {
@@ -325,7 +328,7 @@ export default function StudentResultsPage({ Open }) {
         <div className="bg-white rounded-xl shadow-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[100%] text-sm">
-              <thead className="text-xs uppercase sticky top-0 z-10">
+              <thead className="text-sm uppercase sticky top-0 z-10">
                 {" "}
                 {/* هدر چسبان */}
                 <tr className="h-15">
@@ -333,6 +336,7 @@ export default function StudentResultsPage({ Open }) {
                     <th
                       key={header.key}
                       scope="col"
+
                       className={`py-3 font-semibold text-center ${header.headerClass}`}
                     >
                       {" "}
@@ -347,7 +351,8 @@ export default function StudentResultsPage({ Open }) {
                   ? resultsTableData.map((row, idx) => (
                     <tr
                       key={row.id || idx}
-                      className={`${ row.id==user.id ? "bg-[#D4F3F1] " : ""}${idx % 2 === 0 && !row.id==user.id ? "bg-white" : !row.id==user.id ? "bg-gray-50/60 " :""
+
+                      className={`${row.id == user.id ? "bg-[#D4F3F1] " : ""}${idx % 2 === 0 && !row.id == user.id ? "bg-white" : !row.id == user.id ? "bg-gray-50/60 " : ""
                         } hover:bg-indigo-50/50 transition-colors text-xs`}
                     >
                       {" "}
@@ -355,6 +360,8 @@ export default function StudentResultsPage({ Open }) {
                       {headerConfig.map((header) => (
                         <td
                           key={`${row.id || idx}-${header.key}`}
+                          onClick={header.key === 'name' ? () => openStudentModal(row) : console.log(row)} // اضافه کردن این خط
+
                           className={`h-15 py-2.5 font-[600] text-center ${header.cellClass}`}
                         >
                           {" "}
@@ -450,6 +457,12 @@ export default function StudentResultsPage({ Open }) {
         )}
         <div className="h-16"></div>
       </div>
+      <StudentProfileModal
+        isOpen={isModalOpen}
+        onClose={closeStudentModal}
+        student={selectedStudent}
+        token={token} // اضافه کردن این خط
+      />
     </>
   );
 }

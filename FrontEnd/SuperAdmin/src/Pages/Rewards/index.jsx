@@ -65,14 +65,12 @@ function RewardExcelUpload({ Open }) {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${localStorage.getItem('token')}`, // اطمینان از وجود توکن
-          'X-Requested-With': 'XMLHttpRequest'
         },
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
             const percentCompleted = Math.round(
               (progressEvent.loaded * 100) / progressEvent.total
             );
-            console.log(`${percentCompleted}% uploaded`);
             // اینجا می‌توانید یک state برای نمایش درصد آپلود اضافه کنید
           }
         }

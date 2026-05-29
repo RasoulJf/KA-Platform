@@ -12,6 +12,7 @@ function ExcelUpload({ Open }) {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [errors, setErrors] = useState([]);
   
   // منطق تاریخ
   const date = new Date();
@@ -35,38 +36,59 @@ function ExcelUpload({ Open }) {
     }
   
     setFile(selectedFile);
+    // پاک کردن نتایج و خطاهای قبلی هنگام انتخاب فایل جدید
+    setResult(null);
+    setErrors([]);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file) return;
+    if (!file) {
+      setErrors(['لطفا یک فایل انتخاب کنید']);
+      return;
+    }
   
     const formData = new FormData();
     formData.append('excelFile', file, file.name);
 
     try {
       setLoading(true);
+      setErrors([]);
       const response = await axios.post('http://localhost:5000/api/exel/register', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'X-Requested-With': 'XMLHttpRequest'
         },
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round(
             (progressEvent.loaded * 100) / progressEvent.total
           );
-          console.log(`${percentCompleted}% uploaded`);
         }
       });
-      setResult(response.data);
+      
+      // پردازش پاسخ سرور
+      if (response.data && response.data.success) {
+        setResult(response.data);
+      } else {
+        setErrors([response.data?.message || 'خطای نامشخص از سرور']);
+      }
     } catch (error) {
       console.error('Error details:', error.response?.data || error.message);
-      setResult({
-        success: false,
-        message: error.response?.data?.message || 
-          'خطا در آپلود فایل. لطفا فایل را بررسی کنید و مجددا تلاش نمایید'
-      });
+      
+      // مدیریت خطاهای مختلف
+      if (error.response?.status === 401) {
+        setErrors(['احراز هویت ناموفق بود. لطفا دوباره وارد شوید']);
+      } else if (error.response?.data?.errors) {
+        // اگر سرور آرایه‌ای از خطاها برگرداند
+        setErrors(error.response.data.errors);
+      } else if (error.response?.data?.message) {
+        setErrors([error.response.data.message]);
+      } else if (error.code === 'NETWORK_ERROR') {
+        setErrors(['خطای اتصال به سرور. لطفا اتصال اینترنت خود را بررسی کنید']);
+      } else {
+        console.log(error)
+        setErrors(['خطا در آپلود فایل. لطفا فایل را بررسی کنید و مجددا تلاش نمایید']);
+      }
     } finally {
       setLoading(false);
     }
@@ -122,20 +144,33 @@ function ExcelUpload({ Open }) {
                   accept=".xlsx, .xls" 
                   onChange={handleFileChange}
                   className="border border-gray-300 p-2 rounded-lg text-sm w-full max-w-md"
+                  disabled={loading}
                 />
                 <p className="text-gray-500 text-xs">فرمت‌های مجاز: xlsx, xls (حداکثر حجم: 5MB)</p>
               </div>
               
               <button 
                 type="submit" 
-                disabled={loading}
-                className="bg-[#19A297] text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-[#168a7f] transition-colors disabled:bg-gray-400"
+                disabled={loading || !file}
+                className="bg-[#19A297] text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-[#168a7f] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {loading ? 'در حال پردازش...' : 'آپلود و ثبت‌نام'}
               </button>
             </form>
           </div>
         </div>
+
+        {/* نمایش خطاها */}
+        {errors.length > 0 && (
+          <div className="relative bg-white rounded-lg overflow-hidden mb-6 p-6 shadow-sm border border-red-200 z-10">
+            <h3 className="font-bold text-red-600 mb-3">خطا در پردازش فایل</h3>
+            <ul className="list-disc list-inside text-sm text-red-500 space-y-1">
+              {errors.map((error, i) => (
+                <li key={i}>{error}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* نتایج آپلود */}
         {result && (
@@ -148,9 +183,13 @@ function ExcelUpload({ Open }) {
               <p className="text-[#202A5A] text-sm mb-2">تعداد کاربران ثبت‌شده: {result.insertedCount}</p>
             )}
             
+            {result.duplicateCount > 0 && (
+              <p className="text-amber-600 text-sm mb-2">تعداد کاربران تکراری: {result.duplicateCount}</p>
+            )}
+            
             {result.errorCount > 0 && (
               <div className="mt-3">
-                <h4 className="font-bold text-sm text-[#202A5A] mb-2">خطاها:</h4>
+                <h4 className="font-bold text-sm text-[#202A5A] mb-2">خطاهای جزئیات:</h4>
                 <ul className="list-disc list-inside text-sm text-red-500 space-y-1">
                   {result.errors.map((error, i) => (
                     <li key={i}>{error}</li>

@@ -110,12 +110,9 @@ export default function StudentDashboard({ Open }) {
         const response = await fetchData('student-dashboard', {
           headers: { authorization: `Bearer ${token}` }
         });
-        console.log("Fetched Dashboard Data (Frontend):", response.data);
-        console.log("Activity Summary from API (Frontend):", JSON.stringify(response.data.activitySummary, null, 2));
 
         if (response.success && response.data) {
           setDashboardData(response.data);
-          console.log(response.data)
         } else {
           console.error("Dashboard fetch error response:", response);
           setErrorDashboard(response.message || "خطا در دریافت اطلاعات داشبورد.");

@@ -47,7 +47,6 @@ export default function Results({ Open }) {
 
   const handleGetReport = (e) => {
     e.preventDefault();
-    console.log("دریافت گزارش با فیلترهای:", reportFilters);
   };
 
   const handleGradeSelect = (gradeValue) => {
