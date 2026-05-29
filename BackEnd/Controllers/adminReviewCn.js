@@ -185,6 +185,7 @@ export const approveStudentActivity = catchAsync(async (req, res, next) => {
         try {
             await Notification.create({
                 userId: studentActivity.userId,
+                activityId:studentActivityId,
                 title: `فعالیت "${activityDef.name}" تایید شد`,
                 message: `درخواست شما با موفقیت تایید و ${Number(scoreAwarded).toLocaleString('fa-IR')} امتیاز به شما تعلق گرفت.`,
                 type: 'activity_status',
@@ -236,6 +237,7 @@ export const rejectStudentActivity = catchAsync(async (req, res, next) => {
         try {
             await Notification.create({
                 userId: studentActivity.userId,
+                activityId:studentActivityId,
                 title: `فعالیت "${activityDef.name}" رد شد`,
                 message: `متاسفانه درخواست شما رد شد. کامنت ادمین: ${studentActivity.adminComment}`,
                 type: 'activity_status',
