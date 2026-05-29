@@ -207,7 +207,6 @@ export default function ResultsPageContainer({ Open }) {
     if (reportFilters.fromDate) filtersToSend.fromDate = reportFilters.fromDate;
     if (reportFilters.toDate) filtersToSend.toDate = reportFilters.toDate;
 
-    console.log("Sending filters to backend:", JSON.stringify(filtersToSend));
 
     try {
       const response = await fetch(`${import.meta.env.VITE_BASE_URL}reports/generate-report`, {

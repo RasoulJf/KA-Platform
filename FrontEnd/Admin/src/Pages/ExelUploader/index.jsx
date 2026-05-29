@@ -42,7 +42,6 @@ function ExcelUpload() {
           const percentCompleted = Math.round(
             (progressEvent.loaded * 100) / progressEvent.total
           );
-          console.log(`${percentCompleted}% uploaded`);
         }
       });
       setResult(response.data);

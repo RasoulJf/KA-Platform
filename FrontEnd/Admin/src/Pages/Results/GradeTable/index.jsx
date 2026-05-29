@@ -45,8 +45,7 @@ export default function GradeTable({ grade, token, onDataLoad }) { // token و o
                     headers: { authorization: `Bearer ${token}` }
                 });
 
-                console.log(`--- GradeTable (${grade}) - Data from API ---`);
-                console.log("Raw response:", JSON.stringify(response, null, 2));
+              
 
                 if (response.success && Array.isArray(response.data)) {
                     const formattedData = response.data.map((item, index) => ({
@@ -61,7 +60,6 @@ export default function GradeTable({ grade, token, onDataLoad }) { // token و o
                     }));
                     setTableData(formattedData);
                     setCurrentPageTable(page);
-                    console.log(response)
                     setTotalPagesTable(Math.ceil((response.totalCount || 0) / 15));
                     if (onDataLoad) onDataLoad({ grade, count: response.totalCount || 0 }); // اطلاع به والد از تعداد نتایج
                 } else {
@@ -82,7 +80,6 @@ export default function GradeTable({ grade, token, onDataLoad }) { // token و o
 
     const handlePageChangeTable = (newPage) => {
         if (newPage >= 1 && newPage <= totalPagesTable && !loadingTable) {
-            console.log(totalPagesTable)
             setCurrentPageTable(newPage);
         }
       };

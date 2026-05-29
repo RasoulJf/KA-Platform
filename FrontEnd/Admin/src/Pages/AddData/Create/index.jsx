@@ -168,7 +168,6 @@ export default function CreateNewData({ Open }) {
     // ۶. مدیریت تغییرات فرم فردی
     const handleIndividualFormChange = (e) => {
         const { name, value } = e.target;
-        console.log(`handleIndividualFormChange - Name: ${name}, Value: ${value}, Type of Value: ${typeof value}`); // لاگ اضافه شد
         setIndividualFormData(prevState => {
             let newState = { ...prevState, [name]: value };
             if (name === "base") { newState.classNum = ''; newState.studentId = ''; setStudentsInClass([]); setSelectedActivityFullDetails(null); newState.activityCategory = ''; newState.activityTitle = ''; newState.details = ''; newState.scoreAwarded = ''; }
@@ -189,7 +188,6 @@ const handleSubmitIndividual = async (e) => {
     e.preventDefault();
     const { studentId, activityTitle, details, scoreAwarded, base, classNum, activityCategory, description } = individualFormData;
 
-    console.log("handleSubmitIndividual: Current individualFormData:", JSON.stringify(individualFormData, null, 2));
 
     if (!base || !classNum || !studentId || !activityCategory || !activityTitle) {
         setSubmitIndividualMessage({ type: 'error', text: 'فیلدهای پایه، کلاس، دانش‌آموز، دسته‌بندی و عنوان فعالیت الزامی است.' });
@@ -218,18 +216,15 @@ const handleSubmitIndividual = async (e) => {
             scoreAwarded: Number(scoreAwarded),
             description: description || undefined,
         };
-        console.log("handleSubmitIndividual: Sending create payload:", JSON.stringify(payload, null, 2));
 
         const createResponse = await fetchData(`admin-activity/user/${studentId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` },
             body: JSON.stringify(payload),
         });
-        console.log("handleSubmitIndividual: Create response received:", JSON.stringify(createResponse, null, 2));
 
         // <<<<<<<<<<<<<<<< مهم: اینجا success رو چک می‌کنیم >>>>>>>>>>>>>>>>>>
         if (createResponse && createResponse.success === true) { // صراحتاً === true
-            console.log("handleSubmitIndividual: Activity CREATED successfully. Setting success message and resetting form...");
             setSubmitIndividualMessage({ type: 'success', text: 'فعالیت با موفقیت ثبت شد.' }); // پیام موفقیت ست میشه
 
             // ریست کردن فیلدها
@@ -239,13 +234,10 @@ const handleSubmitIndividual = async (e) => {
             // setAvailableActivityTitles([]); // شاید نخوای اینو ریست کنی
             // setSelectedParent('');
 
-            console.log("handleSubmitIndividual: Form reset. Now updating stats...");
 
             // آپدیت آمارها با دقت بیشتر
             try {
-                console.log("handleSubmitIndividual: Fetching admin count...");
                 const adminCountRes = await fetchData('admin-activity/stats/count', { headers: { authorization: `Bearer ${token}` } });
-                console.log("handleSubmitIndividual: Admin count response:", JSON.stringify(adminCountRes, null, 2));
 
                 // <<<<<<<<<<<<<<<< چک کردن دقیق پاسخ آمار >>>>>>>>>>>>>>>>>>
                 if (adminCountRes && adminCountRes.success === true && adminCountRes.data && typeof adminCountRes.data.count !== 'undefined') {
@@ -256,9 +248,7 @@ const handleSubmitIndividual = async (e) => {
                     // setSubmitIndividualMessage(prev => ({ ...prev, text: prev.text + ' (خطا در بروزرسانی تعداد فعالیت‌ها)' }));
                 }
 
-                console.log("handleSubmitIndividual: Fetching user stats...");
                 const userStatsRes = await fetchData('users/summary-stats', { headers: { authorization: `Bearer ${token}` } });
-                console.log("handleSubmitIndividual: User stats response:", JSON.stringify(userStatsRes, null, 2));
 
                 // <<<<<<<<<<<<<<<< چک کردن دقیق پاسخ آمار >>>>>>>>>>>>>>>>>>
                 if (userStatsRes && userStatsRes.success === true && userStatsRes.data && typeof userStatsRes.data.totalScore !== 'undefined') {
@@ -267,7 +257,6 @@ const handleSubmitIndividual = async (e) => {
                     console.error("handleSubmitIndividual: Failed to fetch or process user stats. Response:", userStatsRes);
                     // setSubmitIndividualMessage(prev => ({ ...prev, text: prev.text + ' (خطا در بروزرسانی آمار امتیازات)' }));
                 }
-                console.log("handleSubmitIndividual: Stats update finished.");
 
             } catch (statsUpdateError) {
                 // این catch فقط برای خطاهای پیش‌بینی نشده در خود کدهای جاوااسکریپت بخش آمار هست،
@@ -290,7 +279,6 @@ const handleSubmitIndividual = async (e) => {
         setSubmitIndividualMessage({ type: 'error', text: `خطای غیرمنتظره در سرور: ${error.message}` });
     } finally {
         setSubmittingIndividual(false);
-        console.log("handleSubmitIndividual: Submission process finished.");
     }
 };
 

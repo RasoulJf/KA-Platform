@@ -4,6 +4,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import union from '../../assets/images/Union4.png'; // مسیر صحیح
 import Frame20 from '../../assets/images/Frame20.png'; // مسیر صحیح
+import Frame121 from '../../assets/images/Frame121.png'; // مسیر صحیح
+
 
 import { BiSolidSchool } from "react-icons/bi";
 import { IoNotificationsOutline } from "react-icons/io5"; // از io5
@@ -168,7 +170,7 @@ export default function RewardsAdminPage({ Open }) {
                         id: reward._id,
                         name: reward.studentName || "نامشخص",
                         grade: reward.studentGrade || "نامشخص",
-                        image: reward.studentImage ? `${import.meta.env.VITE_BASE_FILE}${reward.studentImage}` : Frame20,
+                        image: reward.studentImage ? `${import.meta.env.VITE_BASE_FILE}${reward.studentImage}` : Frame121,
                         title: reward.rewardTitle || "بدون عنوان",
                         submissionDate: formatDateToPersian(reward.submissionDate),
                         paymentDate: reward.status === 'approved' && reward.reviewDate ? formatDateToPersian(reward.reviewDate) : "نامشخص",
@@ -207,7 +209,7 @@ export default function RewardsAdminPage({ Open }) {
                 setStatCardsDisplayData([
                     { title: "پاداش‌های در انتظار پرداخت", value: formatNumberToPersian(apiStats.rewardsPendingValue) },
                     { title: "پاداش‌های پرداخت‌شده", value: formatNumberToPersian(apiStats.rewardsPaidValue) },
-                    { title: "کل توکن‌های درخواستی", value: formatNumberToPersian(apiStats.rewardsTotalRegisteredValue), decorated: true },
+                    { title: "کل توکن‌های درخواستی", value: formatNumberToPersian(apiStats.rewardsTotalRegisteredValue), },
                     { title: "توکن‌های قابل استفاده (کل)", value: formatNumberToPersian(apiStats.systemTotalAvailableTokens) },
                     { title: "توکن‌های پرداخت شده (کل)", value: formatNumberToPersian(apiStats.systemTotalUsedOrPaidTokens) },
                     { title: "جمع کل توکن‌های کاربران", value: formatNumberToPersian(apiStats.systemOverallStudentTokens) },
@@ -290,7 +292,6 @@ export default function RewardsAdminPage({ Open }) {
             return;
         }
 
-        console.log(`Admin: Attempting to change status of StudentReward ID ${studentRewardId} to ${newStatus}`);
 
         try {
             const response = await fetchData(`student-reward/${studentRewardId}`, {
@@ -375,9 +376,9 @@ export default function RewardsAdminPage({ Open }) {
                 {/* کارت‌های آماری */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                     {statCardsDisplayData.map((card, index) => (
-                        <div key={index} className="relative bg-purple-50 p-6 rounded-xl shadow-lg flex flex-col items-center justify-center text-center min-h-[150px] overflow-hidden">
-                            <img src={Frame20} className="absolute z-0 h-full w-full object-cover scale-105 top-0 left-0 rounded-xl" alt="" />
-                            <div className="absolute inset-0 bg-black/10 rounded-xl"></div>
+                        <div key={index} className="relative p-6 rounded-xl flex flex-col items-center justify-center text-center min-h-[150px] overflow-hidden">
+                            <img src={card.title==="کل توکن‌های درخواستی" ? Frame20 :Frame121} className="absolute z-0 h-full w-full object-cover scale-105 top-0 left-0 rounded-xl" alt="" />
+                            <div className="absolute inset-0 rounded-xl"></div>
                             {card.decorated && (
                                 <>
                                     <div className="absolute top-4 left-6 w-3 h-3 bg-blue-400/70 rounded-full opacity-70"></div>
@@ -387,8 +388,8 @@ export default function RewardsAdminPage({ Open }) {
                             )}
                             <div className="absolute -top-8 -right-8 w-28 h-28 bg-white/10 rounded-full opacity-40 filter blur-sm"></div>
                             <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-white/5 rounded-full opacity-30 filter blur-md"></div>
-                            <h2 className="text-md font-semibold text-white drop-shadow-sm mb-2 z-10">{card.title}</h2>
-                            <p className="text-3xl font-bold text-white drop-shadow-md z-10">{card.value}</p>
+                            <h2 className="text-xl font-semibold text-[#5052D3] mb-2 z-10">{card.title}</h2>
+                            <p className="text-3xl font-bold text-[#5052D3] z-10">{card.value}</p>
                         </div>
                     ))}
                 </div>

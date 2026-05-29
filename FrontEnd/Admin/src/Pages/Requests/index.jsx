@@ -10,6 +10,7 @@ import { IoIosArrowDown } from "react-icons/io";
 import { BsChatLeftText, BsClipboardCheck, BsClipboardX, BsClipboardData } from "react-icons/bs";
 import RequestApprovalModal from './RequestApprovalModal';
 import NotificationPanel from '../../Components/NotificationPanel';
+import DynamicIcon from '../../Components/DynamicIcon';
 
 export default function Requests({ Open }) {
     const token = localStorage.getItem("token");
@@ -266,8 +267,8 @@ export default function Requests({ Open }) {
     const parentCategoryFilterOptions = [{ value: '', label: 'همه دسته‌بندی‌ها' }, ...(activityCategories || []).map(cat => ({ value: cat, label: cat }))];
 
     const statCardsDisplayData = [ /* ... (بدون تغییر، از statsData استفاده می‌کند) ... */
-        { title: "درخواست های در انتظار بررسی", count: statsData.pendingCount, Icon: BsChatLeftText, iconBgColor: "bg-orange-500", textColor: "text-[#FF4F0A]" },
-        { title: "درخواست های تایید شده", count: statsData.approvedCount, Icon: BsClipboardCheck, iconBgColor: "bg-green-500", textColor: "text-green-600" },
+        { title: "درخواست های در انتظار بررسی", count: statsData.pendingCount, Icon: "MessageTime", iconBgColor: "bg-[#FF500A]", textColor: "text-[#FF500A]" },
+        { title: "درخواست های تایید شده", count: statsData.approvedCount, Icon: "MessageTick", iconBgColor: "bg-[#FF500A]", textColor: "text-[#FF500A]" },
     ];
 
     return (
@@ -276,7 +277,7 @@ export default function Requests({ Open }) {
             <div className={`${!Open ? "w-[80%]" : "w-[94%]"} p-6 md:p-8 transition-all duration-500 flex flex-col h-screen relative z-10 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 overflow-y-auto`}>
                 {/* ... (هدر صفحه) ... */}
                 <div className="flex flex-col sm:flex-row justify-between items-center h-auto sm:h-[5vh] mb-6">
-                  
+
                     {/* در داخل اولین div در هدر صفحه */}
                     <div className="flex justify-center items-center gap-3 sm:gap-5 mb-2 sm:mb-0">
                         <h3 className='text-[#19A297] text-xs sm:text-sm'>هنرستان استارتاپی رکاد</h3>
@@ -321,13 +322,13 @@ export default function Requests({ Open }) {
                         <>
                             <div className="flex flex-col gap-4 lg:w-1/2">
                                 {statCardsDisplayData.map((card, idx) => (
-                                    <div key={idx} className="relative flex-1 bg-[#FFF7F0] rounded-lg overflow-hidden p-4 sm:p-6 flex items-center justify-between shadow-sm border border-gray-100">
+                                    <div key={idx} className="relative flex-1 bg-[#FF500A] rounded-lg overflow-hidden p-4 sm:p-6 flex items-center justify-between shadow-sm border border-gray-100">
                                         <img src={Frame11} className='absolute z-0 h-full w-full object-cover left-0 top-0 opacity-100' alt="" />
-                                        <p className={`${card.textColor} font-semibold text-2xl sm:text-3xl z-10`}>{card.count?.toLocaleString('fa-IR')}</p>
+                                        <p className={`${card.textColor} font-semibold text-xl sm:text-3xl z-10`}>{card.count?.toLocaleString('fa-IR')}</p>
                                         <div className='flex items-center gap-2 sm:gap-3 z-10'>
-                                            <h2 className={`${card.textColor} font-semibold text-lg sm:text-xl md:text-2xl text-right`}>{card.title}</h2>
-                                            <div className={`${card.iconBgColor} flex justify-center items-center w-10 h-10 rounded-full flex-shrink-0`}>
-                                                <card.Icon className='text-white text-xl sm:text-2xl scale-75' />
+                                            <h2 className={`${card.textColor} font-semibold text-md sm:text-xl md:text-xl text-right`}>{card.title}</h2>
+                                            <div className={`${card.iconBgColor} flex justify-center items-center w-18 h-18 rounded-full flex-shrink-0`}>
+                                                <DynamicIcon color="white" variant="Bold" size={32} name={`${card.Icon}`}  />
                                             </div>
                                         </div>
                                     </div>
@@ -335,11 +336,12 @@ export default function Requests({ Open }) {
                             </div>
                             <div className="relative lg:w-1/2 bg-blue-50 rounded-lg overflow-hidden p-6 flex flex-col justify-center items-center text-center shadow-sm border border-gray-100 gap-2">
                                 <img src={Frame10} className='absolute z-0 h-full w-full object-cover top-0 left-0 opacity-100' alt="" />
-                                <div className="bg-blue-500 flex justify-center items-center w-12 h-12 rounded-full mb-2 z-10">
-                                    <BsClipboardData className='text-white scale-100' />
+                                <div className="bg-[#FF500A] flex justify-center items-center w-18 h-18 rounded-[100%] mb-2 z-10">
+                                    <DynamicIcon name={"Message2"} size={32} color="white" variant="Bold" />
+
                                 </div>
-                                <h2 className='text-blue-600 font-semibold text-2xl z-10'>کل درخواست های ثبت شده</h2>
-                                <p className='text-blue-600 font-bold text-4xl z-10'>{statsData.totalRequests?.toLocaleString('fa-IR')}</p>
+                                <h2 className='text-[#FF500A] font-semibold text-xl z-10'>کل درخواست های ثبت شده</h2>
+                                <p className='text-[#FF500A] font-bold text-2xl z-10'>{statsData.totalRequests?.toLocaleString('fa-IR')}</p>
                             </div>
                         </>
                     }
