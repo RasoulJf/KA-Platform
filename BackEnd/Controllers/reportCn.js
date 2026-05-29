@@ -80,7 +80,6 @@ const createAndSendExcelReport = async (res, options) => {
 
 export const generateGeneralReport = catchAsync(async (req, res, next) => {
     // ... (بخش دریافت فیلترها و تعریف matchConditions و userAndFilterMatch بدون تغییر)
-    console.log("Received filters on backend for new report types:", req.body);
     const { reportType, grade, students, fromDate, toDate } = req.body;
     if (!reportType) return res.status(400).json({ success: false, message: "نوع گزارش مشخص نشده است." });
     const matchConditions = {};
