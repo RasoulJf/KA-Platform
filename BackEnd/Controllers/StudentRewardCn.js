@@ -1,5 +1,5 @@
 // =========================================================================
-// StudentRewardCn.js (کامل با تمام اصلاحات و console.log های دیباگ)
+// StudentRewardCn.js 
 // =========================================================================
 import StudentReward from "../Models/StudentRewardMd.js";
 import catchAsync from "../Utils/catchAsync.js";
@@ -135,6 +135,7 @@ export const changeStatusRe = catchAsync(async (req, res, next) => {
 
             await Notification.create({
                 userId: studentReward.userId,
+                rewardId:studentReward._id,
                 title: notificationTitle,
                 message: notificationMessage,
                 type: 'reward_status', // از enum مدل نوتیفیکیشن
@@ -166,9 +167,7 @@ export const changeStatusRe = catchAsync(async (req, res, next) => {
 
 
 export const createStudentReward = catchAsync(async (req, res, next) => {
-    // console.log("--- createStudentReward Controller ---");
-    // console.log("req.userId:", req.userId);
-    // console.log("req.body:", req.body);
+
 
     const { rewardId, token: requestedTokenStr } = req.body; // اسم رو به requestedTokenStr تغییر دادم برای وضوح
     const requestedTokenNum = Number(requestedTokenStr); // تبدیل به عدد
@@ -219,7 +218,6 @@ export const createStudentReward = catchAsync(async (req, res, next) => {
                                         // معمولاً بهتره توکن موقع تایید (approved) توسط ادمین کسر بشه.
                                         // پس این خط رو اینجا کامنت می‌کنیم.
         await user.save({ validateBeforeSave: false }); // ذخیره کاربر با پاداش جدید در لیستش
-        // console.log(`StudentReward ${studentReward._id} added to user ${user._id} rewards list.`);
     } else {
         // اگر studentReward به هر دلیلی ساخته نشد (که بعیده بعد از create موفق)
         return next(new HandleERROR("خطا در ایجاد رکورد درخواست پاداش.", 500));
@@ -234,6 +232,7 @@ export const createStudentReward = catchAsync(async (req, res, next) => {
         if (admins.length > 0) {
             const notifications = admins.map(admin => ({
                 userId: admin._id,
+                rewardId:studentReward._id,
                 title: `درخواست پاداش جدید از ${studentName}`,
                 message: `درخواست پاداش "${rewardName}" با هزینه ${requestedTokenNum} توکن ثبت شد.`,
                 type: 'new_reward_request',
@@ -285,7 +284,6 @@ export const getMyStudentRewards = catchAsync(async (req, res, next) => {
 
 // --- کنترلر getAllStudentRewardsForAdmin ---
 export const getAllStudentRewardsForAdmin = catchAsync(async (req, res, next) => {
-    // console.log("getAllStudentRewardsForAdmin called with query:", req.query);
 
     // فیلترهای اولیه که می‌خواهیم قبل از populate اعمال شوند (اگر وجود دارند و ApiFeatures آنها را نمی‌سازد)
     const initialFilters = {}; // مثال: { status: req.query.status } اگر status یک فیلتر اصلی است
