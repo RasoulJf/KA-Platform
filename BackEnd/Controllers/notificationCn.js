@@ -17,9 +17,6 @@ export const getMyNotifications = catchAsync(async (req, res, next) => {
     const userId = req.userId;
     const userRole = req.role; // <<< تغییر از req.userRole به req.role
     
-    console.log("--- Get My Notifications ---");
-    console.log("User ID:", userId);
-    console.log("User Role:", userRole);
 
     const { page = 1, limit = 10, filter = 'all' } = req.query; 
 
@@ -27,7 +24,6 @@ export const getMyNotifications = catchAsync(async (req, res, next) => {
 
     // اگر کاربر ادمین یا سوپرادمین است، فقط اعلان‌های مربوط به ادمین را نشان بده
     if (userRole === 'admin' || userRole === 'superAdmin') {
-        console.log("User is an admin. Filtering for admin types.");
 
         query.type = { 
             $in: [
@@ -50,7 +46,6 @@ export const getMyNotifications = catchAsync(async (req, res, next) => {
     if (filter === 'unread') {
         query.isRead = false;
     }
-    console.log("Final MongoDB Query:", JSON.stringify(query, null, 2)); // <<<< این خیلی مهمه!
 
 
     // بقیه کد بدون تغییر ...
@@ -60,9 +55,25 @@ export const getMyNotifications = catchAsync(async (req, res, next) => {
         .limit(Number(limit));
 
     const totalCount = await Notification.countDocuments(query);
+    const totalCountActivity = await Notification.countDocuments({
+        userId: userId,
+        type: "activity_status",
+        isRead:false
+
+    });
+    
+    // تعداد نوتیفیکیشن‌های مربوط به پاداش‌ها
+    const totalCountReward = await Notification.countDocuments({
+        userId: userId,
+        type: "reward_status",
+        isRead:false
+    });
+
 
     res.status(200).json({
         success: true,
+        totalCountActivity,
+        totalCountReward,
         totalCount,
         totalPages: Math.ceil(totalCount / limit),
         currentPage: Number(page),
