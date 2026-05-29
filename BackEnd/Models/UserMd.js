@@ -19,6 +19,9 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
     },
+    image:{
+      type:String
+    },
     idCode: {
       type: String,
       required: [true, "IdCode is required"],
