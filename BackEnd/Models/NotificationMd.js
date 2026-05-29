@@ -7,6 +7,16 @@ const notificationSchema = new mongoose.Schema({
         required: true,
         index: true,
     },
+    activityId:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'StudentActivity', // همچنان به مدل User اشاره می‌کند
+        index: true,
+    },
+    rewardId:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'StudentReward', // همچنان به مدل User اشاره می‌کند
+        index: true,
+    },
     title: {
         type: String,
         required: [true, 'عنوان اعلان الزامی است.'],
