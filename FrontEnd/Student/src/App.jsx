@@ -15,6 +15,16 @@ import RequestRewardPage from './Pages/Rewards/RewardOptionData';
 const AppContent = () => {
   const { token, user } = useContext(AuthContext);
   const [open, setOpen] = useState(true);
+  const [refresh, setRefresh] = useState(false);
+
+  const handleRefresh=(e)=>{
+    setRefresh(true)
+    setTimeout(() => {
+    setRefresh(false)
+      
+    }, 10);
+  }
+
   
   // 2. مسیر فعلی را بگیرید
   const location = useLocation();
@@ -45,11 +55,11 @@ const AppContent = () => {
   
         <Route 
           path='/activities' 
-          element={!token || user?.role !== "student" ? <Navigate to="/login" /> : <Activities Open={open} />} 
+          element={!token || user?.role !== "student" ? <Navigate to="/login" /> : <Activities Open={open} handleRefresh={handleRefresh} />} 
         />
         <Route 
           path='/rewards' 
-          element={!token || user?.role !== "student" ? <Navigate to="/login" /> : <Rewards Open={open} />} 
+          element={!token || user?.role !== "student" ? <Navigate to="/login" /> : <Rewards Open={open} handleRefresh={handleRefresh}/>} 
         />
          <Route path="/request-reward" element={!token || user?.role !== "student" ? <Navigate to="/login" /> : <RequestRewardPage Open={open} />} /> 
         <Route 
@@ -57,7 +67,7 @@ const AppContent = () => {
           element={!token || user?.role !== "student" ? <Navigate to="/login" /> : <Result Open={open} />} 
         />
       </Routes>
-      {showSidebar && <Sidebar activeNum={1} getOpen={getOpen} />}
+      {showSidebar && <Sidebar activeNum={1} getOpen={getOpen} refresh={refresh}/>}
     </div>
   );
 }
