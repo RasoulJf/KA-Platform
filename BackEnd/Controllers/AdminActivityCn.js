@@ -487,13 +487,7 @@ export const createBulkAdminActivitiesFromExcel = catchAsync(async (req, res, ne
                 insertedCount = result.length;
                 successfulEntriesData = result;
 
-                // <<<< لاگ برای دیباگ >>>>
-                console.log('--- INSERT MANY RESULT (First Item) ---');
-                if (result && result.length > 0) {
-                    console.log(result[0]); // اولین رکورد درج شده را با تمام فیلدها لاگ کن
-                } else {
-                    console.log('No items were inserted.');
-                }
+              
             } catch (bulkError) {
                 insertedCount = bulkError.result ? bulkError.result.nInserted : 0;
                 if (bulkError.writeErrors) {
