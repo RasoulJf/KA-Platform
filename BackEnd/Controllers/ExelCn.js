@@ -72,7 +72,6 @@ export const registerFromExcel = catchAsync(async (req, res, next) => {
 
         // 5. درج کاربران
         let insertedCount = 0;
-        console.log(usersToInsert)
         if (usersToInsert.length > 0) {
             // درج به صورت دسته‌ای برای جلوگیری از خطای timeout
             const batchSize = 50;
@@ -155,7 +154,6 @@ export const createActivitiesFromExcel = catchAsync(async (req, res, next) => {
                 }
             });
 
-            console.log(`\nProcessing Excel row ${rowIndex}:`, row);
 
             try {
                 // --- اعتبارسنجی اولیه فیلدهای اصلی ---
@@ -210,7 +208,6 @@ export const createActivitiesFromExcel = catchAsync(async (req, res, next) => {
                 // scoreDefinition همیشه inputType دارد پس خالی نمی شود
 
 
-                console.log(`Constructed activityData for row ${rowIndex}:`, JSON.stringify(activityData, null, 2));
 
                 const activity = new Activity(activityData);
                 await activity.validate(); // اعتبارسنجی بر اساس مدل Mongoose
@@ -228,8 +225,6 @@ export const createActivitiesFromExcel = catchAsync(async (req, res, next) => {
             }
         }
 
-        console.log("Total activities to insert:", activitiesToInsert.length);
-        console.log("Total errors during row processing:", errors.length, errors);
 
         let insertedCount = 0;
         let allInsertedDocuments = [];
@@ -313,13 +308,10 @@ export const createActivitiesFromExcel = catchAsync(async (req, res, next) => {
 const VALID_REWARD_PARENTS = ["پاداش‌های عمومی", "پاداش‌های اختصاصی", "پاداش نیکوکارانه"];
 
 export const createRewardsFromExcel = catchAsync(async (req, res, next) => {
-    console.log("1. createRewardsFromExcel controller reached.");
 
     if (!req.file) {
-        console.log("Error: No file uploaded.");
         return next(new HandleERROR("لطفا فایل اکسل را ارسال کنید", 400));
     }
-    console.log("2. File received:", req.file.originalname);
 
     try {
         const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
@@ -327,38 +319,29 @@ export const createRewardsFromExcel = catchAsync(async (req, res, next) => {
         const worksheet = workbook.Sheets[sheetName];
         const jsonDataFromExcel = XLSX.utils.sheet_to_json(worksheet);
 
-        console.log("3. Excel data (first 2 rows):", jsonDataFromExcel.slice(0, 2));
-
         if (!jsonDataFromExcel || jsonDataFromExcel.length === 0) {
-            console.log("Error: Excel file is empty or has incorrect format.");
             return next(new HandleERROR("فایل اکسل خالی است یا فرمت صحیحی ندارد.", 400));
         }
 
         const rewardsToInsert = [];
         const errors = [];
-        const processedRewardNamesInFile = new Set(); // برای جلوگیری از نام‌های تکراری در همین فایل
-
-        // اختیاری: خواندن نام پاداش‌های موجود برای جلوگیری از تکرار با دیتابیس
-        // اگر نیاز به یونیک بودن name دارید، این بخش را فعال کنید و در schema هم unique index بگذارید
-        // const existingRewards = await Reward.find({}, { name: 1 });
-        // const existingRewardNames = new Set(existingRewards.map(rew => rew.name));
+        const processedRewardNamesInFile = new Set();
 
         for (const [index, row] of jsonDataFromExcel.entries()) {
-            const rowIndex = index + 2; // شماره ردیف در اکسل (با فرض هدر در ردیف اول)
-            console.log(`\n4. Processing row ${rowIndex} from Excel:`, row);
+            const rowIndex = index + 2;
 
             try {
-                // خواندن مقادیر از ردیف اکسل
-                // فرض می‌کنیم هدرهای اکسل با نام فیلدها یکی هستند
+                // خواندن مقادیر از ردیف اکسل (همه فیلدهای جدید)
                 const parent = row.parent;
                 const name = row.name;
                 const description = row.description;
                 const minToken = row.minToken;
                 const maxToken = row.maxToken;
+                const icon = row.icon;
+                const color = row.color;
+                const hide = row.hide;
 
-                console.log(`5. Values extracted for row ${rowIndex}:`, { parent, name, description, minToken, maxToken });
-
-                // اعتبارسنجی فیلدهای ضروری (با توجه به schema: parent و name اجباری هستند)
+                // اعتبارسنجی فیلدهای ضروری
                 if (!parent || typeof parent !== 'string' || parent.trim() === '') {
                     errors.push(`سطر ${rowIndex}: فیلد 'parent' ضروری است و نمی‌تواند خالی باشد.`);
                     continue;
@@ -379,50 +362,41 @@ export const createRewardsFromExcel = catchAsync(async (req, res, next) => {
                     errors.push(`سطر ${rowIndex}: نام پاداش '${name}' در این فایل تکراری است.`);
                     continue;
                 }
-                // اختیاری: بررسی تکراری بودن نام با دیتابیس
-                // if (existingRewardNames && existingRewardNames.has(name.trim())) {
-                //     errors.push(`سطر ${rowIndex}: نام پاداش '${name}' قبلا در سیستم ثبت شده است.`);
-                //     continue;
-                // }
 
-                // ساخت شیء پاداش
+                // ساخت شیء پاداش با فیلدهای جدید
                 const rewardData = {
                     parent: parent.trim(),
                     name: name.trim(),
                     description: (description !== undefined && description !== null) ? String(description).trim() : undefined,
                     minToken: (minToken !== undefined && minToken !== null && String(minToken).trim() !== '') ? Number(minToken) : undefined,
                     maxToken: (maxToken !== undefined && maxToken !== null && String(maxToken).trim() !== '') ? Number(maxToken) : undefined,
+                    icon: (icon !== undefined && icon !== null) ? String(icon).trim() : undefined,
+                    color: (color !== undefined && color !== null) ? String(color).trim() : undefined,
+                    hide: (hide !== undefined && hide !== null) ? String(hide).trim() : undefined
                 };
 
-                console.log(`7. Constructed rewardData for row ${rowIndex}:`, rewardData);
-
-                // اعتبارسنجی با schema ی Mongoose
+                // اعتبارسنجی با schema
                 const reward = new Reward(rewardData);
-                await reward.validate(); // اگر خطایی باشد، اینجا throw می‌شود
+                await reward.validate();
 
-                rewardsToInsert.push(reward.toObject()); // .toObject() برای گرفتن plain object
+                rewardsToInsert.push(reward.toObject());
                 processedRewardNamesInFile.add(name.trim());
-                // if (existingRewardNames) existingRewardNames.add(name.trim());
 
-            } catch (error) { // خطای مربوط به یک سطر خاص
+            } catch (error) {
                 let message = error.message;
                 if (error.name === 'ValidationError') {
                     message = Object.values(error.errors).map(e => e.message).join(', ');
                 }
                 errors.push(`سطر ${rowIndex}: ${message}`);
-                console.log(`Error processing row ${rowIndex}:`, message);
             }
         }
-
-        console.log("8. Total rewards to insert:", rewardsToInsert.length);
-        console.log("9. Total errors during row processing:", errors.length, errors);
 
         // درج پاداش‌ها
         let insertedCount = 0;
         let allInsertedDocuments = [];
         if (rewardsToInsert.length > 0) {
             try {
-                const batchSize = 100; // می‌توانید تنظیم کنید
+                const batchSize = 100;
                 for (let i = 0; i < rewardsToInsert.length; i += batchSize) {
                     const batch = rewardsToInsert.slice(i, i + batchSize);
                     const result = await Reward.insertMany(batch, { ordered: false });
@@ -442,22 +416,24 @@ export const createRewardsFromExcel = catchAsync(async (req, res, next) => {
             }
         }
 
-        console.log("10. Final insertedCount:", insertedCount);
-        console.log("11. Final allInsertedDocuments (first 2):", allInsertedDocuments.slice(0, 2));
-
         // ارسال پاسخ
-        const isGenerallySuccessful = insertedCount > 0;
-        const responseStatus = errors.length > 0 && insertedCount === 0 ? 400 : (insertedCount > 0 ? 201 : 200) ; // 200 if no errors and nothing inserted
-        const message = insertedCount > 0 ?
-                        `${insertedCount} پاداش با موفقیت از فایل اکسل اضافه شد.` :
-                        (errors.length > 0 ? `عملیات با ${errors.length} خطا همراه بود و هیچ پاداشی اضافه نشد.` : `هیچ پاداش جدیدی برای افزودن یافت نشد.`);
-        if(insertedCount > 0 && errors.length > 0) {
-            message += ` همچنین ${errors.length} خطا نیز وجود داشت.`;
+        let message = '';
+        if (insertedCount > 0) {
+            message = `${insertedCount} پاداش با موفقیت از فایل اکسل اضافه شد.`;
+            if (errors.length > 0) {
+                message += ` همچنین ${errors.length} خطا نیز وجود داشت.`;
+            }
+        } else if (errors.length > 0) {
+            message = `عملیات با ${errors.length} خطا همراه بود و هیچ پاداشی اضافه نشد.`;
+        } else {
+            message = `هیچ پاداش جدیدی برای افزودن یافت نشد.`;
         }
 
+        const responseStatus = errors.length > 0 && insertedCount === 0 ? 400 : (insertedCount > 0 ? 201 : 200);
+        const isGenerallySuccessful = insertedCount > 0 || (insertedCount === 0 && errors.length === 0);
 
         return res.status(responseStatus).json({
-            success: isGenerallySuccessful || (insertedCount === 0 && errors.length === 0), // True if success or nothing to do with no errors
+            success: isGenerallySuccessful,
             message,
             insertedCount,
             data: allInsertedDocuments,
@@ -465,7 +441,7 @@ export const createRewardsFromExcel = catchAsync(async (req, res, next) => {
             errors: errors.length > 0 ? errors : undefined
         });
 
-    } catch (error) { // خطای کلی در پردازش فایل یا خطای غیرمنتظره
+    } catch (error) {
         console.error('خطای کلی در پردازش فایل اکسل برای پاداش‌ها:', error);
         return next(new HandleERROR(
             `خطا در پردازش فایل اکسل: ${error.message}`,
