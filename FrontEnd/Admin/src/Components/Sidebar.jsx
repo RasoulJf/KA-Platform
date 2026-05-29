@@ -22,6 +22,7 @@ export default function Sidebar({ getOpen }) {
 
   const [open, setOpen] = useState(true);
   const [openProfile, setOpenProfile] = useState(false);
+  
 
   const handleOpen = () => {
     const newOpenState = !open;
@@ -85,7 +86,7 @@ export default function Sidebar({ getOpen }) {
       {/* این بخش اجازه می‌دهد پروفایل روی هدر و منو شناور باشد */}
       <div className="relative w-full h-24 flex-shrink-0">
           {/* کارت پروفایل ادمین (حالت باز) */}
-          <div className={`absolute z-20 top-[-50px] left-0 right-0 mx-auto ${!open ? "hidden" : ""} rounded-lg bg-white shadow-sm transition-all duration-500 w-[85%] overflow-hidden flex flex-col`}>
+          <div className={`absolute z-20 top-[-35px] left-0 right-0 mx-auto ${!open ? "hidden" : ""} rounded-lg bg-white shadow-sm transition-all duration-500 w-[85%] overflow-hidden flex flex-col`}>
               <div className="flex justify-between items-center w-full py-3 px-3 gap-2">
                   <button onClick={() => setOpenProfile(!openProfile)} className="p-1">
                       {openProfile ? <SlArrowUp className="scale-75 text-gray-400" /> : <SlArrowDown className="scale-75 text-gray-400" />}
